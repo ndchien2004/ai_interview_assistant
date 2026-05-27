@@ -93,7 +93,7 @@ export function DashboardView() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-        <Card className="rounded-lg">
+        <Card>
           <CardHeader>
             <CardTitle>Latest resume</CardTitle>
             <CardDescription>The resume source used for question generation.</CardDescription>
@@ -129,7 +129,7 @@ export function DashboardView() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-lg">
+        <Card>
           <CardHeader>
             <CardTitle>Recent interviews</CardTitle>
             <CardDescription>Jump back into practice or review your scores.</CardDescription>
@@ -142,7 +142,7 @@ export function DashboardView() {
                   href={
                     session.evaluationId ? `/results/${session.evaluationId}` : `/interviews/${session.id}`
                   }
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+                  className="flex items-center justify-between gap-3 border-b border-border/80 py-3 transition-colors hover:text-foreground last:border-b-0"
                 >
                   <div>
                     <p className="font-medium">{session.targetRole}</p>
@@ -164,7 +164,7 @@ export function DashboardView() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="rounded-lg">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquareText className="size-4" />
@@ -176,7 +176,7 @@ export function DashboardView() {
             evaluation produces a scorecard with improvement guidance.
           </CardContent>
         </Card>
-        <Card className="rounded-lg">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="size-4" />

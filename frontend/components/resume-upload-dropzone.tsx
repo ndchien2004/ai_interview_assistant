@@ -55,12 +55,12 @@ export function ResumeUploadDropzone({ onUploaded }: ResumeUploadDropzoneProps) 
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cn(
-          "flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-border bg-background p-8 text-center transition-colors",
+          "flex min-h-64 cursor-pointer flex-col items-center justify-center border-y border-dashed border-border/80 bg-transparent p-8 text-center transition-colors",
           dragging && "border-primary bg-primary/5"
         )}
       >
         <input type="file" accept="application/pdf" className="sr-only" onChange={onChange} />
-        <div className="mb-4 flex size-12 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+        <div className="mb-4 flex size-12 items-center justify-center border border-border text-muted-foreground">
           {loading ? <Loader2 className="size-5 animate-spin" /> : <FileUp className="size-5" />}
         </div>
         <h2 className="text-lg font-semibold">Upload resume PDF</h2>

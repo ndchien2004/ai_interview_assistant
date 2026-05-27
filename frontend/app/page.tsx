@@ -24,11 +24,11 @@ const features = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f6f7f3]">
-      <header className="border-b border-border bg-background/90">
+    <main className="min-h-screen bg-background">
+      <header className="border-b border-border/80 bg-background/90">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <span className="flex size-9 items-center justify-center border border-foreground text-foreground">
               <Sparkles className="size-4" />
             </span>
             AI Interview Assistant
@@ -67,14 +67,14 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-background p-5 shadow-xs">
-          <div className="rounded-lg bg-[#12231d] p-5 text-white">
-            <p className="text-sm text-white/70">Current mock evaluation</p>
+        <div className="border-y border-border/80 py-5">
+          <div className="border-b border-border pb-5">
+            <p className="text-sm text-muted-foreground">Current mock evaluation</p>
             <div className="mt-4 flex items-end gap-3">
               <span className="text-6xl font-semibold tracking-normal">82%</span>
-              <span className="pb-2 text-sm text-white/70">overall score</span>
+              <span className="pb-2 text-sm text-muted-foreground">overall score</span>
             </div>
-            <p className="mt-5 text-sm leading-6 text-white/75">
+            <p className="mt-5 text-sm leading-6 text-muted-foreground">
               Strong junior full-stack signal. Improve by making answers more evidence-driven and
               structured around project outcomes.
             </p>
@@ -83,8 +83,8 @@ export default function Home() {
             {features.map((feature) => {
               const Icon = feature.icon
               return (
-                <div key={feature.title} className="flex gap-3 rounded-lg border border-border p-4">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+                <div key={feature.title} className="flex gap-3 border-b border-border/80 py-4 last:border-b-0">
+                  <span className="flex size-9 shrink-0 items-center justify-center border border-border text-muted-foreground">
                     <Icon className="size-4" />
                   </span>
                   <div>

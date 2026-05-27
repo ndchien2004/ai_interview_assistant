@@ -15,7 +15,7 @@ export function StateBlock({ title, description, tone = "empty", className }: St
   return (
     <div
       className={cn(
-        "flex min-h-44 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center",
+        "flex min-h-44 flex-col items-center justify-center border-y border-dashed border-border/80 bg-transparent p-8 text-center",
         className
       )}
     >

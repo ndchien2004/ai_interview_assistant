@@ -12,7 +12,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-6 shadow-xs">
+      <div className="border-y border-border/80 py-6">
         <p className="text-sm text-muted-foreground">Overall score</p>
         <div className="mt-2 flex items-end gap-3">
           <span className="text-5xl font-semibold tracking-normal">{evaluation.totalScore}%</span>
@@ -25,11 +25,11 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
       </div>
 
       {evaluation.skillScores?.length ? (
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="border-y border-border/80 py-5">
           <h2 className="font-semibold">Skill-based scoring</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {evaluation.skillScores.map((skill) => (
-              <div key={skill.name} className="rounded-lg border border-border p-4">
+              <div key={skill.name} className="border-t border-border/80 py-4">
                 <div className="mb-2 flex items-center justify-between gap-3 text-sm">
                   <span className="font-medium">{skill.name}</span>
                   <span className="font-semibold">{skill.score}%</span>
@@ -43,7 +43,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="border-y border-border/80 py-5">
           <h2 className="font-semibold">Category scores</h2>
           <div className="mt-4 space-y-4">
             {categoryRows.map(([label, value]) => (
@@ -58,7 +58,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="border-y border-border/80 py-5">
           <h2 className="font-semibold">Strengths</h2>
           <ul className="mt-4 space-y-3">
             {evaluation.strengths.map((item) => (
@@ -72,7 +72,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="border-y border-border/80 py-5">
           <h2 className="flex items-center gap-2 font-semibold">
             <Target className="size-4" />
             Focus areas
@@ -86,7 +86,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
           </ul>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="border-y border-border/80 py-5">
           <h2 className="flex items-center gap-2 font-semibold">
             <Lightbulb className="size-4" />
             Improvement roadmap
@@ -94,7 +94,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
           <ol className="mt-4 space-y-3">
             {evaluation.improvementRoadmap.map((item, index) => (
               <li key={item} className="flex gap-3 text-sm text-muted-foreground">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-medium text-foreground">
+                <span className="flex size-6 shrink-0 items-center justify-center border border-border text-xs font-medium text-foreground">
                   {index + 1}
                 </span>
                 {item}
@@ -105,11 +105,11 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
       </div>
 
       {evaluation.transcript?.length ? (
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="border-y border-border/80 py-5">
           <h2 className="font-semibold">Saved transcript</h2>
-          <div className="mt-4 max-h-96 space-y-3 overflow-y-auto rounded-lg bg-muted/30 p-3">
+          <div className="mt-4 max-h-96 space-y-3 overflow-y-auto border-y border-border/80 py-3">
             {evaluation.transcript.map((message) => (
-              <div key={message.id} className="rounded-md bg-background p-3 text-sm">
+              <div key={message.id} className="border-b border-border/70 pb-3 text-sm last:border-b-0">
                 <p className="mb-1 font-medium capitalize">{message.role}</p>
                 <p className="text-muted-foreground">{message.content}</p>
               </div>

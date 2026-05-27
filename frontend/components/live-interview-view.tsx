@@ -293,7 +293,7 @@ export function LiveInterviewView() {
             description="Live interview mode needs resume context before generating questions."
           />
         ) : (
-          <Card className="rounded-lg">
+          <Card>
             <CardHeader>
               <CardTitle>Configure live session</CardTitle>
               <CardDescription>
@@ -309,7 +309,7 @@ export function LiveInterviewView() {
                       id="live-resume"
                       value={resumeId}
                       onChange={(event) => setResumeId(event.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="h-10 w-full rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 text-sm shadow-none outline-none focus-visible:border-foreground focus-visible:ring-0"
                     >
                       {resumes.map((resume) => (
                         <option key={resume.id} value={resume.id}>
@@ -346,7 +346,7 @@ export function LiveInterviewView() {
                       onChange={(event) =>
                         setSeniority(event.target.value as InterviewSession["seniority"])
                       }
-                      className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="h-10 w-full rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 text-sm shadow-none outline-none focus-visible:border-foreground focus-visible:ring-0"
                     >
                       {["Intern", "Junior", "Middle", "Senior"].map((item) => (
                         <option key={item} value={item}>
@@ -376,8 +376,8 @@ export function LiveInterviewView() {
                       <label
                         key={skill}
                         className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm transition-colors",
-                          selectedSkills.includes(skill) && "border-primary bg-primary/5"
+                          "flex cursor-pointer items-center gap-2 border-b border-border/80 py-3 text-sm transition-colors",
+                          selectedSkills.includes(skill) && "border-primary text-foreground"
                         )}
                       >
                         <input
@@ -408,7 +408,7 @@ export function LiveInterviewView() {
 
   return (
     <div className="grid min-h-[calc(100vh-8rem)] gap-5 lg:grid-cols-[1fr_340px]">
-      <section className="flex min-h-[640px] flex-col overflow-hidden rounded-lg border border-border bg-background shadow-xs">
+      <section className="flex min-h-[640px] flex-col overflow-hidden border-y border-border/80 bg-transparent">
         <div className="border-b border-border p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -436,12 +436,12 @@ export function LiveInterviewView() {
             >
               <div
                 className={cn(
-                  "max-w-[82%] rounded-lg px-4 py-3 text-sm leading-6",
+                  "max-w-[82%] border-y border-border/80 px-4 py-3 text-sm leading-6",
                   message.role === "candidate"
-                    ? "bg-primary text-primary-foreground"
+                    ? "border-foreground bg-transparent text-foreground"
                     : message.role === "system"
-                      ? "border border-border bg-muted text-muted-foreground"
-                      : "bg-[#edf4ef] text-foreground"
+                      ? "bg-transparent text-muted-foreground"
+                      : "bg-transparent text-foreground"
                 )}
               >
                 {message.content}
@@ -450,7 +450,7 @@ export function LiveInterviewView() {
           ))}
           {interimText ? (
             <div className="flex justify-end">
-              <div className="max-w-[82%] rounded-lg border border-dashed border-primary/40 px-4 py-3 text-sm text-muted-foreground">
+              <div className="max-w-[82%] border-y border-dashed border-primary/40 px-4 py-3 text-sm text-muted-foreground">
                 {interimText}
               </div>
             </div>
@@ -473,8 +473,8 @@ export function LiveInterviewView() {
                   type="button"
                   onClick={listening ? stopListening : startListening}
                   className={cn(
-                    "relative flex size-16 items-center justify-center rounded-full border border-border bg-[#12231d] text-white shadow-lg transition-transform hover:scale-[1.03]",
-                    listening && "animate-pulse bg-emerald-700"
+                    "relative flex size-16 items-center justify-center rounded-full border border-foreground bg-transparent text-foreground shadow-none transition-transform hover:scale-[1.03]",
+                    listening && "animate-pulse border-emerald-700 text-emerald-700"
                   )}
                   aria-label={listening ? "Stop voice capture" : "Start voice capture"}
                 >
@@ -502,7 +502,7 @@ export function LiveInterviewView() {
       </section>
 
       <aside className="space-y-4">
-        <Card className="rounded-lg">
+        <Card>
           <CardHeader>
             <CardTitle>Live scoring focus</CardTitle>
             <CardDescription>These skills will appear in the result scorecard.</CardDescription>
@@ -517,7 +517,7 @@ export function LiveInterviewView() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-lg">
+        <Card>
           <CardHeader>
             <CardTitle>Transcript storage</CardTitle>
             <CardDescription>

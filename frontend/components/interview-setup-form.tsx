@@ -67,7 +67,7 @@ export function InterviewSetupForm() {
   }
 
   return (
-    <Card className="rounded-lg">
+    <Card>
       <CardHeader>
         <CardTitle>Interview setup</CardTitle>
         <CardDescription>
@@ -82,7 +82,7 @@ export function InterviewSetupForm() {
               id="resume"
               value={resumeId}
               onChange={(event) => setResumeId(event.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="h-10 w-full rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 text-sm shadow-none outline-none focus-visible:border-foreground focus-visible:ring-0"
             >
               {resumes.map((resume) => (
                 <option key={resume.id} value={resume.id}>
@@ -108,7 +108,7 @@ export function InterviewSetupForm() {
                 id="seniority"
                 value={seniority}
                 onChange={(event) => setSeniority(event.target.value as InterviewSession["seniority"])}
-                className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="h-10 w-full rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 text-sm shadow-none outline-none focus-visible:border-foreground focus-visible:ring-0"
               >
                 {["Intern", "Junior", "Middle", "Senior"].map((item) => (
                   <option key={item} value={item}>

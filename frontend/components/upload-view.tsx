@@ -43,7 +43,7 @@ export function UploadView() {
         </div>
       </div>
 
-      <Card className="rounded-lg">
+      <Card>
         <CardHeader>
           <CardTitle>Resume library</CardTitle>
           <CardDescription>Choose a resume later when generating questions.</CardDescription>
@@ -51,7 +51,7 @@ export function UploadView() {
         <CardContent className="space-y-3">
           {resumes.length ? (
             resumes.map((resume) => (
-              <div key={resume.id} className="rounded-lg border border-border p-4">
+              <div key={resume.id} className="border-b border-border/80 py-4 last:border-b-0">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{resume.fileName}</p>

@@ -119,7 +119,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         </Button>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
+      <div className="border-y border-border/80 py-5">
         <div className="mb-4 flex items-center justify-between gap-3 text-sm text-muted-foreground">
           <span>
             Question {activeIndex + 1} of {session.questions.length}
@@ -129,7 +129,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         <Progress value={progress} />
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-6 shadow-xs">
+      <div className="border-y border-border/80 py-6">
         <div className="mb-4 flex flex-wrap gap-2">
           <Badge>{activeQuestion.category}</Badge>
           <Badge>{activeQuestion.difficulty}</Badge>

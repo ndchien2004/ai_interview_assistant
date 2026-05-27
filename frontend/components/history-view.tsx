@@ -69,13 +69,13 @@ export function HistoryView() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
+      <div className="border-y border-border/80">
         {filteredSessions.length ? (
           <div className="divide-y divide-border">
             {filteredSessions.map((session) => (
               <div
                 key={session.id}
-                className="grid gap-3 p-4 md:grid-cols-[1fr_auto_auto] md:items-center"
+                className="grid gap-3 py-4 md:grid-cols-[1fr_auto_auto] md:items-center"
               >
                 <div>
                   <p className="font-medium">{session.targetRole}</p>
