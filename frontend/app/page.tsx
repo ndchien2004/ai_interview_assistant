@@ -1,65 +1,102 @@
-import Image from "next/image";
+import Link from "next/link"
+import { ArrowRight, BrainCircuit, FileText, ShieldCheck, Sparkles } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+
+const features = [
+  {
+    icon: FileText,
+    title: "Resume-based practice",
+    description: "Upload a PDF and generate interview questions from the candidate profile.",
+  },
+  {
+    icon: BrainCircuit,
+    title: "AI-ready evaluation",
+    description: "Mock scoring now, backend-owned OpenAI evaluation in the Spring Boot phase.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Production-style contracts",
+    description: "Typed service boundaries mirror authentication, resume, interview, and result APIs.",
+  },
+]
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-[#f6f7f3]">
+      <header className="border-b border-border bg-background/90">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2 font-semibold">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Sparkles className="size-4" />
+            </span>
+            AI Interview Assistant
+          </Link>
+          <nav className="flex items-center gap-2">
+            <Button asChild variant="ghost">
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/register">Start demo</Link>
+            </Button>
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div>
+          <Badge className="mb-5 bg-emerald-50 text-emerald-800">Portfolio-ready fullstack project</Badge>
+          <h1 className="max-w-3xl text-5xl font-semibold leading-tight tracking-normal md:text-6xl">
+            Practice smarter interviews from your own resume.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
+            A production-style AI interview assistant built with Next.js, Tailwind, shadcn/ui, Spring
+            Boot contracts, PostgreSQL planning, and backend-owned OpenAI integration.
           </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/login">
+                Try the mock app
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/dashboard">Open workspace</Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="rounded-lg border border-border bg-background p-5 shadow-xs">
+          <div className="rounded-lg bg-[#12231d] p-5 text-white">
+            <p className="text-sm text-white/70">Current mock evaluation</p>
+            <div className="mt-4 flex items-end gap-3">
+              <span className="text-6xl font-semibold tracking-normal">82%</span>
+              <span className="pb-2 text-sm text-white/70">overall score</span>
+            </div>
+            <p className="mt-5 text-sm leading-6 text-white/75">
+              Strong junior full-stack signal. Improve by making answers more evidence-driven and
+              structured around project outcomes.
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3">
+            {features.map((feature) => {
+              const Icon = feature.icon
+              return (
+                <div key={feature.title} className="flex gap-3 rounded-lg border border-border p-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+                    <Icon className="size-4" />
+                  </span>
+                  <div>
+                    <h2 className="font-medium">{feature.title}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{feature.description}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </main>
-    </div>
-  );
+      </section>
+    </main>
+  )
 }
