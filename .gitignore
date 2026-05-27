@@ -1,0 +1,23 @@
+# Node / Next.js
+node_modules
+.next
+out
+.env.local
+
+# Java / Spring Boot
+target
+*.class
+*.jar
+
+# IntelliJ
+.idea
+*.iml
+
+# VS Code
+.vscode
+
+# OS
+.DS_Store
+
+# Env
+.env
