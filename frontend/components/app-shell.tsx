@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
   BarChart3,
+  BookOpen,
+  ChevronsLeft,
+  ChevronsRight,
   FileText,
   History,
   LayoutDashboard,
@@ -25,8 +28,11 @@ const navItems = [
   { href: "/upload", label: "Resume", icon: FileText },
   { href: "/interviews/new", label: "New interview", icon: Sparkles },
   { href: "/interviews/live", label: "Live interview", icon: Mic2 },
+  { href: "/courses/java-core", label: "Java Core", icon: BookOpen },
   { href: "/history", label: "History", icon: History },
 ]
+
+const SIDEBAR_COLLAPSED_KEY = "ai-interview-sidebar-collapsed"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -34,6 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [ready, setReady] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -45,6 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
 
       setUser(currentUser)
+      setSidebarCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true")
       setReady(true)
     }, 0)
 
@@ -54,6 +62,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const handleLogout = () => {
     logout()
     router.replace("/login")
+  }
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next))
+      return next
+    })
   }
 
   if (!ready || !user) {
@@ -71,17 +87,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 border-r border-border/80 bg-background px-5 py-5 transition-transform lg:translate-x-0",
-          menuOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-40 w-48 border-r border-border/80 bg-background px-4 py-5 transition-all duration-200 lg:translate-x-0",
+          menuOpen ? "translate-x-0" : "-translate-x-full",
+          sidebarCollapsed && "lg:w-20 lg:px-3"
         )}
       >
-        <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-            <span className="flex size-9 items-center justify-center border border-foreground text-foreground">
-              <BarChart3 className="size-4" />
-            </span>
-            AI Interview
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2",
+            sidebarCollapsed && "lg:flex-col lg:justify-center"
+          )}
+        >
+          <Link
+            href="/dashboard"
+            className={cn("flex items-center gap-2 font-semibold", sidebarCollapsed && "lg:justify-center")}
+            title="AI Interview"
+          >
+            <BarChart3 className="size-5 text-foreground" />
+            <span className={cn(sidebarCollapsed && "lg:hidden")}>AI Interview</span>
           </Link>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="hidden lg:inline-flex"
+            onClick={toggleSidebar}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <ChevronsRight /> : <ChevronsLeft />}
+          </Button>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -102,27 +136,52 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                title={item.label}
                 onClick={() => setMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 border-l px-3 py-2 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  sidebarCollapsed && "lg:justify-center lg:px-0"
                 )}
               >
                 <Icon className="size-4" />
-                {item.label}
+                <span className={cn(sidebarCollapsed && "lg:hidden")}>{item.label}</span>
               </Link>
             )
           })}
         </nav>
 
-        <div className="absolute inset-x-5 bottom-5 border-t border-border pt-4">
-          <p className="text-sm font-medium">{user.name}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{user.email}</p>
-          <Button variant="outline" size="sm" className="mt-3 w-full" onClick={handleLogout}>
+        <div
+          className={cn(
+            "absolute inset-x-5 bottom-5 border-t border-border pt-4",
+            sidebarCollapsed && "lg:inset-x-3 lg:flex lg:flex-col lg:items-center"
+          )}
+        >
+          <p className={cn("text-sm font-medium", sidebarCollapsed && "lg:hidden")}>{user.name}</p>
+          <p className={cn("mt-0.5 truncate text-xs text-muted-foreground", sidebarCollapsed && "lg:hidden")}>
+            {user.email}
+          </p>
+          <span
+            className={cn(
+              "hidden size-9 items-center justify-center rounded-full border border-border text-sm font-semibold text-foreground",
+              sidebarCollapsed && "lg:flex"
+            )}
+            title={user.name}
+          >
+            {user.name.slice(0, 1).toUpperCase()}
+          </span>
+          <Button
+            variant="outline"
+            size={sidebarCollapsed ? "icon-sm" : "sm"}
+            className={cn("mt-3 w-full", sidebarCollapsed && "lg:w-8")}
+            onClick={handleLogout}
+            title="Sign out"
+            aria-label="Sign out"
+          >
             <LogOut className="size-4" />
-            Sign out
+            <span className={cn(sidebarCollapsed && "lg:hidden")}>Sign out</span>
           </Button>
         </div>
       </aside>
@@ -135,7 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
       ) : null}
 
-      <div className="lg:pl-72">
+      <div className={cn("transition-[padding] duration-200 lg:pl-48", sidebarCollapsed && "lg:pl-20")}>
         <header className="sticky top-0 z-20 border-b border-border/80 bg-background/90 backdrop-blur">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6">
             <Button

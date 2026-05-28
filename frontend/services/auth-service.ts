@@ -115,6 +115,10 @@ export function getCurrentUser() {
   return readJson<User | null>(USER_KEY, null)
 }
 
+export function getAuthToken() {
+  return canUseStorage() ? window.localStorage.getItem(TOKEN_KEY) : null
+}
+
 export function logout() {
   if (!canUseStorage()) return
 

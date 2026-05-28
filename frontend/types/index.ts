@@ -11,10 +11,17 @@ export type Resume = {
   userId: string
   fileName: string
   fileSize: number
+  contentType?: string
   uploadedAt: string
   parsedText: string
+  summary?: string
+  status?: "PROCESSING" | "READY" | "NEEDS_REVIEW" | "FAILED"
+  parseError?: string | null
   roleSignals: string[]
   skills: string[]
+  senioritySignals?: string[]
+  projectHighlights?: string[]
+  warnings?: string[]
 }
 
 export type QuestionCategory =
@@ -85,4 +92,123 @@ export type Evaluation = {
   interviewDomain?: string
   summary: string
   createdAt: string
+}
+
+export type QuestionDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+
+export type ImportDelimiterMode = "AUTO" | "TAB" | "COMMA" | "PIPE"
+
+export type PracticeConfidence = "AGAIN" | "HARD" | "GOOD" | "MASTERED"
+
+export type PracticeSessionMode = "INTERVIEW" | "FLASHCARD"
+
+export type FlashcardStatusFilter = "ALL" | "UNSEEN" | "LEARNING" | "MASTERED"
+
+export type FlashcardStudyFilters = {
+  topic?: string
+  difficulty?: QuestionDifficulty
+  status?: FlashcardStatusFilter
+}
+
+export type PracticeQuestion = {
+  id: string
+  question: string
+  shortAnswer: string
+  detailedAnswer: string
+  keyPoints: string[]
+  commonMistakes: string[]
+  difficulty: QuestionDifficulty
+  topic: string
+  tags: string[]
+  codeSnippet?: string | null
+  sortOrder: number
+}
+
+export type CourseImportPayload = {
+  topic: string
+  difficulty: QuestionDifficulty
+  content: string
+  delimiterMode: ImportDelimiterMode
+}
+
+export type CourseImportRowError = {
+  rowNumber: number
+  raw: string
+  reason: string
+}
+
+export type CourseImportResponse = {
+  importedCount: number
+  skippedCount: number
+  invalidRows: CourseImportRowError[]
+  createdQuestions: PracticeQuestion[]
+}
+
+export type ParsedImportRow = {
+  rowNumber: number
+  question: string
+  answer: string
+  raw: string
+}
+
+export type ParsedImportPreview = {
+  validRows: ParsedImportRow[]
+  invalidRows: CourseImportRowError[]
+  skippedCount: number
+}
+
+export type CourseSection = {
+  id: string
+  slug: string
+  title: string
+  description: string
+  sortOrder: number
+  questions: PracticeQuestion[]
+}
+
+export type Course = {
+  id: string
+  slug: string
+  title: string
+  description: string
+  active: boolean
+  questionCount: number
+  sections?: CourseSection[]
+}
+
+export type TopicProgress = {
+  topic: string
+  total: number
+  attempted: number
+  mastered: number
+}
+
+export type CourseProgress = {
+  courseSlug: string
+  totalQuestions: number
+  attemptedQuestions: number
+  masteredQuestions: number
+  masteryPercentage: number
+  averageConfidence: number
+  topics: TopicProgress[]
+}
+
+export type PracticeAttempt = {
+  id: string
+  questionId: string
+  answerText?: string | null
+  confidence: PracticeConfidence
+  createdAt: string
+}
+
+export type PracticeSession = {
+  id: string
+  courseSlug: string
+  mode?: PracticeSessionMode
+  filters?: FlashcardStudyFilters
+  status: "IN_PROGRESS" | "COMPLETED"
+  createdAt: string
+  completedAt?: string | null
+  nextQuestion?: PracticeQuestion | null
+  attempts: PracticeAttempt[]
 }
