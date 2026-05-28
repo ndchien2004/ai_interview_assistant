@@ -60,8 +60,8 @@ export function ResumeUploadDropzone({ onUploaded }: ResumeUploadDropzoneProps) 
         )}
       >
         <input type="file" accept="application/pdf" className="sr-only" onChange={onChange} />
-        <div className="mb-4 flex size-12 items-center justify-center border border-border text-muted-foreground">
-          {loading ? <Loader2 className="size-5 animate-spin" /> : <FileUp className="size-5" />}
+        <div className="mb-4 text-muted-foreground">
+          {loading ? <Loader2 className="size-6 animate-spin" /> : <FileUp className="size-6" />}
         </div>
         <h2 className="text-lg font-semibold">Upload resume PDF</h2>
         <p className="mt-2 max-w-md text-sm text-muted-foreground">
