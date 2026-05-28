@@ -8,9 +8,7 @@ export default function LoginPage() {
     <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         <Link href="/" className="mb-6 flex items-center justify-center gap-2 font-semibold">
-          <span className="flex size-9 items-center justify-center border border-foreground text-foreground">
-            <Sparkles className="size-4" />
-          </span>
+          <Sparkles className="size-5 text-foreground" />
           AI Interview Assistant
         </Link>
         <AuthForm mode="login" />

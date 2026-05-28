@@ -94,7 +94,7 @@ export function EvaluationSummary({ evaluation }: EvaluationSummaryProps) {
           <ol className="mt-4 space-y-3">
             {evaluation.improvementRoadmap.map((item, index) => (
               <li key={item} className="flex gap-3 text-sm text-muted-foreground">
-                <span className="flex size-6 shrink-0 items-center justify-center border border-border text-xs font-medium text-foreground">
+                <span className="shrink-0 text-xs font-medium text-foreground">
                   {index + 1}
                 </span>
                 {item}
