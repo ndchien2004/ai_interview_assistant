@@ -8,8 +8,15 @@ const USER_KEY = "ai-interview-user"
 const RESUMES_KEY = "ai-interview-resumes"
 const SESSIONS_KEY = "ai-interview-sessions"
 const EVALUATIONS_KEY = "ai-interview-evaluations"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 const canUseStorage = () => typeof window !== "undefined"
+const canUseApi = () => Boolean(API_BASE_URL)
+
+type AuthResponse = {
+  token: string
+  user: User
+}
 
 const readJson = <T>(key: string, fallback: T): T => {
   if (!canUseStorage()) return fallback
@@ -72,6 +79,19 @@ export const setStoredEvaluations = (evaluations: Evaluation[]) =>
   writeJson(EVALUATIONS_KEY, evaluations)
 
 export async function login(email: string, password: string) {
+  if (canUseApi()) {
+    try {
+      return await apiAuth("/api/auth/login", {
+        email: email.trim().toLowerCase(),
+        password,
+      })
+    } catch (error) {
+      if (!(error instanceof TypeError)) {
+        throw error
+      }
+    }
+  }
+
   seedMockData()
 
   const user: User =
@@ -91,6 +111,20 @@ export async function login(email: string, password: string) {
 }
 
 export async function register(name: string, email: string, password: string) {
+  if (canUseApi()) {
+    try {
+      return await apiAuth("/api/auth/register", {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      })
+    } catch (error) {
+      if (!(error instanceof TypeError)) {
+        throw error
+      }
+    }
+  }
+
   seedMockData()
 
   const user: User = {
@@ -124,4 +158,33 @@ export function logout() {
 
   window.localStorage.removeItem(TOKEN_KEY)
   window.localStorage.removeItem(USER_KEY)
+}
+
+async function apiAuth(path: string, payload: Record<string, string>) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, "Authentication failed."))
+  }
+
+  const data = (await response.json()) as AuthResponse
+  writeJson(USER_KEY, data.user)
+  window.localStorage.setItem(TOKEN_KEY, data.token)
+
+  return { token: data.token, user: data.user }
+}
+
+async function errorMessage(response: Response, fallback: string) {
+  try {
+    const json = await response.json()
+    return json.message ?? fallback
+  } catch {
+    return fallback
+  }
 }

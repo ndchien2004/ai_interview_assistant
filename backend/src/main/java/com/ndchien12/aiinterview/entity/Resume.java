@@ -68,6 +68,7 @@ public class Resume {
     private List<String> projectHighlights = new ArrayList<>();
 
     @ElementCollection
+    @Column(columnDefinition = "TEXT")
     private List<String> warnings = new ArrayList<>();
 
     @PrePersist

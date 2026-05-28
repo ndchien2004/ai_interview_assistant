@@ -2,6 +2,8 @@ package com.ndchien12.aiinterview.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,52 +19,98 @@ import java.util.Set;
 
 @Service
 public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
+    private static final Logger log = LoggerFactory.getLogger(OpenAiResumeAnalysisService.class);
     private static final int MAX_AI_INPUT_CHARS = 18_000;
+    private static final Set<String> STOPWORDS = Set.of(
+            "and", "the", "for", "with", "from", "this", "that", "have", "has", "was", "were",
+            "are", "role", "work", "used", "using", "user", "users", "data", "system", "project",
+            "application", "app", "service", "services", "development", "experience"
+    );
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
-    private final String apiKey;
-    private final String model;
+    private final String openAiApiKey;
+    private final String openAiModel;
+    private final String geminiApiKey;
+    private final String geminiModel;
     private final boolean aiEnabled;
 
     public OpenAiResumeAnalysisService(
             ObjectMapper objectMapper,
-            @Value("${app.openai.api-key:${OPENAI_API_KEY:}}") String apiKey,
-            @Value("${app.openai.model:${OPENAI_MODEL:gpt-5-mini}}") String model,
+            @Value("${app.openai.api-key:${OPENAI_API_KEY:}}") String openAiApiKey,
+            @Value("${app.openai.model:${OPENAI_MODEL:gpt-5-mini}}") String openAiModel,
+            @Value("${app.gemini.api-key:${GEMINI_API_KEY:}}") String geminiApiKey,
+            @Value("${app.gemini.model:${GEMINI_MODEL:gemini-2.5-flash}}") String geminiModel,
             @Value("${app.resume.ai-enabled:${RESUME_AI_ENABLED:true}}") boolean aiEnabled
     ) {
         this.objectMapper = objectMapper;
-        this.apiKey = apiKey;
-        this.model = model;
+        this.openAiApiKey = openAiApiKey;
+        this.openAiModel = openAiModel;
+        this.geminiApiKey = geminiApiKey;
+        this.geminiModel = geminiModel;
         this.aiEnabled = aiEnabled;
         this.restClient = RestClient.builder()
-                .baseUrl("https://api.openai.com/v1")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 
     @Override
     public ResumeAnalysisResult analyze(String extractedText) {
-        if (!aiEnabled || apiKey == null || apiKey.isBlank()) {
-            return fallbackAnalyze(extractedText, "AI analysis is disabled or OPENAI_API_KEY is not configured.");
+        if (!aiEnabled) {
+            return fallbackAnalyze(extractedText, "AI analysis is disabled.");
         }
 
-        try {
-            String response = restClient.post()
-                    .uri("/responses")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .body(requestBody(extractedText))
-                    .retrieve()
-                    .body(String.class);
-            return parseResponse(response, extractedText);
-        } catch (Exception exception) {
-            return fallbackAnalyze(extractedText, "AI analysis failed; fallback extraction was used.");
+        List<String> failures = new ArrayList<>();
+
+        if (hasText(openAiApiKey)) {
+            try {
+                return analyzeWithOpenAi(extractedText);
+            } catch (Exception exception) {
+                log.warn("OpenAI resume analysis failed for model {}: {}", openAiModel, exception.getMessage());
+                failures.add("OpenAI: " + safeReason(exception));
+            }
+        } else {
+            failures.add("OpenAI: OPENAI_API_KEY is not configured.");
         }
+
+        if (hasText(geminiApiKey)) {
+            try {
+                return analyzeWithGemini(extractedText);
+            } catch (Exception exception) {
+                log.warn("Gemini resume analysis failed for model {}: {}", geminiModel, exception.getMessage());
+                failures.add("Gemini: " + safeReason(exception));
+            }
+        } else {
+            failures.add("Gemini: GEMINI_API_KEY is not configured.");
+        }
+
+        return fallbackAnalyze(extractedText, "AI fallback used. " + truncate(String.join(" ", failures), 220));
     }
 
-    private Map<String, Object> requestBody(String extractedText) {
+    private ResumeAnalysisResult analyzeWithOpenAi(String extractedText) throws Exception {
+        String response = restClient.post()
+                .uri("https://api.openai.com/v1/responses")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + openAiApiKey)
+                .body(openAiRequestBody(extractedText))
+                .retrieve()
+                .body(String.class);
+        return parseOpenAiResponse(response, extractedText);
+    }
+
+    private ResumeAnalysisResult analyzeWithGemini(String extractedText) throws Exception {
+        String response = restClient.post()
+                .uri("https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                        geminiModel,
+                        geminiApiKey)
+                .body(geminiRequestBody(extractedText))
+                .retrieve()
+                .body(String.class);
+        return parseGeminiResponse(response, extractedText);
+    }
+
+    private Map<String, Object> openAiRequestBody(String extractedText) {
         return Map.of(
-                "model", model,
+                "model", openAiModel,
                 "input", List.of(Map.of(
                         "role", "user",
                         "content", List.of(Map.of(
@@ -75,27 +123,26 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
                                 "type", "json_schema",
                                 "name", "resume_analysis",
                                 "strict", true,
-                                "schema", schema()
+                                "schema", openAiSchema()
                         )
                 )
         );
     }
 
-    private String prompt(String extractedText) {
-        String safeText = extractedText.length() > MAX_AI_INPUT_CHARS
-                ? extractedText.substring(0, MAX_AI_INPUT_CHARS)
-                : extractedText;
-        return """
-                Analyze this resume text for an interview preparation app.
-                Return JSON only. Extract only evidence present in the resume. Do not invent technologies, roles, or seniority.
-                If the text is weak, ambiguous, or missing sections, include warnings.
-
-                Resume text:
-                %s
-                """.formatted(safeText);
+    private Map<String, Object> geminiRequestBody(String extractedText) {
+        return Map.of(
+                "contents", List.of(Map.of(
+                        "role", "user",
+                        "parts", List.of(Map.of("text", prompt(extractedText)))
+                )),
+                "generationConfig", Map.of(
+                        "responseMimeType", "application/json",
+                        "responseSchema", geminiSchema()
+                )
+        );
     }
 
-    private Map<String, Object> schema() {
+    private Map<String, Object> openAiSchema() {
         Map<String, Object> stringArray = Map.of("type", "array", "items", Map.of("type", "string"));
         return Map.of(
                 "type", "object",
@@ -121,30 +168,107 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
         );
     }
 
-    private ResumeAnalysisResult parseResponse(String response, String extractedText) throws Exception {
+    private Map<String, Object> geminiSchema() {
+        Map<String, Object> stringArray = Map.of("type", "ARRAY", "items", Map.of("type", "STRING"));
+        return Map.of(
+                "type", "OBJECT",
+                "required", List.of(
+                        "parsedResumeText",
+                        "summary",
+                        "skills",
+                        "roleSignals",
+                        "senioritySignals",
+                        "projectHighlights",
+                        "warnings"
+                ),
+                "propertyOrdering", List.of(
+                        "parsedResumeText",
+                        "summary",
+                        "skills",
+                        "roleSignals",
+                        "senioritySignals",
+                        "projectHighlights",
+                        "warnings"
+                ),
+                "properties", Map.of(
+                        "parsedResumeText", Map.of("type", "STRING"),
+                        "summary", Map.of("type", "STRING"),
+                        "skills", stringArray,
+                        "roleSignals", stringArray,
+                        "senioritySignals", stringArray,
+                        "projectHighlights", stringArray,
+                        "warnings", stringArray
+                )
+        );
+    }
+
+    private ResumeAnalysisResult parseOpenAiResponse(String response, String extractedText) throws Exception {
         JsonNode root = objectMapper.readTree(response);
         String outputText = root.path("output_text").asText(null);
 
         if (outputText == null || outputText.isBlank()) {
-            outputText = findOutputText(root);
+            outputText = findOpenAiOutputText(root);
         }
         if (outputText == null || outputText.isBlank()) {
             throw new IllegalStateException("OpenAI response did not contain output text");
         }
 
+        return parseAnalysisJson(outputText, extractedText);
+    }
+
+    private ResumeAnalysisResult parseGeminiResponse(String response, String extractedText) throws Exception {
+        JsonNode root = objectMapper.readTree(response);
+        String outputText = null;
+
+        for (JsonNode candidate : root.path("candidates")) {
+            for (JsonNode part : candidate.path("content").path("parts")) {
+                String text = part.path("text").asText(null);
+                if (text != null && !text.isBlank()) {
+                    outputText = text;
+                    break;
+                }
+            }
+            if (outputText != null) {
+                break;
+            }
+        }
+
+        if (outputText == null || outputText.isBlank()) {
+            throw new IllegalStateException("Gemini response did not contain output text");
+        }
+
+        return parseAnalysisJson(outputText, extractedText);
+    }
+
+    private ResumeAnalysisResult parseAnalysisJson(String outputText, String extractedText) throws Exception {
         JsonNode json = objectMapper.readTree(outputText);
-        return new ResumeAnalysisResult(
-                nonBlank(json.path("parsedResumeText").asText(), extractedText),
-                json.path("summary").asText(""),
+        ResumeAnalysisResult aiResult = new ResumeAnalysisResult(
+                extractedText,
+                summarize(extractedText),
                 array(json.path("skills")),
                 array(json.path("roleSignals")),
                 array(json.path("senioritySignals")),
                 array(json.path("projectHighlights")),
                 array(json.path("warnings"))
         );
+        return groundAnalysis(aiResult, extractedText);
     }
 
-    private String findOutputText(JsonNode root) {
+    private String prompt(String extractedText) {
+        String safeText = extractedText.length() > MAX_AI_INPUT_CHARS
+                ? extractedText.substring(0, MAX_AI_INPUT_CHARS)
+                : extractedText;
+        return """
+                Analyze this resume text for an interview preparation app.
+                Return JSON only. Extract only evidence present in the resume. Do not invent technologies, roles, or seniority.
+                If the text is weak, ambiguous, or missing sections, include warnings.
+
+                Resume text:
+                %s
+                """.formatted(safeText);
+    }
+
+    private String findOpenAiOutputText(JsonNode root) {
         for (JsonNode output : root.path("output")) {
             for (JsonNode content : output.path("content")) {
                 String text = content.path("text").asText(null);
@@ -168,6 +292,128 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
                 List.of(),
                 List.of(warning)
         );
+    }
+
+    private ResumeAnalysisResult groundAnalysis(ResumeAnalysisResult aiResult, String extractedText) {
+        List<String> groundedAiSkills = groundedOnly(aiResult.skills(), extractedText);
+        List<String> groundedAiRoleSignals = groundedOnly(aiResult.roleSignals(), extractedText);
+        List<String> skills = mergeDistinct(
+                groundedAiSkills,
+                inferSkills(extractedText)
+        );
+        List<String> roleSignals = mergeDistinct(
+                groundedAiRoleSignals,
+                inferRoleSignals(extractedText)
+        );
+        List<String> senioritySignals = groundedOnly(aiResult.senioritySignals(), extractedText);
+        List<String> projectHighlights = groundedOnly(aiResult.projectHighlights(), extractedText);
+        List<String> warnings = new ArrayList<>(aiResult.warnings());
+
+        int originalCount = size(aiResult.skills())
+                + size(aiResult.roleSignals())
+                + size(aiResult.senioritySignals())
+                + size(aiResult.projectHighlights());
+        int groundedCount = groundedAiSkills.size() + groundedAiRoleSignals.size() + senioritySignals.size() + projectHighlights.size();
+        if (groundedCount < originalCount) {
+            warnings.add("Some AI suggestions were removed because they were not supported by the resume text.");
+        }
+
+        return new ResumeAnalysisResult(
+                extractedText,
+                summarize(extractedText),
+                skills,
+                roleSignals,
+                senioritySignals,
+                projectHighlights,
+                warnings
+        );
+    }
+
+    private int size(List<String> values) {
+        return values == null ? 0 : values.size();
+    }
+
+    private List<String> mergeDistinct(List<String> primary, List<String> secondary) {
+        Set<String> values = new LinkedHashSet<>();
+        if (primary != null) {
+            values.addAll(primary);
+        }
+        if (secondary != null) {
+            values.addAll(secondary);
+        }
+        return new ArrayList<>(values);
+    }
+
+    private List<String> groundedOnly(List<String> values, String extractedText) {
+        if (values == null || values.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> grounded = new ArrayList<>();
+        for (String value : values) {
+            String cleanValue = value == null ? "" : value.trim();
+            if (!cleanValue.isBlank() && hasGrounding(cleanValue, extractedText)) {
+                grounded.add(cleanValue);
+            }
+        }
+        return grounded.stream().distinct().toList();
+    }
+
+    private boolean hasGrounding(String value, String extractedText) {
+        String normalizedText = normalizeForMatch(extractedText);
+        String normalizedValue = normalizeForMatch(value);
+        if (normalizedValue.length() >= 2 && normalizedText.contains(normalizedValue)) {
+            return true;
+        }
+
+        List<String> tokens = significantTokens(value);
+        if (tokens.isEmpty()) {
+            return false;
+        }
+
+        long matched = tokens.stream()
+                .filter(token -> normalizedText.contains(token))
+                .count();
+        int requiredMatches = Math.min(2, tokens.size());
+        return matched >= requiredMatches;
+    }
+
+    private String normalizeForMatch(String value) {
+        return value == null
+                ? ""
+                : value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9+#]+", "");
+    }
+
+    private List<String> significantTokens(String value) {
+        String[] rawTokens = value == null
+                ? new String[0]
+                : value.toLowerCase(Locale.ROOT).split("[^a-z0-9+#]+");
+        List<String> tokens = new ArrayList<>();
+        for (String token : rawTokens) {
+            if (token.length() >= 3 && !STOPWORDS.contains(token)) {
+                tokens.add(token);
+            }
+        }
+        return tokens;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String safeReason(Exception exception) {
+        String message = exception.getMessage();
+        if (message == null || message.isBlank()) {
+            return exception.getClass().getSimpleName();
+        }
+        return truncate(message, 180);
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength).trim() + "...";
     }
 
     private List<String> inferSkills(String text) {
