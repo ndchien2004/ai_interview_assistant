@@ -1,0 +1,102 @@
+﻿JVM là gì?|Java Virtual Machine
+JDK là gì?|Java Development Kit
+JRE là gì?|Java Runtime Environment
+Sự khác nhau giữa JDK, JRE và JVM là gì?|JDK chứa JRE và công cụ phát triển; JRE chứa JVM và thư viện chạy chương trình
+Java có độc lập nền tảng không?|Có, nhờ JVM
+Biến trong Java là gì?|Nơi lưu trữ dữ liệu
+Primitive types là gì?|Các kiểu dữ liệu nguyên thủy như int, double, boolean
+Object trong Java là gì?|Thực thể được tạo từ class
+Class là gì?|Bản thiết kế để tạo object
+Constructor là gì?|Hàm khởi tạo object
+Method là gì?|Hàm trong class
+Overloading là gì?|Nhiều method cùng tên nhưng khác tham số
+Overriding là gì?|Ghi đè method của class cha
+Tính kế thừa là gì?|Class con kế thừa thuộc tính và phương thức từ class cha
+Tính đóng gói là gì?|Ẩn dữ liệu và kiểm soát truy cập
+Tính đa hình là gì?|Một đối tượng có nhiều hình thức hoạt động
+Tính trừu tượng là gì?|Ẩn chi tiết triển khai
+Interface là gì?|Bản thiết kế chỉ chứa hành vi
+Abstract class là gì?|Class không thể khởi tạo trực tiếp
+Sự khác nhau giữa abstract class và interface?|Abstract class có thể chứa state; interface chủ yếu định nghĩa hành vi
+Static keyword là gì?|Thuộc về class thay vì object
+Final keyword là gì?|Không thể thay đổi hoặc kế thừa
+this keyword là gì?|Tham chiếu tới object hiện tại
+super keyword là gì?|Tham chiếu tới class cha
+Access modifiers là gì?|public, private, protected, default
+String là immutable nghĩa là gì?|Không thể thay đổi sau khi tạo
+StringBuilder dùng để làm gì?|Nối chuỗi hiệu quả
+Exception là gì?|Lỗi xảy ra khi chạy chương trình
+Checked exception là gì?|Exception được kiểm tra lúc compile
+Unchecked exception là gì?|Runtime exception
+try-catch dùng để làm gì?|Xử lý exception
+finally block là gì?|Khối luôn được thực thi
+throw là gì?|Ném exception
+throws là gì?|Khai báo exception có thể xảy ra
+Collection Framework là gì?|Framework quản lý tập hợp dữ liệu
+List là gì?|Collection có thứ tự và cho phép trùng lặp
+Set là gì?|Collection không cho phép trùng lặp
+Map là gì?|Lưu dữ liệu dạng key-value
+ArrayList là gì?|List sử dụng mảng động
+LinkedList là gì?|List sử dụng danh sách liên kết
+HashSet là gì?|Set sử dụng hash table
+HashMap là gì?|Map sử dụng hash table
+Sự khác nhau giữa ArrayList và LinkedList?|ArrayList truy cập nhanh; LinkedList thêm/xóa nhanh
+Sự khác nhau giữa HashMap và Hashtable?|Hashtable synchronized còn HashMap thì không
+equals() và == khác nhau thế nào?|== so sánh địa chỉ; equals() so sánh nội dung
+hashCode() dùng để làm gì?|Tạo mã băm cho object
+Thread là gì?|Luồng thực thi độc lập
+Multithreading là gì?|Chạy nhiều thread cùng lúc
+Synchronization là gì?|Đồng bộ thread
+Deadlock là gì?|Các thread chờ nhau vô hạn
+Garbage Collection là gì?|Cơ chế dọn bộ nhớ tự động
+Heap memory là gì?|Vùng nhớ lưu object
+Stack memory là gì?|Vùng nhớ lưu biến local và lời gọi hàm
+Wrapper class là gì?|Class bọc kiểu nguyên thủy
+Autoboxing là gì?|Tự động chuyển primitive sang wrapper
+Unboxing là gì?|Chuyển wrapper sang primitive
+Enum là gì?|Kiểu dữ liệu tập hợp hằng số
+Package trong Java là gì?|Nhóm các class liên quan
+Import keyword dùng để làm gì?|Import class hoặc package
+Lambda expression là gì?|Biểu thức hàm ngắn gọn
+Functional interface là gì?|Interface chỉ có một abstract method
+Stream API là gì?|API xử lý dữ liệu dạng luồng
+Optional là gì?|Container tránh NullPointerException
+NullPointerException là gì?|Lỗi truy cập object null
+Serialization là gì?|Chuyển object thành byte stream
+Deserialization là gì?|Chuyển byte stream thành object
+Comparable là gì?|Interface để sắp xếp tự nhiên
+Comparator là gì?|Interface để định nghĩa cách sắp xếp
+Annotation là gì?|Metadata cho code
+Generics là gì?|Cho phép dùng kiểu dữ liệu tổng quát
+Type casting là gì?|Ép kiểu dữ liệu
+Upcasting là gì?|Ép class con sang class cha
+Downcasting là gì?|Ép class cha sang class con
+Daemon thread là gì?|Thread chạy nền
+volatile keyword là gì?|Đảm bảo visibility giữa các thread
+synchronized keyword là gì?|Đồng bộ truy cập thread
+Inner class là gì?|Class bên trong class khác
+Anonymous class là gì?|Class không tên
+Immutable object là gì?|Object không thể thay đổi
+Reflection là gì?|Phân tích class khi runtime
+File handling là gì?|Đọc và ghi file
+BufferedReader dùng để làm gì?|Đọc dữ liệu hiệu quả
+Scanner class dùng để làm gì?|Đọc input
+TCP là gì?|Giao thức kết nối đáng tin cậy
+UDP là gì?|Giao thức không kết nối
+Socket trong Java là gì?|Cơ chế giao tiếp mạng
+JDBC là gì?|Java Database Connectivity
+PreparedStatement là gì?|Statement hỗ trợ tham số
+SQL Injection là gì?|Tấn công chèn mã SQL
+Maven là gì?|Công cụ quản lý dependency
+Gradle là gì?|Công cụ build tự động
+Unit Test là gì?|Kiểm thử đơn vị
+JUnit là gì?|Framework test cho Java
+Dependency Injection là gì?|Inject dependency từ bên ngoài
+IOC là gì?|Inversion of Control
+Spring Framework là gì?|Framework phát triển ứng dụng Java
+Spring Boot là gì?|Framework đơn giản hóa Spring
+REST API là gì?|API theo kiến trúc REST
+JSON là gì?|Định dạng trao đổi dữ liệu
+Microservices là gì?|Kiến trúc chia nhỏ dịch vụ
+Docker là gì?|Nền tảng container hóa ứng dụng
+CI/CD là gì?|Tự động build, test và deploy
