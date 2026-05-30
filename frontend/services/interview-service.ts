@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  getAuthToken,
   getCurrentUser,
   getStoredEvaluations,
   getStoredSessions,
@@ -9,12 +10,15 @@ import {
   setStoredSessions,
 } from "@/services/auth-service"
 import { sampleQuestionPrompts } from "@/services/mock-data"
+import { getResumeById } from "@/services/resume-service"
 import type {
   Answer,
   Evaluation,
   InterviewSession,
   Question,
   QuestionCategory,
+  QuestionFeedback,
+  Resume,
   SkillScore,
   TranscriptMessage,
 } from "@/types"
@@ -24,9 +28,17 @@ type CreateSessionInput = {
   targetRole: string
   seniority: InterviewSession["seniority"]
   questionCount: number
+  focusAreas?: string[]
 }
 
-const categories: QuestionCategory[] = ["technical", "experience", "behavioral", "system-design"]
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
+const canUseApi = () => Boolean(API_BASE_URL && getAuthToken()?.startsWith("ey"))
+
+const authHeaders = (): Record<string, string> => {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 const difficultyFor = (seniority: InterviewSession["seniority"]): Question["difficulty"] => {
   if (seniority === "Senior") return "senior"
@@ -34,18 +46,59 @@ const difficultyFor = (seniority: InterviewSession["seniority"]): Question["diff
   return "junior"
 }
 
-const buildQuestions = (input: CreateSessionInput): Question[] =>
-  Array.from({ length: input.questionCount }, (_, index) => ({
+const questionPlan = (count: number): QuestionCategory[] => {
+  const plan: QuestionCategory[] = ["technical", "experience", "behavioral"]
+  if (count >= 4) plan.push("system-design")
+  if (count >= 5) plan.splice(1, 0, "technical")
+  while (plan.length < count) {
+    plan.push(plan.length % 2 === 0 ? "experience" : "technical")
+  }
+  return plan.slice(0, count)
+}
+
+const buildQuestions = (input: CreateSessionInput, resume: Resume | null): Question[] => {
+  const plan = questionPlan(input.questionCount)
+  const focusAreas = input.focusAreas?.length ? input.focusAreas : resume?.skills.slice(0, 3) ?? []
+  const project = resume?.projectHighlights?.[0] ?? "your most relevant resume project"
+  const skill = focusAreas[0] ?? resume?.skills[0] ?? "a core skill"
+
+  return plan.map((category, index) => ({
     id: makeId("question"),
     prompt:
-      sampleQuestionPrompts[index % sampleQuestionPrompts.length] +
-      ` Frame your answer for a ${input.seniority.toLowerCase()} ${input.targetRole} interview.`,
-    category: categories[index % categories.length],
+      category === "experience"
+        ? `Tell me about ${project}. What was your role, what was hard, and what outcome came from it?`
+        : category === "system-design"
+          ? `Design a production-ready ${input.targetRole} feature using ${skill}. Cover API shape, UI states, persistence, and failure modes.`
+          : category === "behavioral"
+            ? `Describe a time you had to learn or debug something quickly while working toward a ${input.targetRole} goal.`
+            : `${sampleQuestionPrompts[index % sampleQuestionPrompts.length]} Frame your answer for a ${input.seniority.toLowerCase()} ${input.targetRole} interview using ${skill}.`,
+    category,
     difficulty: difficultyFor(input.seniority),
-    expectedSignals: ["clear structure", "resume evidence", "specific tradeoffs", "practical outcome"],
+    expectedSignals: [
+      "clear structure",
+      "resume evidence",
+      "specific tradeoffs",
+      "practical outcome",
+      ...focusAreas.slice(0, 2).map((item) => `evidence for ${item}`),
+    ],
   }))
+}
 
 export async function listInterviewSessions() {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews`, { headers: authHeaders() })
+      if (!response.ok) throw new Error("Unable to load interviews.")
+      return response.json() as Promise<InterviewSession[]>
+    } catch {
+      return listLocalInterviewSessions()
+    }
+  }
+
+  return listLocalInterviewSessions()
+}
+
+function listLocalInterviewSessions() {
   const user = getCurrentUser()
   const sessions = getStoredSessions()
 
@@ -54,12 +107,35 @@ export async function listInterviewSessions() {
 }
 
 export async function createInterviewSession(input: CreateSessionInput) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify(input),
+      })
+      if (!response.ok) throw new Error(await errorMessage(response, "Unable to create interview."))
+      return response.json() as Promise<InterviewSession>
+    } catch {
+      return createLocalInterviewSession(input)
+    }
+  }
+
+  return createLocalInterviewSession(input)
+}
+
+async function createLocalInterviewSession(input: CreateSessionInput) {
   const user = getCurrentUser()
 
   if (!user) {
     throw new Error("You must be signed in to create an interview.")
   }
 
+  const resume = await getResumeById(input.resumeId)
+  const focusAreas = input.focusAreas?.length ? input.focusAreas : resume?.skills.slice(0, 3) ?? []
   const session: InterviewSession = {
     id: makeId("session"),
     userId: user.id,
@@ -69,8 +145,12 @@ export async function createInterviewSession(input: CreateSessionInput) {
     questionCount: input.questionCount,
     status: "in-progress",
     createdAt: new Date().toISOString(),
-    questions: buildQuestions(input),
+    questions: buildQuestions(input, resume),
     answers: [],
+    sourceResumeSummary: resume?.summary ?? "",
+    focusAreas,
+    questionPlan: questionPlan(input.questionCount),
+    generationMode: "HYBRID",
   }
 
   setStoredSessions([session, ...getStoredSessions()])
@@ -79,10 +159,41 @@ export async function createInterviewSession(input: CreateSessionInput) {
 }
 
 export async function getInterviewSession(id: string) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${id}`, { headers: authHeaders() })
+      if (!response.ok) throw new Error("Unable to load interview.")
+      return response.json() as Promise<InterviewSession>
+    } catch {
+      return getStoredSessions().find((session) => session.id === id) ?? null
+    }
+  }
+
   return getStoredSessions().find((session) => session.id === id) ?? null
 }
 
 export async function saveInterviewAnswers(sessionId: string, answers: Answer[]) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/answers`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify({ answers }),
+      })
+      if (!response.ok) throw new Error(await errorMessage(response, "Unable to save answers."))
+      return response.json() as Promise<InterviewSession>
+    } catch {
+      return saveLocalInterviewAnswers(sessionId, answers)
+    }
+  }
+
+  return saveLocalInterviewAnswers(sessionId, answers)
+}
+
+function saveLocalInterviewAnswers(sessionId: string, answers: Answer[]) {
   const sessions = getStoredSessions()
   const nextSessions = sessions.map((session) =>
     session.id === sessionId ? { ...session, answers, status: "in-progress" as const } : session
@@ -93,6 +204,23 @@ export async function saveInterviewAnswers(sessionId: string, answers: Answer[])
 }
 
 export async function evaluateInterview(sessionId: string, answers: Answer[]) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/evaluate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify({ answers }),
+      })
+      if (!response.ok) throw new Error(await errorMessage(response, "Unable to evaluate interview."))
+      return response.json() as Promise<Evaluation>
+    } catch (caught) {
+      throw caught instanceof Error ? caught : new Error("Unable to evaluate interview.")
+    }
+  }
+
   return evaluateInterviewWithContext(sessionId, answers, {})
 }
 
@@ -105,6 +233,33 @@ export async function evaluateInterviewWithContext(
     domain?: string
   }
 ) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/evaluate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify({ answers }),
+      })
+      if (!response.ok) throw new Error(await errorMessage(response, "Unable to evaluate interview."))
+      const evaluation = (await response.json()) as Evaluation
+      return {
+        ...evaluation,
+        transcript: context.transcript,
+        skillScores: context.skills?.map((skill) => ({
+          name: skill,
+          score: evaluation.totalScore,
+          rationale: "Score generated from the saved interview answers.",
+        })),
+        interviewDomain: context.domain,
+      }
+    } catch (caught) {
+      throw caught instanceof Error ? caught : new Error("Unable to evaluate interview.")
+    }
+  }
+
   const sessions = getStoredSessions()
   const session = sessions.find((item) => item.id === sessionId)
 
@@ -132,6 +287,7 @@ export async function evaluateInterviewWithContext(
           : "Promising signal, but needs more specific examples and outcomes.",
     }
   })
+  const perQuestionFeedback = buildLocalQuestionFeedback(session, answers, totalScore)
 
   const evaluation: Evaluation = {
     id: makeId("eval"),
@@ -160,8 +316,12 @@ export async function evaluateInterviewWithContext(
     transcript: context.transcript,
     skillScores,
     interviewDomain: context.domain,
+    evaluationMode: "FALLBACK",
+    provider: "LOCAL",
+    model: "local",
+    perQuestionFeedback,
     summary:
-      "The mock evaluator sees a solid interview signal. The strongest next step is making each answer more outcome-driven and easier to scan verbally.",
+      "Fallback evaluation generated locally because the AI provider was unavailable. The strongest next step is making each answer more outcome-driven and easier to scan verbally.",
     createdAt: new Date().toISOString(),
   }
 
@@ -183,10 +343,68 @@ export async function evaluateInterviewWithContext(
   return evaluation
 }
 
+function buildLocalQuestionFeedback(
+  session: InterviewSession,
+  answers: Answer[],
+  totalScore: number
+): QuestionFeedback[] {
+  const answersByQuestionId = new Map(answers.map((answer) => [answer.questionId, answer.response]))
+  return session.questions.map((question) => {
+    const answerText = answersByQuestionId.get(question.id) ?? ""
+    const answered = answerText.trim().length > 0
+    const missingSignals = answered
+      ? question.expectedSignals.filter((signal) => !answerText.toLowerCase().includes(signal.toLowerCase())).slice(0, 4)
+      : question.expectedSignals.slice(0, 4)
+
+    return {
+      questionId: question.id,
+      questionPrompt: question.prompt,
+      answerText,
+      score: answered ? Math.max(35, Math.min(92, totalScore + Math.round(answerText.length / 80))) : 15,
+      rationale: answered
+        ? "Local fallback found a usable answer. Add sharper evidence, tradeoffs, and measurable outcomes to make it interview-ready."
+        : "No substantial answer was provided for this question.",
+      missingSignals,
+      suggestedAnswer: `Open with a direct conclusion, cite a concrete CV project, explain tradeoffs, cover ${
+        missingSignals.length ? missingSignals.join(", ") : "the expected signals"
+      }, and close with an outcome.`,
+    }
+  })
+}
+
 export async function getEvaluation(id: string) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/evaluations/${id}`, { headers: authHeaders() })
+      if (!response.ok) throw new Error("Unable to load evaluation.")
+      return response.json() as Promise<Evaluation>
+    } catch (caught) {
+      throw caught instanceof Error ? caught : new Error("Unable to load evaluation.")
+    }
+  }
+
   return getStoredEvaluations().find((evaluation) => evaluation.id === id) ?? null
 }
 
 export async function getEvaluationBySessionId(sessionId: string) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/evaluation`, { headers: authHeaders() })
+      if (!response.ok) throw new Error("Unable to load evaluation.")
+      return response.json() as Promise<Evaluation>
+    } catch (caught) {
+      throw caught instanceof Error ? caught : new Error("Unable to load evaluation.")
+    }
+  }
+
   return getStoredEvaluations().find((evaluation) => evaluation.sessionId === sessionId) ?? null
+}
+
+async function errorMessage(response: Response, fallback: string) {
+  try {
+    const json = await response.json()
+    return json.message ?? fallback
+  } catch {
+    return fallback
+  }
 }

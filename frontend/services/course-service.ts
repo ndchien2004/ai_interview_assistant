@@ -1,5 +1,6 @@
 "use client"
 
+import javaFullstackQuestionBank from "@/data/java_fullstack_cv_interview_bank.json"
 import { getAuthToken, makeId } from "@/services/auth-service"
 import type {
   Course,
@@ -12,11 +13,11 @@ import type {
   PracticeQuestion,
   QuestionDifficulty,
 } from "@/types"
-import vietnameseJavaCoreFlashcards from "@/data/java_core_interview_questions_vi.json"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const COURSE_SLUG = "java-core-interview-mastery"
-const IMPORTED_QUESTIONS_KEY = "java-core-imported-questions"
+const COURSE_SLUG = "java-fullstack-cv-interview-bank"
+const IMPORTED_QUESTIONS_KEY = "java-fullstack-imported-questions"
+const LOCAL_PROGRESS_KEY = "java-fullstack-progress"
 
 const headers = () => {
   const token = getAuthToken()
@@ -198,7 +199,7 @@ export function readMockProgress(slug: string, course: Course): CourseProgress {
 export function readLocalProgress() {
   if (typeof window === "undefined") return {}
   try {
-    return JSON.parse(window.localStorage.getItem("java-core-progress") ?? "{}") as Record<
+    return JSON.parse(window.localStorage.getItem(LOCAL_PROGRESS_KEY) ?? "{}") as Record<
       string,
       { confidence: string; answerText?: string }
     >
@@ -210,42 +211,21 @@ export function readLocalProgress() {
 export function writeLocalProgress(questionId: string, confidence: string, answerText?: string) {
   const progress = readLocalProgress()
   progress[questionId] = { confidence, answerText }
-  window.localStorage.setItem("java-core-progress", JSON.stringify(progress))
+  window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
 }
 
 function mockJavaCourse(): Course {
-  const sections: CourseSection[] = topicSeeds().map((topic, topicIndex) => ({
-    id: makeId(`section-${topic.slug}`),
-    slug: topic.slug,
-    title: topic.title,
-    description: `Practice interview questions for ${topic.title}.`,
-    sortOrder: topicIndex + 1,
-    questions: topic.prompts.map((prompt, index) => buildQuestion(topic, prompt, index)),
+  const bank = javaFullstackQuestionBank as QuestionBankSeed
+  const sections: CourseSection[] = bank.sections.map((section, sectionIndex) => ({
+    id: makeId(`section-${section.slug}`),
+    slug: section.slug,
+    title: section.title,
+    description: section.description,
+    sortOrder: section.sortOrder || sectionIndex + 1,
+    questions: section.questions.map((question, questionIndex) => buildSeedQuestion(section, question, questionIndex)),
   }))
 
-  sections.push({
-    id: "section-imported-java-core-vi",
-    slug: "imported-java-core-vi",
-    title: "Imported Java Core VI",
-    description: "Flashcards imported from the Vietnamese Java Core CSV file.",
-    sortOrder: sections.length + 1,
-    questions: vietnameseJavaCoreFlashcards.map((row, index) => ({
-      id: `imported-java-core-vi-${index + 1}`,
-      question: row.question,
-      shortAnswer: row.answer,
-      detailedAnswer: row.answer,
-      keyPoints: [row.answer],
-      commonMistakes: ["Đánh dấu đã thuộc trước khi có thể tự nhớ lại câu trả lời."],
-      difficulty: "BEGINNER",
-      topic: "Imported Java Core VI",
-      tags: ["java-core", "imported", "user-flashcard", "vietnamese"],
-      codeSnippet: null,
-      sortOrder: 101 + index,
-    })),
-  })
-
   const importedQuestions = readImportedQuestions()
-
   for (const question of importedQuestions) {
     const sectionSlug = slugify(question.topic)
     let section = sections.find((item) => item.slug === sectionSlug)
@@ -264,11 +244,10 @@ function mockJavaCourse(): Course {
   }
 
   return {
-    id: "course-java-core",
-    slug: COURSE_SLUG,
-    title: "Java Core Interview Mastery",
-    description:
-      "A structured 100-question Java Core course for interview preparation, covering syntax, OOP, collections, exceptions, generics, Java 8, streams, concurrency, JVM, and I/O.",
+    id: "course-java-fullstack-cv",
+    slug: bank.slug,
+    title: bank.title,
+    description: bank.description,
     active: true,
     questionCount: sections.reduce((total, section) => total + section.questions.length, 0),
     sections,
@@ -380,165 +359,46 @@ function slugify(value: string) {
   return slug || "imported-flashcards"
 }
 
-function buildQuestion(
-  topic: { slug: string; title: string; concepts: string[] },
-  prompt: string,
-  index: number
-): PracticeQuestion {
-  const difficulty: QuestionDifficulty = index % 5 === 4 ? "ADVANCED" : index % 2 === 1 ? "INTERMEDIATE" : "BEGINNER"
-
+function buildSeedQuestion(section: QuestionBankSectionSeed, seed: QuestionBankQuestionSeed, index: number): PracticeQuestion {
   return {
-    id: `${topic.slug}-${index + 1}`,
-    question: prompt,
-    shortAnswer: `Define the ${topic.title} concept, explain why it matters, and mention ${topic.concepts
-      .slice(0, 3)
-      .join(", ")}.`,
-    detailedAnswer: `A strong answer starts with the core definition, then explains runtime behavior, tradeoffs, and a practical example. Connect the answer to ${topic.concepts.join(
-      ", "
-    )}.`,
-    keyPoints: topic.concepts,
+    id: `${section.slug}-${index + 1}`,
+    question: seed.question,
+    shortAnswer: seed.answerGuide,
+    detailedAnswer: `${seed.answerGuide} In a strong interview answer, connect this to a CV project, mention tradeoffs, and close with a concrete production example.`,
+    keyPoints: seed.keyPoints,
     commonMistakes: [
-      "Giving only a memorized definition.",
-      "Skipping edge cases or runtime behavior.",
-      "Not comparing the concept with nearby Java alternatives.",
+      "Only giving a memorized definition without a project example.",
+      `Skipping tradeoffs, failure modes, or production constraints for ${section.title}.`,
+      "Not adjusting depth to the target role and seniority.",
     ],
-    difficulty,
-    topic: topic.title,
-    tags: ["java-core", topic.slug, difficulty.toLowerCase()],
-    codeSnippet: ["streams-and-lambdas", "multithreading-and-concurrency", "collections-framework"].includes(topic.slug)
-      ? "// Explain this snippet and its tradeoffs\n"
-      : null,
+    difficulty: seed.difficulty,
+    topic: section.title,
+    tags: seed.tags,
+    codeSnippet: seed.codeSnippet?.trim() ? seed.codeSnippet : null,
     sortOrder: index + 1,
   }
 }
 
-function topicSeeds(): Array<{ slug: string; title: string; concepts: string[]; prompts: string[] }> {
-  return [
-    topic("java-basics-and-syntax", "Java Basics and Syntax", ["primitive vs reference types", "pass-by-value", "operators", "control flow"], [
-      "Explain why Java is considered platform independent and how bytecode fits into that story.",
-      "What is the difference between primitive types and reference types in Java?",
-      "Does Java pass parameters by value or by reference? Explain with an object example.",
-      "How do final variables, final methods, and final classes differ?",
-      "What happens when integer overflow occurs in Java?",
-      "Explain static fields, static methods, and static initialization blocks.",
-      "What is the difference between == and equals for Java objects?",
-      "How does Java handle variable scope inside loops, methods, and blocks?",
-    ]),
-    topic("oop", "OOP", ["encapsulation", "inheritance", "polymorphism", "abstraction", "composition"], [
-      "Explain encapsulation and give a Java example where it improves maintainability.",
-      "What is polymorphism in Java, and how do overriding and dynamic dispatch work?",
-      "Compare abstract classes and interfaces in modern Java.",
-      "When would you prefer composition over inheritance?",
-      "Explain method overloading versus method overriding.",
-      "What is constructor chaining, and how do this() and super() work?",
-      "Why should equals and hashCode be implemented together?",
-      "What are access modifiers and how do they support API design?",
-      "Explain the Liskov Substitution Principle with a Java inheritance example.",
-      "What is an immutable class, and how would you design one?",
-      "How do nested, inner, local, and anonymous classes differ?",
-      "What are sealed classes and what problem do they solve?",
-    ]),
-    topic("string-and-wrapper-classes", "String and Wrapper Classes", ["immutability", "String pool", "equals vs ==", "autoboxing"], [
-      "Why is String immutable in Java?",
-      "Explain the String pool and when intern() is useful or risky.",
-      "Compare String, StringBuilder, and StringBuffer.",
-      "Why can == be misleading when comparing Strings?",
-      "What is autoboxing and unboxing, and where can it cause bugs?",
-      "Explain wrapper class caching for Integer and Boolean.",
-      "How do you handle null safely when working with wrapper types?",
-      "What are common performance pitfalls in repeated String concatenation?",
-    ]),
-    topic("collections-framework", "Collections Framework", ["List vs Set vs Map", "hashing", "ordering", "iteration", "complexity"], [
-      "Compare ArrayList and LinkedList for access, insertion, and memory use.",
-      "How does HashMap work internally at a high level?",
-      "Why must hashCode be stable for keys stored in HashMap?",
-      "Compare HashSet, LinkedHashSet, and TreeSet.",
-      "Compare HashMap, LinkedHashMap, TreeMap, and ConcurrentHashMap.",
-      "What is fail-fast iteration and why does ConcurrentModificationException happen?",
-      "How would you choose between List, Set, and Map for a business feature?",
-      "Explain Comparable versus Comparator.",
-      "What are the time complexities of common ArrayList and HashMap operations?",
-      "How does resizing affect HashMap performance?",
-      "What is the difference between Iterator remove and collection remove during iteration?",
-      "When should you use Collections.unmodifiableList or List.copyOf?",
-      "Explain Queue, Deque, and PriorityQueue use cases.",
-      "How do equals and hashCode affect Set uniqueness?",
-    ]),
-    topic("exceptions", "Exceptions", ["checked exceptions", "unchecked exceptions", "try-with-resources", "custom exceptions"], [
-      "Compare checked and unchecked exceptions.",
-      "When should you create a custom exception?",
-      "How does try-with-resources work?",
-      "What is exception chaining and why is it useful?",
-      "Why is catching Exception or Throwable usually a smell?",
-      "How should a service layer translate low-level exceptions?",
-      "What happens when finally returns or throws an exception?",
-    ]),
-    topic("generics", "Generics", ["type safety", "wildcards", "type erasure", "bounded types"], [
-      "What problem do generics solve in Java?",
-      "Explain type erasure and one limitation it creates.",
-      "What is the difference between List<? extends Number> and List<? super Integer>?",
-      "What are bounded type parameters?",
-      "Why cannot you create a generic array directly?",
-      "How do raw types break type safety?",
-      "Explain PECS: producer extends, consumer super.",
-    ]),
-    topic("java-8-features", "Java 8 Features", ["default methods", "Optional", "functional interfaces", "method references"], [
-      "What is a functional interface?",
-      "Compare lambda expressions and anonymous classes.",
-      "What are method references and when do they improve readability?",
-      "How should Optional be used, and how should it not be used?",
-      "What are default methods in interfaces?",
-      "Explain java.time improvements over Date and Calendar.",
-      "How do Predicate, Function, Consumer, and Supplier differ?",
-      "What is the difference between map and flatMap?",
-      "How can default methods create multiple inheritance conflicts?",
-      "Explain effectively final variables in lambdas.",
-      "When should Optional not be used as a field or parameter?",
-      "What changed in interfaces after Java 8?",
-    ]),
-    topic("streams-and-lambdas", "Streams and Lambdas", ["lazy evaluation", "intermediate operations", "terminal operations", "parallel streams"], [
-      "Explain intermediate and terminal stream operations.",
-      "Why are streams lazy?",
-      "Compare map, filter, reduce, and collect.",
-      "When can parallel streams hurt performance?",
-      "How do you debug a stream pipeline?",
-      "What is the difference between findFirst and findAny?",
-      "How do collectors like groupingBy and partitioningBy work?",
-      "What side effects should be avoided inside stream operations?",
-    ]),
-    topic("multithreading-and-concurrency", "Multithreading and Concurrency", ["thread lifecycle", "synchronization", "volatile", "locks", "executors"], [
-      "Explain the Java thread lifecycle.",
-      "Compare synchronized methods and synchronized blocks.",
-      "What does volatile guarantee and what does it not guarantee?",
-      "Compare Runnable, Callable, Future, and CompletableFuture.",
-      "What is a race condition and how can it be prevented?",
-      "Explain deadlock and how to reduce the risk.",
-      "When would you use ReentrantLock instead of synchronized?",
-      "What is the ExecutorService and why is it preferred over manual threads?",
-      "Explain thread-safe collections in Java.",
-      "What are atomic classes and CAS?",
-      "How does wait/notify differ from sleep?",
-      "What is the difference between concurrency and parallelism?",
-    ]),
-    topic("jvm-memory-gc", "JVM, Memory, GC", ["heap", "stack", "metaspace", "GC roots", "garbage collectors"], [
-      "Explain heap, stack, and metaspace.",
-      "How does garbage collection decide an object is unreachable?",
-      "What are GC roots?",
-      "What can cause a memory leak in Java despite garbage collection?",
-      "Compare minor GC and major/full GC conceptually.",
-      "How would you investigate OutOfMemoryError?",
-      "What is the difference between stack overflow and heap exhaustion?",
-      "How do strong, soft, weak, and phantom references differ?",
-    ]),
-    topic("io-serialization-date-time", "I/O, Serialization, Date/Time", ["streams", "serialization", "NIO", "java.time"], [
-      "Compare byte streams and character streams.",
-      "What is Java serialization and why can it be risky?",
-      "How does NIO differ from classic IO?",
-      "Why is java.time preferred over Date and Calendar?",
-    ]),
-  ]
+type QuestionBankSeed = {
+  slug: string
+  title: string
+  description: string
+  sections: QuestionBankSectionSeed[]
 }
 
-function topic(slug: string, title: string, concepts: string[], prompts: string[]) {
-  return { slug, title, concepts, prompts }
+type QuestionBankSectionSeed = {
+  slug: string
+  title: string
+  description: string
+  sortOrder: number
+  questions: QuestionBankQuestionSeed[]
+}
+
+type QuestionBankQuestionSeed = {
+  question: string
+  difficulty: QuestionDifficulty
+  answerGuide: string
+  keyPoints: string[]
+  tags: string[]
+  codeSnippet?: string
 }

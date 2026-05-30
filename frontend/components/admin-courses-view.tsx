@@ -29,8 +29,8 @@ const emptyDraft: Draft = {
   shortAnswer: "",
   detailedAnswer: "",
   difficulty: "INTERMEDIATE",
-  topic: "Java Basics and Syntax",
-  tags: "java-core",
+  topic: "Java Core Foundations",
+  tags: "java, cv-bank",
 }
 
 export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }) {
@@ -190,7 +190,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/courses/java-core">
               <ArrowLeft className="size-4" />
-              Java Core
+              Java + Full-stack
             </Link>
           </Button>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">
@@ -201,7 +201,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
           </p>
         </div>
         <Button asChild>
-          <Link href="/admin/courses/course-java-core">Open Course Detail</Link>
+          <Link href="/admin/courses/course-java-fullstack-cv">Open Course Detail</Link>
         </Button>
       </div>
 

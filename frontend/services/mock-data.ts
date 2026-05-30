@@ -100,6 +100,35 @@ export const demoEvaluations: Evaluation[] = [
       "Practice explaining JWT expiry and refresh-token flows.",
       "Add concrete numbers when describing project impact.",
     ],
+    evaluationMode: "FALLBACK",
+    provider: "LOCAL",
+    model: "local",
+    perQuestionFeedback: [
+      {
+        questionId: "q-architecture",
+        questionPrompt:
+          "Walk me through how you would design the frontend-to-backend flow for a resume upload and AI question generation feature.",
+        answerText:
+          "I would validate PDF files on the frontend, send multipart form data to the backend, parse text there, persist resume metadata, then call an endpoint that creates a session and returns structured questions.",
+        score: 84,
+        rationale: "Clear end-to-end flow with API and persistence awareness. It would be stronger with queueing, retry, and observability details.",
+        missingSignals: ["async state", "error handling"],
+        suggestedAnswer:
+          "Start with the user flow, define upload validation and API boundaries, persist resume/session state, handle async parsing and retries, then close with monitoring and failure states.",
+      },
+      {
+        questionId: "q-auth",
+        questionPrompt:
+          "How would you protect authenticated dashboard routes in a Next.js app that talks to a Spring Boot API?",
+        answerText:
+          "I would store a JWT after login, attach it to API requests, redirect unauthenticated users, and handle 401 responses by clearing the session.",
+        score: 78,
+        rationale: "Covers the core JWT route-protection path, but needs expiry, refresh, storage tradeoffs, and backend authorization checks.",
+        missingSignals: ["token expiry", "API interceptor"],
+        suggestedAnswer:
+          "Mention route guards, secure token storage tradeoffs, request interceptors, 401 handling, expiry/refresh behavior, and backend role checks.",
+      },
+    ],
     summary:
       "Strong junior full-stack signal with practical architecture instincts. The next improvement is making answers more concise and evidence-driven.",
     createdAt: "2026-05-22T14:29:00.000Z",

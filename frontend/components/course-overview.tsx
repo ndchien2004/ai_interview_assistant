@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { getCourse, getCourseProgress } from "@/services/course-service"
 import type { Course, CourseProgress } from "@/types"
 
-const courseSlug = "java-core-interview-mastery"
+const courseSlug = "java-fullstack-cv-interview-bank"
 
 export function CourseOverview() {
   const [course, setCourse] = useState<Course | null>(null)
@@ -26,7 +26,7 @@ export function CourseOverview() {
         setProgress(progressData)
       })
       .catch(() => {
-        if (active) setError("Unable to load the Java Core course.")
+        if (active) setError("Unable to load the Java + full-stack course.")
       })
 
     return () => {
@@ -52,7 +52,7 @@ export function CourseOverview() {
   }
 
   if (!course || !progress) {
-    return <StateBlock title="Loading Java Core" description="Preparing questions and progress data..." />
+    return <StateBlock title="Loading question bank" description="Preparing questions and progress data..." />
   }
 
   return (
@@ -139,7 +139,7 @@ export function CourseOverview() {
                 <div>
                   <p className="text-sm font-medium">{topic.topic}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Focus here to raise your Java Core coverage.
+                    Focus here to raise your interview coverage.
                   </p>
                 </div>
                 <span className="text-sm text-muted-foreground">

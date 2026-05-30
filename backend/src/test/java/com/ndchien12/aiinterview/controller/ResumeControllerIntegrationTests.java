@@ -2,6 +2,9 @@ package com.ndchien12.aiinterview.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ndchien12.aiinterview.entity.Role;
+import com.ndchien12.aiinterview.entity.User;
+import com.ndchien12.aiinterview.repository.UserRepository;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -13,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -36,6 +40,12 @@ class ResumeControllerIntegrationTests {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Test
     void authenticatedUserCanUploadReadUpdateAndDeleteResume() throws Exception {
@@ -161,16 +171,26 @@ class ResumeControllerIntegrationTests {
     }
 
     private String registerUserAndToken() throws Exception {
-        MvcResult result = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/auth/register")
+        String email = uniqueEmail();
+        String password = "Password123!";
+
+        User user = new User();
+        user.setName("Resume User");
+        user.setEmail(email);
+        user.setHeadline("Resume user");
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setRole(Role.USER);
+        userRepository.save(user);
+
+        MvcResult result = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "name": "Resume User",
                                   "email": "%s",
-                                  "password": "password123"
+                                  "password": "%s"
                                 }
-                                """.formatted(uniqueEmail())))
-                .andExpect(status().isCreated())
+                                """.formatted(email, password)))
+                .andExpect(status().isOk())
                 .andReturn();
 
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());

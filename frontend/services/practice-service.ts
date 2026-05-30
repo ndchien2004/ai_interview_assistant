@@ -11,7 +11,8 @@ import type {
 } from "@/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const COURSE_SLUG = "java-core-interview-mastery"
+const COURSE_SLUG = "java-fullstack-cv-interview-bank"
+const LOCAL_SESSIONS_KEY = "java-fullstack-sessions"
 
 const headers = () => {
   const token = getAuthToken()
@@ -198,7 +199,7 @@ function selectNextLocalFlashcardQuestion(questions: PracticeQuestion[], exclude
 function readLocalSessions() {
   if (typeof window === "undefined") return []
   try {
-    return JSON.parse(window.localStorage.getItem("java-core-sessions") ?? "[]") as PracticeSession[]
+    return JSON.parse(window.localStorage.getItem(LOCAL_SESSIONS_KEY) ?? "[]") as PracticeSession[]
   } catch {
     return []
   }
@@ -208,5 +209,5 @@ function writeLocalSession(session: PracticeSession) {
   if (typeof window === "undefined") return
   const sessions = readLocalSessions()
   const nextSessions = [session, ...sessions.filter((item) => item.id !== session.id)].slice(0, 20)
-  window.localStorage.setItem("java-core-sessions", JSON.stringify(nextSessions))
+  window.localStorage.setItem(LOCAL_SESSIONS_KEY, JSON.stringify(nextSessions))
 }

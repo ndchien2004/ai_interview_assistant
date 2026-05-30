@@ -45,7 +45,7 @@ export function JavaCoreFlashcardsView() {
       status: statusFilter,
     }
 
-    Promise.all([getCourse(), getCourseProgress(), createFlashcardSession("java-core-interview-mastery", filters)])
+    Promise.all([getCourse(), getCourseProgress(), createFlashcardSession("java-fullstack-cv-interview-bank", filters)])
       .then(([courseData, progressData, sessionData]) => {
         if (!active) return
         setCourse(courseData)
@@ -145,7 +145,7 @@ export function JavaCoreFlashcardsView() {
   }
 
   if (!course || !progress || !session) {
-    return <StateBlock title="Loading flashcards" description="Building your Java Core study deck..." />
+    return <StateBlock title="Loading flashcards" description="Building your Java + full-stack study deck..." />
   }
 
   if (!question && statusFilter === "ALL" && remaining === 0) {
@@ -154,7 +154,7 @@ export function JavaCoreFlashcardsView() {
         <BackHeader />
         <StateBlock
           title="All cards mastered"
-          description="Every Java Core flashcard is marked as known. Nice work - your deck is fully green."
+          description="Every flashcard in this bank is marked as known. Nice work - your deck is fully green."
         />
         <div className="flex flex-wrap gap-2">
           <Button asChild>
@@ -364,7 +364,7 @@ function BackHeader() {
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/courses/java-core">
             <ArrowLeft className="size-4" />
-            Java Core
+            Java + Full-stack
           </Link>
         </Button>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight">Flashcard Study</h1>

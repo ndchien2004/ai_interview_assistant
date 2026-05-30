@@ -3,7 +3,10 @@ package com.ndchien12.aiinterview.controller;
 import com.ndchien12.aiinterview.dto.auth.AuthResponse;
 import com.ndchien12.aiinterview.dto.auth.GoogleAuthRequest;
 import com.ndchien12.aiinterview.dto.auth.LoginRequest;
+import com.ndchien12.aiinterview.dto.auth.OtpChallengeResponse;
 import com.ndchien12.aiinterview.dto.auth.RegisterRequest;
+import com.ndchien12.aiinterview.dto.auth.ResendOtpRequest;
+import com.ndchien12.aiinterview.dto.auth.VerifyRegistrationRequest;
 import com.ndchien12.aiinterview.dto.user.UserResponse;
 import com.ndchien12.aiinterview.service.AuthService;
 import jakarta.validation.Valid;
@@ -27,8 +30,18 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+    public OtpChallengeResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/register/verify")
+    public AuthResponse verifyRegistration(@Valid @RequestBody VerifyRegistrationRequest request) {
+        return authService.verifyRegistration(request);
+    }
+
+    @PostMapping("/register/resend-otp")
+    public OtpChallengeResponse resendRegistrationOtp(@Valid @RequestBody ResendOtpRequest request) {
+        return authService.resendRegistrationOtp(request);
     }
 
     @PostMapping("/login")

@@ -68,7 +68,7 @@ export function JavaCorePracticeView() {
   }
 
   if (!session) {
-    return <StateBlock title="Starting practice" description="Selecting unseen and weak Java Core questions..." />
+    return <StateBlock title="Starting practice" description="Selecting unseen and weak questions..." />
   }
 
   if (!question) {
@@ -104,7 +104,7 @@ export function JavaCorePracticeView() {
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/courses/java-core">
               <ArrowLeft className="size-4" />
-              Java Core
+              Java + Full-stack
             </Link>
           </Button>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">Flashcard Practice</h1>

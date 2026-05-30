@@ -18,7 +18,7 @@ const examples = [
 ]
 
 export function CourseImportView() {
-  const [topic, setTopic] = useState("Imported Java Core")
+  const [topic, setTopic] = useState("Imported Java Full-stack")
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>("BEGINNER")
   const [delimiterMode, setDelimiterMode] = useState<ImportDelimiterMode>("AUTO")
   const [content, setContent] = useState("")
@@ -47,7 +47,7 @@ export function CourseImportView() {
     setImporting(true)
 
     try {
-      const result = await importCourseQuestions("java-core-interview-mastery", {
+      const result = await importCourseQuestions("java-fullstack-cv-interview-bank", {
         topic,
         difficulty,
         delimiterMode,
@@ -69,7 +69,7 @@ export function CourseImportView() {
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/courses/java-core">
               <ArrowLeft className="size-4" />
-              Java Core
+              Java + Full-stack
             </Link>
           </Button>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">Import Flashcards</h1>

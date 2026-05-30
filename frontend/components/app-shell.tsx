@@ -30,7 +30,7 @@ const navItems = [
   { href: "/upload", label: "Resume", icon: FileText },
   { href: "/interviews/new", label: "New interview", icon: Sparkles },
   { href: "/interviews/live", label: "Live interview", icon: Mic2 },
-  { href: "/courses/java-core", label: "Java Core", icon: BookOpen },
+  { href: "/courses/java-core", label: "Java + Full-stack", icon: BookOpen },
   { href: "/history", label: "History", icon: History },
 ]
 

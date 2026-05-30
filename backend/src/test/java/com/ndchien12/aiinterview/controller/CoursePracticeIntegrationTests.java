@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class CoursePracticeIntegrationTests {
 
-    private static final String JAVA_CORE_SLUG = "java-core-interview-mastery";
+    private static final String QUESTION_BANK_SLUG = "java-fullstack-cv-interview-bank";
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,15 +54,15 @@ class CoursePracticeIntegrationTests {
     private PasswordEncoder passwordEncoder;
 
     @Test
-    void javaCoreCourseSeedCreatesBaseAndImportedQuestions() {
-        Course course = courseRepository.findBySlug(JAVA_CORE_SLUG).orElseThrow();
+    void javaFullstackQuestionBankSeedCreatesQuestions() {
+        Course course = courseRepository.findBySlug(QUESTION_BANK_SLUG).orElseThrow();
 
-        assertThat(course.getTitle()).isEqualTo("Java Core Interview Mastery");
-        assertThat(practiceQuestionRepository.countByCourseAndActiveTrue(course)).isEqualTo(202);
+        assertThat(course.getTitle()).isEqualTo("Java + Full-stack CV Interview Bank");
+        assertThat(practiceQuestionRepository.countByCourseAndActiveTrue(course)).isEqualTo(100);
         assertThat(practiceQuestionRepository.findByCourseAndTopicAndActiveTrueOrderBySortOrderAsc(
                 course,
-                "Imported Java Core VI"
-        )).hasSize(102);
+                "Spring Boot, REST, and Security"
+        )).hasSize(10);
     }
 
     @Test
@@ -77,24 +77,24 @@ class CoursePracticeIntegrationTests {
         JsonNode coursesJson = objectMapper.readTree(coursesResult.getResponse().getContentAsString());
         boolean hasJavaCoreCourse = false;
         for (JsonNode courseJson : coursesJson) {
-            if (JAVA_CORE_SLUG.equals(courseJson.get("slug").asText())
-                    && courseJson.get("questionCount").asInt() == 202) {
+            if (QUESTION_BANK_SLUG.equals(courseJson.get("slug").asText())
+                    && courseJson.get("questionCount").asInt() == 100) {
                 hasJavaCoreCourse = true;
                 break;
             }
         }
         assertThat(hasJavaCoreCourse).isTrue();
 
-        mockMvc.perform(get("/api/courses/{slug}", JAVA_CORE_SLUG)
-                        .header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/courses/{slug}", QUESTION_BANK_SLUG)
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sections.length()").value(12))
-                .andExpect(jsonPath("$.questionCount").value(202));
+                .andExpect(jsonPath("$.sections.length()").value(10))
+                .andExpect(jsonPath("$.questionCount").value(100));
 
-        mockMvc.perform(get("/api/courses/{slug}/progress", JAVA_CORE_SLUG)
-                        .header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/courses/{slug}/progress", QUESTION_BANK_SLUG)
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalQuestions").value(202))
+                .andExpect(jsonPath("$.totalQuestions").value(100))
                 .andExpect(jsonPath("$.attemptedQuestions").value(0));
     }
 
@@ -109,7 +109,7 @@ class CoursePracticeIntegrationTests {
                                 {
                                   "courseSlug": "%s"
                                 }
-                                """.formatted(JAVA_CORE_SLUG)))
+                                """.formatted(QUESTION_BANK_SLUG)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
                 .andExpect(jsonPath("$.nextQuestion.id").isNotEmpty())
@@ -132,7 +132,7 @@ class CoursePracticeIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.attempts.length()").value(1));
 
-        mockMvc.perform(get("/api/courses/{slug}/progress", JAVA_CORE_SLUG)
+        mockMvc.perform(get("/api/courses/{slug}/progress", QUESTION_BANK_SLUG)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.attemptedQuestions").value(1));
@@ -150,7 +150,7 @@ class CoursePracticeIntegrationTests {
                                   "courseSlug": "%s",
                                   "mode": "FLASHCARD"
                                 }
-                                """.formatted(JAVA_CORE_SLUG)))
+                                """.formatted(QUESTION_BANK_SLUG)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.mode").value("FLASHCARD"))
                 .andExpect(jsonPath("$.nextQuestion.id").isNotEmpty())
@@ -172,7 +172,7 @@ class CoursePracticeIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("FLASHCARD"));
 
-        mockMvc.perform(get("/api/courses/{slug}/progress", JAVA_CORE_SLUG)
+        mockMvc.perform(get("/api/courses/{slug}/progress", QUESTION_BANK_SLUG)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.attemptedQuestions").value(1))
@@ -261,7 +261,7 @@ class CoursePracticeIntegrationTests {
     @Test
     void flashcardSessionCompletesWhenEveryQuestionIsMastered() throws Exception {
         String token = registerUserAndToken();
-        Course course = courseRepository.findBySlug(JAVA_CORE_SLUG).orElseThrow();
+        Course course = courseRepository.findBySlug(QUESTION_BANK_SLUG).orElseThrow();
         int totalQuestions = Math.toIntExact(practiceQuestionRepository.countByCourseAndActiveTrue(course));
 
         MvcResult sessionResult = mockMvc.perform(post("/api/practice-sessions")
@@ -272,7 +272,7 @@ class CoursePracticeIntegrationTests {
                                   "courseSlug": "%s",
                                   "mode": "FLASHCARD"
                                 }
-                                """.formatted(JAVA_CORE_SLUG)))
+                                """.formatted(QUESTION_BANK_SLUG)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -300,7 +300,7 @@ class CoursePracticeIntegrationTests {
         assertThat(sessionJson.get("nextQuestion").isNull()).isTrue();
         assertThat(sessionJson.get("status").asText()).isEqualTo("COMPLETED");
 
-        mockMvc.perform(get("/api/courses/{slug}/progress", JAVA_CORE_SLUG)
+        mockMvc.perform(get("/api/courses/{slug}/progress", QUESTION_BANK_SLUG)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.masteredQuestions").value(totalQuestions))
@@ -315,11 +315,11 @@ class CoursePracticeIntegrationTests {
                                 {
                                   "courseSlug": "%s"
                                 }
-                                """.formatted(JAVA_CORE_SLUG)))
+                                """.formatted(QUESTION_BANK_SLUG)))
                 .andExpect(status().isUnauthorized());
 
         String userToken = registerUserAndToken();
-        Course course = courseRepository.findBySlug(JAVA_CORE_SLUG).orElseThrow();
+        Course course = courseRepository.findBySlug(QUESTION_BANK_SLUG).orElseThrow();
 
         mockMvc.perform(post("/api/admin/courses")
                         .header("Authorization", "Bearer " + userToken)
@@ -339,7 +339,7 @@ class CoursePracticeIntegrationTests {
     void adminCanCreateUpdateAndDeleteQuestion() throws Exception {
         String adminToken = createAdminAndToken();
 
-        MvcResult courseResult = mockMvc.perform(get("/api/courses/{slug}", JAVA_CORE_SLUG)
+        MvcResult courseResult = mockMvc.perform(get("/api/courses/{slug}", QUESTION_BANK_SLUG)
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -381,8 +381,8 @@ class CoursePracticeIntegrationTests {
                   "keyPoints": ["immutable data", "generated methods"],
                   "commonMistakes": ["Treating records as mutable entities"],
                   "difficulty": "%s",
-                  "topic": "Java Basics and Syntax",
-                  "tags": ["java-core", "records"],
+                  "topic": "Java Core Foundations",
+                  "tags": ["java", "records"],
                   "codeSnippet": "record UserDto(String name) {}",
                   "active": true,
                   "sortOrder": 101
@@ -401,17 +401,25 @@ class CoursePracticeIntegrationTests {
 
     private String registerUserAndToken() throws Exception {
         String email = "user-%s@example.com".formatted(UUID.randomUUID());
+        String password = "Password123!";
 
-        MvcResult result = mockMvc.perform(post("/api/auth/register")
+        User user = new User();
+        user.setName("Course User");
+        user.setEmail(email);
+        user.setHeadline("Course user");
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setRole(Role.USER);
+        userRepository.save(user);
+
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "name": "Course User",
                                   "email": "%s",
-                                  "password": "password123"
+                                  "password": "%s"
                                 }
-                                """.formatted(email)))
-                .andExpect(status().isCreated())
+                                """.formatted(email, password)))
+                .andExpect(status().isOk())
                 .andReturn();
 
         return tokenFrom(result);
@@ -419,7 +427,7 @@ class CoursePracticeIntegrationTests {
 
     private String createAdminAndToken() throws Exception {
         String email = "admin-%s@example.com".formatted(UUID.randomUUID());
-        String password = "password123";
+        String password = "Password123!";
 
         User user = new User();
         user.setName("Admin User");

@@ -17,24 +17,30 @@ type ResultViewProps = {
 export function ResultView({ evaluationId }: ResultViewProps) {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    getEvaluation(evaluationId).then((data) => {
-      setEvaluation(data)
-      setLoading(false)
-    })
+    getEvaluation(evaluationId)
+      .then((data) => {
+        setEvaluation(data)
+        setLoading(false)
+      })
+      .catch((caught) => {
+        setError(caught instanceof Error ? caught.message : "Unable to load evaluation.")
+        setLoading(false)
+      })
   }, [evaluationId])
 
   if (loading) {
     return <StateBlock title="Loading result" description="Preparing your evaluation summary." />
   }
 
-  if (!evaluation) {
+  if (error || !evaluation) {
     return (
       <StateBlock
         tone="error"
         title="Result not found"
-        description="This evaluation may have been removed from local mock storage."
+        description={error || "This evaluation may have been removed or belongs to another account."}
       />
     )
   }
@@ -45,7 +51,7 @@ export function ResultView({ evaluationId }: ResultViewProps) {
         <div>
           <h1 className="text-3xl font-semibold tracking-normal">Evaluation result</h1>
           <p className="mt-2 text-muted-foreground">
-            A structured mock evaluation for portfolio development and frontend flow testing.
+            A structured interview scorecard generated from your saved answers.
           </p>
         </div>
         <div className="flex gap-2">

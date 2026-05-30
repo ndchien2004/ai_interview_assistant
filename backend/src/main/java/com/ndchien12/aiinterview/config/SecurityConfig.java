@@ -63,7 +63,14 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google", "/api/health").permitAll()
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/register/verify",
+                                "/api/auth/register/resend-otp",
+                                "/api/auth/login",
+                                "/api/auth/google",
+                                "/api/health"
+                        ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

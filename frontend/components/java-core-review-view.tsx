@@ -77,12 +77,12 @@ export function JavaCoreReviewView() {
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/courses/java-core">
               <ArrowLeft className="size-4" />
-              Java Core
+              Java + Full-stack
             </Link>
           </Button>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">Review Weak Topics</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Filter Java Core questions by topic, difficulty, and confidence status.
+            Filter questions by topic, difficulty, and confidence status.
           </p>
         </div>
         <Button asChild>

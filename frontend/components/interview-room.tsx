@@ -66,10 +66,16 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     setError("")
 
     try {
-      await saveInterviewAnswers(session.id, answers)
+      const savedSession = await saveInterviewAnswers(session.id, answers)
+      if (!savedSession) {
+        throw new Error("Interview session was not found.")
+      }
+
+      setSession(savedSession)
+      setAnswers(savedSession.answers ?? answers)
+      router.push("/history")
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save answers.")
-    } finally {
       setSaving(false)
     }
   }
@@ -109,13 +115,12 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
           <Badge className="mb-3 bg-emerald-50 text-emerald-800">{session.seniority}</Badge>
           <h1 className="text-3xl font-semibold tracking-normal">{session.targetRole} interview</h1>
           <p className="mt-2 text-muted-foreground">
-            Answer each question as if speaking to an interviewer. Save a draft or submit for mock
-            evaluation.
+            Answer each question as if speaking to an interviewer. Save a draft or submit for evaluation.
           </p>
         </div>
         <Button variant="outline" onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          Save draft
+          {saving ? "Saving draft..." : "Save draft"}
         </Button>
       </div>
 

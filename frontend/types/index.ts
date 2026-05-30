@@ -57,6 +57,19 @@ export type SkillScore = {
   rationale: string
 }
 
+export type EvaluationMode = "AI" | "FALLBACK"
+export type EvaluationProvider = "OPENAI" | "GEMINI" | "LOCAL"
+
+export type QuestionFeedback = {
+  questionId: string
+  questionPrompt: string
+  answerText: string
+  score: number
+  rationale: string
+  missingSignals: string[]
+  suggestedAnswer: string
+}
+
 export type InterviewStatus = "draft" | "in-progress" | "completed"
 
 export type InterviewSession = {
@@ -72,6 +85,10 @@ export type InterviewSession = {
   questions: Question[]
   answers: Answer[]
   evaluationId?: string
+  sourceResumeSummary?: string
+  focusAreas?: string[]
+  questionPlan?: QuestionCategory[]
+  generationMode?: "HYBRID" | "AI" | "BANK"
 }
 
 export type Evaluation = {
@@ -87,6 +104,10 @@ export type Evaluation = {
   strengths: string[]
   weaknesses: string[]
   improvementRoadmap: string[]
+  evaluationMode: EvaluationMode
+  provider: EvaluationProvider
+  model: string
+  perQuestionFeedback: QuestionFeedback[]
   transcript?: TranscriptMessage[]
   skillScores?: SkillScore[]
   interviewDomain?: string
