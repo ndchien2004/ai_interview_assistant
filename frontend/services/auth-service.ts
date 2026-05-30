@@ -142,6 +142,16 @@ export async function register(name: string, email: string, password: string) {
   return { token, user }
 }
 
+export async function loginWithGoogle(idToken: string) {
+  if (!canUseApi()) {
+    throw new Error("Backend API URL is required for Google sign-in.")
+  }
+
+  return apiAuth("/api/auth/google", {
+    idToken,
+  })
+}
+
 export function getCurrentUser() {
   const token = canUseStorage() ? window.localStorage.getItem(TOKEN_KEY) : null
   if (!token) return null

@@ -8,6 +8,7 @@ out
 target
 *.class
 *.jar
+*.log
 
 # IntelliJ
 .idea

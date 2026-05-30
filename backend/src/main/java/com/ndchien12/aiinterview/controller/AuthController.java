@@ -1,6 +1,7 @@
 package com.ndchien12.aiinterview.controller;
 
 import com.ndchien12.aiinterview.dto.auth.AuthResponse;
+import com.ndchien12.aiinterview.dto.auth.GoogleAuthRequest;
 import com.ndchien12.aiinterview.dto.auth.LoginRequest;
 import com.ndchien12.aiinterview.dto.auth.RegisterRequest;
 import com.ndchien12.aiinterview.dto.user.UserResponse;
@@ -33,6 +34,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/google")
+    public AuthResponse google(@Valid @RequestBody GoogleAuthRequest request) {
+        return authService.loginWithGoogle(request);
     }
 
     @GetMapping("/me")

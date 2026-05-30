@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -108,7 +109,7 @@ public class ResumeService {
         resume.setSenioritySignals(cleanList(request.senioritySignals()));
         resume.setProjectHighlights(cleanList(request.projectHighlights()));
         resume.setWarnings(cleanList(request.warnings()));
-        resume.setStatus(resume.getParsedText().length() < 80 ? ResumeStatus.NEEDS_REVIEW : ResumeStatus.READY);
+        resume.setStatus(toPlainText(resume.getParsedText()).length() < 80 ? ResumeStatus.NEEDS_REVIEW : ResumeStatus.READY);
         resume.setParseError(null);
 
         return ResumeResponse.from(resumeRepository.save(resume));
@@ -138,8 +139,28 @@ public class ResumeService {
 
     private String extractText(MultipartFile file) throws IOException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            return new PDFTextStripper().getText(document).replaceAll("\\s+", " ").trim();
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            return cleanExtractedText(stripper.getText(document));
         }
+    }
+
+    private String cleanExtractedText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFC)
+                .replace('\u00A0', ' ')
+                .replace("\uFFFD", "")
+                .replaceAll("\\r\\n?", "\n")
+                .replaceAll("[\\t\\x0B\\f]+", " ")
+                .replaceAll("(?m)[ \\u200B\\u200C\\u200D]+$", "")
+                .replaceAll("(?m)^\\s+", "")
+                .replaceAll("-\\n(?=\\p{L})", "")
+                .replaceAll("\\n{3,}", "\n\n");
+
+        return normalized.trim();
     }
 
     private void applyAnalysis(Resume resume, ResumeAnalysisResult analysis) {
@@ -175,6 +196,24 @@ public class ResumeService {
 
     private String safeString(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String toPlainText(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value
+                .replaceAll("(?i)<br\\s*/?>", "\n")
+                .replaceAll("(?i)</(p|div|li|h[1-6])>", "\n")
+                .replaceAll("<[^>]*>", "")
+                .replace("&nbsp;", " ")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#039;", "'")
+                .trim();
     }
 
     private List<String> cleanList(List<String> values) {

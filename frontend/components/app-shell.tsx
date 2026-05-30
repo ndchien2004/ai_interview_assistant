@@ -14,7 +14,9 @@ import {
   LogOut,
   Menu,
   Mic2,
+  Moon,
   Sparkles,
+  Sun,
   X,
 } from "lucide-react"
 
@@ -33,6 +35,9 @@ const navItems = [
 ]
 
 const SIDEBAR_COLLAPSED_KEY = "ai-interview-sidebar-collapsed"
+const THEME_KEY = "ai-interview-theme"
+const THEME_CHANGE_EVENT = "ai-interview-theme-change"
+type Theme = "light" | "dark"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -41,6 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [theme, setTheme] = useState<Theme>("light")
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -53,11 +59,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       setUser(currentUser)
       setSidebarCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true")
+      setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light")
       setReady(true)
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
   }, [router])
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light")
+    }
+
+    syncTheme()
+    window.addEventListener(THEME_CHANGE_EVENT, syncTheme)
+    return () => window.removeEventListener(THEME_CHANGE_EVENT, syncTheme)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -70,6 +87,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next))
       return next
     })
+  }
+
+  const toggleTheme = () => {
+    const next: Theme = document.documentElement.classList.contains("dark") ? "light" : "dark"
+    applyAppTheme(next)
   }
 
   if (!ready || !user) {
@@ -87,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-48 border-r border-border/80 bg-background px-4 py-5 transition-all duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-48 border-r border-border/80 bg-sidebar px-4 py-5 text-sidebar-foreground transition-all duration-200 lg:translate-x-0",
           menuOpen ? "translate-x-0" : "-translate-x-full",
           sidebarCollapsed && "lg:w-20 lg:px-3"
         )}
@@ -103,7 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className={cn("flex items-center gap-2 font-semibold", sidebarCollapsed && "lg:justify-center")}
             title="AI Interview"
           >
-            <BarChart3 className="size-5 text-foreground" />
+            <BarChart3 className="size-5 text-sidebar-foreground" />
             <span className={cn(sidebarCollapsed && "lg:hidden")}>AI Interview</span>
           </Link>
           <Button
@@ -141,8 +163,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
                   sidebarCollapsed && "lg:justify-center lg:px-0"
                 )}
               >
@@ -165,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </p>
           <span
             className={cn(
-              "hidden size-9 items-center justify-center rounded-full border border-border text-sm font-semibold text-foreground",
+              "hidden size-9 items-center justify-center rounded-full border border-sidebar-border text-sm font-semibold text-sidebar-foreground",
               sidebarCollapsed && "lg:flex"
             )}
             title={user.name}
@@ -210,6 +232,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="hidden text-sm text-muted-foreground sm:block">
                 Mock mode · API-ready contracts
               </p>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={toggleTheme}
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {theme === "dark" ? <Sun /> : <Moon />}
+              </Button>
               <span className="flex size-9 items-center justify-center rounded-full border border-border text-sm font-semibold text-foreground">
                 {user.name.slice(0, 1).toUpperCase()}
               </span>
@@ -221,4 +252,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   )
+}
+
+function applyAppTheme(theme: Theme) {
+  document.documentElement.classList.toggle("dark", theme === "dark")
+  window.localStorage.setItem(THEME_KEY, theme)
+  window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: theme }))
 }

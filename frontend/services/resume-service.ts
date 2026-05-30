@@ -161,7 +161,7 @@ async function updateLocalResume(id: string, input: ResumeUpdateInput) {
     senioritySignals: input.senioritySignals?.map((item) => item.trim()).filter(Boolean) ?? current.senioritySignals ?? [],
     projectHighlights: input.projectHighlights?.map((item) => item.trim()).filter(Boolean) ?? current.projectHighlights ?? [],
     warnings: input.warnings?.map((item) => item.trim()).filter(Boolean) ?? current.warnings ?? [],
-    status: input.parsedText.trim().length < 80 ? "NEEDS_REVIEW" : "READY",
+    status: toPlainText(input.parsedText).length < 80 ? "NEEDS_REVIEW" : "READY",
     parseError: null,
   }
 
@@ -208,4 +208,18 @@ async function errorMessage(response: Response, fallback: string) {
   } catch {
     return fallback
   }
+}
+
+function toPlainText(value: string) {
+  return value
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .trim()
 }

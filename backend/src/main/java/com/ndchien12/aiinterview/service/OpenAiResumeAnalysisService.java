@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,6 +38,7 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
     private final String geminiApiKey;
     private final String geminiModel;
     private final boolean aiEnabled;
+    private final String resumeAnalysisRules;
 
     public OpenAiResumeAnalysisService(
             ObjectMapper objectMapper,
@@ -49,6 +54,7 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
         this.geminiApiKey = geminiApiKey;
         this.geminiModel = geminiModel;
         this.aiEnabled = aiEnabled;
+        this.resumeAnalysisRules = loadResumeAnalysisRules();
         this.restClient = RestClient.builder()
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -243,8 +249,8 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
     private ResumeAnalysisResult parseAnalysisJson(String outputText, String extractedText) throws Exception {
         JsonNode json = objectMapper.readTree(outputText);
         ResumeAnalysisResult aiResult = new ResumeAnalysisResult(
-                extractedText,
-                summarize(extractedText),
+                cleanParsedResumeText(text(json.path("parsedResumeText")), extractedText),
+                compactSummary(text(json.path("summary")), extractedText),
                 array(json.path("skills")),
                 array(json.path("roleSignals")),
                 array(json.path("senioritySignals")),
@@ -260,12 +266,14 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
                 : extractedText;
         return """
                 Analyze this resume text for an interview preparation app.
-                Return JSON only. Extract only evidence present in the resume. Do not invent technologies, roles, or seniority.
-                If the text is weak, ambiguous, or missing sections, include warnings.
+                Follow the rules below exactly.
+
+                Rules:
+                %s
 
                 Resume text:
                 %s
-                """.formatted(safeText);
+                """.formatted(resumeAnalysisRules, safeText);
     }
 
     private String findOpenAiOutputText(JsonNode root) {
@@ -319,8 +327,8 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
         }
 
         return new ResumeAnalysisResult(
-                extractedText,
-                summarize(extractedText),
+                cleanParsedResumeText(aiResult.parsedResumeText(), extractedText),
+                compactSummary(aiResult.summary(), extractedText),
                 skills,
                 roleSignals,
                 senioritySignals,
@@ -451,11 +459,18 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
     }
 
     private String summarize(String text) {
-        String normalized = text.replaceAll("\\s+", " ").trim();
-        if (normalized.length() <= 420) {
+        String normalized = cleanDisplayText(text).replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= 360) {
             return normalized;
         }
-        return normalized.substring(0, 420).trim() + "...";
+        int sentenceEnd = Math.max(
+                Math.max(normalized.lastIndexOf(". ", 360), normalized.lastIndexOf("! ", 360)),
+                normalized.lastIndexOf("? ", 360)
+        );
+        if (sentenceEnd >= 160) {
+            return normalized.substring(0, sentenceEnd + 1).trim();
+        }
+        return normalized.substring(0, 360).trim() + "...";
     }
 
     private List<String> array(JsonNode node) {
@@ -472,7 +487,60 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
         return values;
     }
 
-    private String nonBlank(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value;
+    private String text(JsonNode node) {
+        return node == null ? "" : node.asText("");
+    }
+
+    private String cleanParsedResumeText(String value, String fallback) {
+        String cleaned = cleanDisplayText(value);
+        if (cleaned.length() < 80) {
+            cleaned = cleanDisplayText(fallback);
+        }
+
+        return cleaned
+                .replaceAll("(?m)^\\s*[-*•]\\s{0,2}$", "")
+                .replaceAll("\\n{3,}", "\n\n")
+                .trim();
+    }
+
+    private String compactSummary(String value, String fallback) {
+        String cleaned = cleanDisplayText(value)
+                .replaceAll("(?m)^\\s*[-*•]\\s*", "")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        if (cleaned.length() < 40) {
+            return summarize(fallback);
+        }
+
+        return summarize(cleaned);
+    }
+
+    private String cleanDisplayText(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return Normalizer.normalize(value, Normalizer.Form.NFC)
+                .replace('\u00A0', ' ')
+                .replace("\uFFFD", "")
+                .replaceAll("\\r\\n?", "\n")
+                .replaceAll("[\\t\\x0B\\f]+", " ")
+                .replaceAll("[\\u200B\\u200C\\u200D]", "")
+                .replaceAll("(?m)[ ]{2,}", " ")
+                .replaceAll("(?m)^\\s+", "")
+                .replaceAll("(?m)\\s+$", "")
+                .trim();
+    }
+
+    private String loadResumeAnalysisRules() {
+        try {
+            return new ClassPathResource("resume-analysis-rules.md")
+                    .getContentAsString(StandardCharsets.UTF_8)
+                    .trim();
+        } catch (IOException exception) {
+            log.warn("Unable to load resume analysis rules: {}", exception.getMessage());
+            return "Return JSON only. Keep summary short. Preserve only evidence present in the resume.";
+        }
     }
 }
