@@ -3,8 +3,12 @@ package com.ndchien12.aiinterview.controller;
 import com.ndchien12.aiinterview.dto.interview.CreateInterviewRequest;
 import com.ndchien12.aiinterview.dto.interview.InterviewEvaluationResponse;
 import com.ndchien12.aiinterview.dto.interview.InterviewSessionResponse;
+import com.ndchien12.aiinterview.dto.interview.InterviewTranscriptMessageResponse;
+import com.ndchien12.aiinterview.dto.interview.RealtimeSessionResponse;
 import com.ndchien12.aiinterview.dto.interview.SaveInterviewAnswersRequest;
+import com.ndchien12.aiinterview.dto.interview.SaveInterviewTranscriptRequest;
 import com.ndchien12.aiinterview.service.InterviewService;
+import com.ndchien12.aiinterview.service.RealtimeSessionService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -24,9 +28,14 @@ import java.util.UUID;
 @RequestMapping("/api/interviews")
 public class InterviewController {
     private final InterviewService interviewService;
+    private final RealtimeSessionService realtimeSessionService;
 
-    public InterviewController(InterviewService interviewService) {
+    public InterviewController(
+            InterviewService interviewService,
+            RealtimeSessionService realtimeSessionService
+    ) {
         this.interviewService = interviewService;
+        this.realtimeSessionService = realtimeSessionService;
     }
 
     @GetMapping
@@ -64,6 +73,20 @@ public class InterviewController {
             Authentication authentication
     ) {
         return interviewService.evaluate(id, request, authentication.getName());
+    }
+
+    @PostMapping("/{id}/realtime/session")
+    public RealtimeSessionResponse createRealtimeSession(@PathVariable UUID id, Authentication authentication) {
+        return realtimeSessionService.createRealtimeSession(id, authentication.getName());
+    }
+
+    @PutMapping("/{id}/transcript")
+    public List<InterviewTranscriptMessageResponse> saveTranscript(
+            @PathVariable UUID id,
+            @Valid @RequestBody SaveInterviewTranscriptRequest request,
+            Authentication authentication
+    ) {
+        return realtimeSessionService.saveTranscript(id, request, authentication.getName());
     }
 
     @GetMapping("/evaluations/{id}")

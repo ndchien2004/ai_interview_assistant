@@ -1,6 +1,7 @@
 package com.ndchien12.aiinterview.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -59,6 +60,18 @@ public class InterviewSession {
     @Column(name = "generation_mode", nullable = false, length = 40)
     private String generationMode = "HYBRID";
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mode", nullable = false, length = 40, columnDefinition = "varchar(40) default 'WRITTEN'")
+    private InterviewMode mode = InterviewMode.WRITTEN;
+
+    @Column(length = 160)
+    private String domain = "";
+
+    @ElementCollection
+    @CollectionTable(name = "interview_session_evaluation_skills", joinColumns = @JoinColumn(name = "session_id"))
+    @Column(name = "skill", nullable = false, length = 120)
+    private List<String> evaluationSkills = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -70,6 +83,9 @@ public class InterviewSession {
         createdAt = Instant.now();
         if (status == null) {
             status = InterviewSessionStatus.IN_PROGRESS;
+        }
+        if (mode == null) {
+            mode = InterviewMode.WRITTEN;
         }
     }
 
@@ -155,6 +171,30 @@ public class InterviewSession {
 
     public void setGenerationMode(String generationMode) {
         this.generationMode = generationMode;
+    }
+
+    public InterviewMode getMode() {
+        return mode;
+    }
+
+    public void setMode(InterviewMode mode) {
+        this.mode = mode;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public List<String> getEvaluationSkills() {
+        return evaluationSkills;
+    }
+
+    public void setEvaluationSkills(List<String> evaluationSkills) {
+        this.evaluationSkills = evaluationSkills;
     }
 
     public Instant getCreatedAt() {

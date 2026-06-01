@@ -7,6 +7,8 @@ import java.util.List;
 
 public record SaveInterviewAnswersRequest(
         @NotNull(message = "Answers are required")
-        List<@Valid InterviewAnswerRequest> answers
+        List<@Valid InterviewAnswerRequest> answers,
+
+        List<@Valid InterviewTranscriptMessageRequest> transcript
 ) {
 }

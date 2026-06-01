@@ -6,15 +6,19 @@ import com.ndchien12.aiinterview.dto.interview.InterviewAnswerResponse;
 import com.ndchien12.aiinterview.dto.interview.InterviewEvaluationResponse;
 import com.ndchien12.aiinterview.dto.interview.InterviewQuestionResponse;
 import com.ndchien12.aiinterview.dto.interview.InterviewSessionResponse;
+import com.ndchien12.aiinterview.dto.interview.InterviewTranscriptMessageRequest;
+import com.ndchien12.aiinterview.dto.interview.InterviewTranscriptMessageResponse;
 import com.ndchien12.aiinterview.dto.interview.SaveInterviewAnswersRequest;
 import com.ndchien12.aiinterview.entity.InterviewAnswer;
 import com.ndchien12.aiinterview.entity.InterviewEvaluation;
+import com.ndchien12.aiinterview.entity.InterviewMode;
 import com.ndchien12.aiinterview.entity.InterviewQuestion;
 import com.ndchien12.aiinterview.entity.InterviewQuestionCategory;
 import com.ndchien12.aiinterview.entity.InterviewQuestionDifficulty;
 import com.ndchien12.aiinterview.entity.InterviewQuestionFeedback;
 import com.ndchien12.aiinterview.entity.InterviewSession;
 import com.ndchien12.aiinterview.entity.InterviewSessionStatus;
+import com.ndchien12.aiinterview.entity.InterviewTranscriptMessage;
 import com.ndchien12.aiinterview.entity.Resume;
 import com.ndchien12.aiinterview.entity.ResumeStatus;
 import com.ndchien12.aiinterview.entity.User;
@@ -23,6 +27,7 @@ import com.ndchien12.aiinterview.repository.InterviewAnswerRepository;
 import com.ndchien12.aiinterview.repository.InterviewEvaluationRepository;
 import com.ndchien12.aiinterview.repository.InterviewQuestionRepository;
 import com.ndchien12.aiinterview.repository.InterviewSessionRepository;
+import com.ndchien12.aiinterview.repository.InterviewTranscriptMessageRepository;
 import com.ndchien12.aiinterview.repository.ResumeRepository;
 import com.ndchien12.aiinterview.repository.UserRepository;
 import com.ndchien12.aiinterview.service.InterviewEvaluationService.EvaluationDraft;
@@ -63,6 +68,7 @@ public class InterviewService {
     private final InterviewQuestionRepository questionRepository;
     private final InterviewAnswerRepository answerRepository;
     private final InterviewEvaluationRepository evaluationRepository;
+    private final InterviewTranscriptMessageRepository transcriptRepository;
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
     private final InterviewEvaluationService evaluationService;
@@ -72,6 +78,7 @@ public class InterviewService {
             InterviewQuestionRepository questionRepository,
             InterviewAnswerRepository answerRepository,
             InterviewEvaluationRepository evaluationRepository,
+            InterviewTranscriptMessageRepository transcriptRepository,
             ResumeRepository resumeRepository,
             UserRepository userRepository,
             InterviewEvaluationService evaluationService
@@ -80,6 +87,7 @@ public class InterviewService {
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
         this.evaluationRepository = evaluationRepository;
+        this.transcriptRepository = transcriptRepository;
         this.resumeRepository = resumeRepository;
         this.userRepository = userRepository;
         this.evaluationService = evaluationService;
@@ -113,6 +121,10 @@ public class InterviewService {
         if (focusAreas.isEmpty()) {
             focusAreas = resume.getSkills().stream().limit(3).toList();
         }
+        List<String> evaluationSkills = cleanList(request.evaluationSkills());
+        if (evaluationSkills.isEmpty()) {
+            evaluationSkills = List.of("Technical depth", "Communication", "Problem solving");
+        }
 
         InterviewSession session = new InterviewSession();
         session.setUser(user);
@@ -125,6 +137,9 @@ public class InterviewService {
         session.setFocusAreas(new ArrayList<>(focusAreas));
         session.setQuestionPlan(questionPlan(questionCount).stream().map(this::categoryValue).toList());
         session.setGenerationMode("HYBRID");
+        session.setMode(normalizeMode(request.mode()));
+        session.setDomain(safeString(request.domain()).isBlank() ? targetRole : safeString(request.domain()));
+        session.setEvaluationSkills(new ArrayList<>(evaluationSkills));
         InterviewSession savedSession = sessionRepository.save(session);
 
         List<InterviewQuestion> questions = buildQuestions(savedSession, resume, focusAreas);
@@ -156,6 +171,7 @@ public class InterviewService {
             answers.add(answer);
         }
         answerRepository.saveAll(answers);
+        saveTranscript(session, request.transcript(), questionsById);
 
         return toResponse(session);
     }
@@ -180,7 +196,7 @@ public class InterviewService {
         session.setCompletedAt(Instant.now());
         sessionRepository.save(session);
 
-        return InterviewEvaluationResponse.from(savedEvaluation);
+        return toEvaluationResponse(savedEvaluation);
     }
 
     private void applyEvaluationDraft(
@@ -254,15 +270,44 @@ public class InterviewService {
         if (!evaluation.getSession().getUser().getId().equals(user.getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Evaluation does not belong to current user");
         }
-        return InterviewEvaluationResponse.from(evaluation);
+        return toEvaluationResponse(evaluation);
     }
 
     @Transactional(readOnly = true)
     public InterviewEvaluationResponse getEvaluationBySession(UUID sessionId, String email) {
         InterviewSession session = findOwnedSession(sessionId, findUser(email));
         return evaluationRepository.findBySession(session)
-                .map(InterviewEvaluationResponse::from)
+                .map(this::toEvaluationResponse)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Evaluation not found"));
+    }
+
+    private void saveTranscript(
+            InterviewSession session,
+            List<InterviewTranscriptMessageRequest> transcript,
+            Map<UUID, InterviewQuestion> questionsById
+    ) {
+        if (transcript == null) {
+            return;
+        }
+
+        transcriptRepository.deleteBySession(session);
+        List<InterviewTranscriptMessage> messages = new ArrayList<>();
+        for (int index = 0; index < transcript.size(); index += 1) {
+            InterviewTranscriptMessageRequest item = transcript.get(index);
+            if (item.questionId() != null && !questionsById.containsKey(item.questionId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Transcript question does not belong to this interview");
+            }
+
+            InterviewTranscriptMessage message = new InterviewTranscriptMessage();
+            message.setSession(session);
+            message.setRole(item.role());
+            message.setContent(safeString(item.content()));
+            message.setQuestionId(item.questionId());
+            message.setSortOrder(index + 1);
+            message.setCreatedAt(item.createdAt());
+            messages.add(message);
+        }
+        transcriptRepository.saveAll(messages);
     }
 
     private List<InterviewQuestion> buildQuestions(
@@ -379,6 +424,12 @@ public class InterviewService {
         };
     }
 
+    private InterviewMode normalizeMode(String value) {
+        return "live".equalsIgnoreCase(safeString(value)) || "LIVE".equalsIgnoreCase(safeString(value))
+                ? InterviewMode.LIVE
+                : InterviewMode.WRITTEN;
+    }
+
     private void validateResume(Resume resume) {
         if (resume.getStatus() == ResumeStatus.FAILED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Resume must be fixed before creating an interview");
@@ -400,7 +451,19 @@ public class InterviewService {
                 answerRepository.findBySessionOrderByCreatedAtAsc(session).stream()
                         .map(InterviewAnswerResponse::from)
                         .toList(),
-                evaluationId
+                evaluationId,
+                transcriptRepository.findBySessionOrderBySortOrderAsc(session).stream()
+                        .map(InterviewTranscriptMessageResponse::from)
+                        .toList()
+        );
+    }
+
+    private InterviewEvaluationResponse toEvaluationResponse(InterviewEvaluation evaluation) {
+        return InterviewEvaluationResponse.from(
+                evaluation,
+                transcriptRepository.findBySessionOrderBySortOrderAsc(evaluation.getSession()).stream()
+                        .map(InterviewTranscriptMessageResponse::from)
+                        .toList()
         );
     }
 

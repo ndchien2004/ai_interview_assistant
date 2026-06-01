@@ -24,6 +24,13 @@ public record CreateInterviewRequest(
         @Max(value = 8, message = "Question count must be at most 8")
         int questionCount,
 
-        List<String> focusAreas
+        List<String> focusAreas,
+
+        String mode,
+
+        @Size(max = 160, message = "Domain must be 160 characters or fewer")
+        String domain,
+
+        List<String> evaluationSkills
 ) {
 }

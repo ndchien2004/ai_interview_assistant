@@ -24,9 +24,22 @@ public record InterviewEvaluationResponse(
         String provider,
         String model,
         List<InterviewQuestionFeedbackResponse> perQuestionFeedback,
+        List<InterviewTranscriptMessageResponse> transcript,
+        List<SkillScoreResponse> skillScores,
+        String interviewDomain,
         Instant createdAt
 ) {
-    public static InterviewEvaluationResponse from(InterviewEvaluation evaluation) {
+    public static InterviewEvaluationResponse from(
+            InterviewEvaluation evaluation,
+            List<InterviewTranscriptMessageResponse> transcript
+    ) {
+        List<SkillScoreResponse> skillScores = evaluation.getSession().getEvaluationSkills().stream()
+                .map(skill -> new SkillScoreResponse(
+                        skill,
+                        evaluation.getTotalScore(),
+                        "Score generated from the saved interview answers and transcript context."
+                ))
+                .toList();
         return new InterviewEvaluationResponse(
                 evaluation.getId(),
                 evaluation.getSession().getId(),
@@ -48,6 +61,9 @@ public record InterviewEvaluationResponse(
                         .sorted(Comparator.comparingInt(com.ndchien12.aiinterview.entity.InterviewQuestionFeedback::getSortOrder))
                         .map(InterviewQuestionFeedbackResponse::from)
                         .toList(),
+                transcript,
+                skillScores,
+                evaluation.getSession().getDomain(),
                 evaluation.getCreatedAt()
         );
     }

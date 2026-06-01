@@ -23,13 +23,18 @@ public record InterviewSessionResponse(
         String sourceResumeSummary,
         List<String> focusAreas,
         List<String> questionPlan,
-        String generationMode
+        String generationMode,
+        String mode,
+        String domain,
+        List<String> evaluationSkills,
+        List<InterviewTranscriptMessageResponse> transcript
 ) {
     public static InterviewSessionResponse from(
             InterviewSession session,
             List<InterviewQuestionResponse> questions,
             List<InterviewAnswerResponse> answers,
-            UUID evaluationId
+            UUID evaluationId,
+            List<InterviewTranscriptMessageResponse> transcript
     ) {
         return new InterviewSessionResponse(
                 session.getId(),
@@ -51,7 +56,11 @@ public record InterviewSessionResponse(
                 session.getSourceResumeSummary(),
                 new ArrayList<>(session.getFocusAreas()),
                 new ArrayList<>(session.getQuestionPlan()),
-                session.getGenerationMode()
+                session.getGenerationMode(),
+                session.getMode() == null ? "WRITTEN" : session.getMode().name(),
+                session.getDomain(),
+                new ArrayList<>(session.getEvaluationSkills()),
+                transcript
         );
     }
 }
