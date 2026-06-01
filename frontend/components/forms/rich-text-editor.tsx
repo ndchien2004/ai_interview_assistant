@@ -14,11 +14,9 @@ import {
   Italic,
   List,
   ListOrdered,
-  Moon,
   Redo2,
   RemoveFormatting,
   Strikethrough,
-  Sun,
   Underline,
   Undo2,
 } from "lucide-react"
@@ -60,9 +58,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const [, setEditorTick] = useState(0)
   const [appTheme, setAppTheme] = useState<Theme>("light")
-  const [manualTheme, setManualTheme] = useState<Theme | null>(null)
-  const theme = manualTheme ?? appTheme
-  const isDark = theme === "dark"
+  const isDark = appTheme === "dark"
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -118,10 +114,6 @@ export function RichTextEditor({
     return () => window.removeEventListener(THEME_CHANGE_EVENT, syncWithAppTheme)
   }, [])
 
-  const toggleEditorTheme = () => {
-    setManualTheme(theme === "dark" ? "light" : "dark")
-  }
-
   return (
     <div
       className={cn(
@@ -141,8 +133,7 @@ export function RichTextEditor({
     >
       <EditorToolbar
         editor={editor}
-        theme={theme}
-        onToggleTheme={toggleEditorTheme}
+        isDark={isDark}
       />
       <div
         className={cn(
@@ -158,14 +149,11 @@ export function RichTextEditor({
 
 function EditorToolbar({
   editor,
-  theme,
-  onToggleTheme,
+  isDark,
 }: {
   editor: Editor | null
-  theme: Theme
-  onToggleTheme: () => void
+  isDark: boolean
 }) {
-  const isDark = theme === "dark"
   const currentFontSize = editor?.getAttributes("textStyle").fontSize as string | undefined
   const currentBlockType = getCurrentBlockType(editor)
 
@@ -176,8 +164,7 @@ function EditorToolbar({
         isDark ? "border-slate-700/80 bg-[#222832]/95" : "border-slate-200 bg-white/95"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
           <select
             aria-label="Block type"
             title="Block type"
@@ -343,21 +330,6 @@ function EditorToolbar({
       >
         <Redo2 className="size-4" />
       </ToolbarButton>
-        </div>
-        <button
-          type="button"
-          title={isDark ? "Switch editor to light mode" : "Switch editor to dark mode"}
-          aria-label={isDark ? "Switch editor to light mode" : "Switch editor to dark mode"}
-          onClick={onToggleTheme}
-          className={cn(
-            "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
-            isDark
-              ? "bg-slate-700 text-slate-100 hover:bg-slate-600"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-          )}
-        >
-          {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        </button>
       </div>
     </div>
   )

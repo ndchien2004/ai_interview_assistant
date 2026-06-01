@@ -20,8 +20,17 @@ export function ResumeUploadDropzone({ onUploaded }: ResumeUploadDropzoneProps) 
 
   const handleFile = async (file?: File) => {
     if (!file) return
+    if (loading) return
 
     setError("")
+
+    const validationError = validateResumeFile(file)
+    if (validationError) {
+      setUploadedName("")
+      setError(validationError)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -43,6 +52,7 @@ export function ResumeUploadDropzone({ onUploaded }: ResumeUploadDropzoneProps) 
 
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
     void handleFile(event.target.files?.[0])
+    event.target.value = ""
   }
 
   return (
@@ -59,7 +69,7 @@ export function ResumeUploadDropzone({ onUploaded }: ResumeUploadDropzoneProps) 
           dragging && "border-teal-500 bg-teal-50/60 dark:bg-teal-500/10"
         )}
       >
-        <input type="file" accept="application/pdf" className="sr-only" onChange={onChange} />
+        <input type="file" accept="application/pdf,.pdf" className="sr-only" onChange={onChange} />
         <div className="mb-4 rounded-full border border-border/60 bg-white/55 p-3 text-muted-foreground dark:bg-white/[0.08]">
           {loading ? <Loader2 className="size-6 animate-spin" /> : <FileUp className="size-6" />}
         </div>
@@ -82,4 +92,11 @@ export function ResumeUploadDropzone({ onUploaded }: ResumeUploadDropzoneProps) 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
   )
+}
+
+function validateResumeFile(file: File) {
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
+  if (!isPdf) return "Please upload a PDF resume."
+  if (file.size > 5 * 1024 * 1024) return "Resume file must be smaller than 5MB."
+  return ""
 }

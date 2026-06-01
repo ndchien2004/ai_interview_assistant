@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { UploadView } from "@/components/upload-view"
+import { AppShell } from "@/components/common/app-shell"
+import { UploadView } from "@/components/views/resume/upload-view"
 
 export default function UploadPage() {
   return (

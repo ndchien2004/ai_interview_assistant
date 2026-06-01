@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { JavaCorePracticeView } from "@/components/java-core-practice-view"
+import { AppShell } from "@/components/common/app-shell"
+import { JavaCorePracticeView } from "@/components/views/practice/java-core-practice-view"
 
 export default function JavaCorePracticePage() {
   return (

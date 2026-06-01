@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Save } from "lucide-react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
+import { LiveChatInterviewRoom } from "@/components/views/interview/live-chat-interview-room"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -22,6 +23,7 @@ type InterviewRoomProps = {
 
 export function InterviewRoom({ sessionId }: InterviewRoomProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [session, setSession] = useState<InterviewSession | null>(null)
   const [answers, setAnswers] = useState<Answer[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
@@ -106,6 +108,10 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         description="This session may have been removed from local mock storage."
       />
     )
+  }
+
+  if (session.mode === "LIVE" || searchParams.get("mode") === "live") {
+    return <LiveChatInterviewRoom session={session} />
   }
 
   return (

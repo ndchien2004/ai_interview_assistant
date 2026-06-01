@@ -1,10 +1,16 @@
-import { AppShell } from "@/components/app-shell"
-import { NewInterviewView } from "@/components/new-interview-view"
+import { AppShell } from "@/components/common/app-shell"
+import { NewInterviewView } from "@/components/views/interview/new-interview-view"
 
-export default function NewInterviewPage() {
+type NewInterviewPageProps = {
+  searchParams: Promise<{ mode?: string }>
+}
+
+export default async function NewInterviewPage({ searchParams }: NewInterviewPageProps) {
+  const { mode } = await searchParams
+
   return (
     <AppShell>
-      <NewInterviewView />
+      <NewInterviewView initialMode={mode === "live" ? "LIVE" : "WRITTEN"} />
     </AppShell>
   )
 }

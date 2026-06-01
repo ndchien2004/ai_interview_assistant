@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   BarChart3,
   BookOpen,
@@ -13,15 +14,15 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Mic2,
   Moon,
   Sparkles,
   Sun,
+  UserRound,
   X,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { getCurrentUser, logout } from "@/services/auth-service"
+import { getCurrentUser, logout, USER_CHANGE_EVENT } from "@/services/auth-service"
 import type { User } from "@/types"
 import { cn } from "@/lib/utils"
 
@@ -29,7 +30,6 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/upload", label: "Resume", icon: FileText },
   { href: "/interviews/new", label: "New interview", icon: Sparkles },
-  { href: "/interviews/live", label: "Live interview", icon: Mic2 },
   { href: "/courses/java-core", label: "Java + Full-stack", icon: BookOpen },
   { href: "/history", label: "History", icon: History },
 ]
@@ -45,8 +45,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [ready, setReady] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [theme, setTheme] = useState<Theme>("light")
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -76,8 +78,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(THEME_CHANGE_EVENT, syncTheme)
   }, [])
 
+  useEffect(() => {
+    const handleUserChange = (event: Event) => {
+      setUser((event as CustomEvent<User>).detail)
+    }
+
+    window.addEventListener(USER_CHANGE_EVENT, handleUserChange)
+    return () => window.removeEventListener(USER_CHANGE_EVENT, handleUserChange)
+  }, [])
+
+  useEffect(() => {
+    if (!profileOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown)
+    return () => window.removeEventListener("pointerdown", handlePointerDown)
+  }, [profileOpen])
+
   const handleLogout = () => {
     logout()
+    setProfileOpen(false)
     router.replace("/login")
   }
 
@@ -181,19 +206,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             sidebarCollapsed && "lg:inset-x-3 lg:flex lg:flex-col lg:items-center"
           )}
         >
-          <p className={cn("text-sm font-medium", sidebarCollapsed && "lg:hidden")}>{user.name}</p>
-          <p className={cn("mt-0.5 truncate text-xs text-muted-foreground", sidebarCollapsed && "lg:hidden")}>
-            {user.email}
-          </p>
-          <span
+          <Link href="/profile" className={cn("block", sidebarCollapsed && "lg:hidden")}>
+            <p className="text-sm font-medium">{user.name}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{user.email}</p>
+          </Link>
+          <Link
+            href="/profile"
             className={cn(
-              "hidden size-9 items-center justify-center rounded-full border border-sidebar-border text-sm font-semibold text-sidebar-foreground",
+              "hidden size-9 items-center justify-center overflow-hidden rounded-full border border-sidebar-border text-sm font-semibold text-sidebar-foreground",
               sidebarCollapsed && "lg:flex"
             )}
             title={user.name}
           >
-            {user.name.slice(0, 1).toUpperCase()}
-          </span>
+            <UserAvatar user={user} />
+          </Link>
           <Button
             variant="outline"
             size={sidebarCollapsed ? "icon-sm" : "sm"}
@@ -229,9 +255,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Menu />
             </Button>
             <div className="ml-auto flex items-center gap-3">
-              <p className="hidden text-sm text-muted-foreground sm:block">
-                Mock mode · API-ready contracts
-              </p>
               <Button
                 variant="outline"
                 size="icon-sm"
@@ -241,9 +264,45 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               >
                 {theme === "dark" ? <Sun /> : <Moon />}
               </Button>
-              <span className="flex size-9 items-center justify-center rounded-full border border-border text-sm font-semibold text-foreground">
-                {user.name.slice(0, 1).toUpperCase()}
-              </span>
+              <div ref={profileMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((current) => !current)}
+                  className="flex size-9 items-center justify-center overflow-hidden rounded-full border border-border text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  aria-label="Open profile menu"
+                  aria-expanded={profileOpen}
+                >
+                  <UserAvatar user={user} />
+                </button>
+                {profileOpen ? (
+                  <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-border bg-background shadow-2xl">
+                    <div className="border-b border-border px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-11 items-center justify-center overflow-hidden rounded-full border border-border text-sm font-semibold">
+                          <UserAvatar user={user} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{user.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="py-1">
+                      <DropdownLink href="/profile" label="Profile" icon={UserRound} onClick={() => setProfileOpen(false)} />
+                    </div>
+                    <div className="border-t border-border p-2">
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        <LogOut className="size-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </header>
@@ -251,6 +310,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:py-8">{children}</main>
       </div>
     </div>
+  )
+}
+
+function UserAvatar({ user }: { user: User }) {
+  if (user.avatarUrl) {
+    return <Image src={user.avatarUrl} alt="" width={44} height={44} unoptimized className="size-full object-cover" />
+  }
+
+  return <span>{user.name.slice(0, 1).toUpperCase()}</span>
+}
+
+function DropdownLink({
+  href,
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  onClick: () => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      <Icon className="size-4" />
+      {label}
+    </Link>
   )
 }
 

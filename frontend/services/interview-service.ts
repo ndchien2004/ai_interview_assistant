@@ -29,6 +29,17 @@ type CreateSessionInput = {
   seniority: InterviewSession["seniority"]
   questionCount: number
   focusAreas?: string[]
+  mode?: InterviewSession["mode"]
+  domain?: string
+  evaluationSkills?: string[]
+}
+
+export type RealtimeSessionResponse = {
+  enabled: boolean
+  clientSecret?: string | null
+  model: string
+  voice: string
+  message?: string | null
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -151,6 +162,12 @@ async function createLocalInterviewSession(input: CreateSessionInput) {
     focusAreas,
     questionPlan: questionPlan(input.questionCount),
     generationMode: "HYBRID",
+    mode: input.mode ?? "WRITTEN",
+    domain: input.domain ?? input.targetRole,
+    evaluationSkills: input.evaluationSkills?.length
+      ? input.evaluationSkills
+      : ["Technical depth", "Communication", "Problem solving"],
+    transcript: [],
   }
 
   setStoredSessions([session, ...getStoredSessions()])
@@ -173,6 +190,64 @@ export async function getInterviewSession(id: string) {
 }
 
 export async function saveInterviewAnswers(sessionId: string, answers: Answer[]) {
+  return saveInterviewAnswersWithContext(sessionId, answers)
+}
+
+export async function createRealtimeInterviewSession(sessionId: string): Promise<RealtimeSessionResponse> {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/realtime/session`, {
+        method: "POST",
+        headers: authHeaders(),
+      })
+      if (!response.ok) throw new Error(await errorMessage(response, "Unable to create realtime session."))
+      return response.json() as Promise<RealtimeSessionResponse>
+    } catch (caught) {
+      return {
+        enabled: false,
+        clientSecret: null,
+        model: "gpt-realtime",
+        voice: "marin",
+        message: caught instanceof Error ? caught.message : "Realtime voice is unavailable.",
+      }
+    }
+  }
+
+  return {
+    enabled: false,
+    clientSecret: null,
+    model: "demo",
+    voice: "demo",
+    message: "Realtime voice requires the backend API. Typed live practice is available in demo mode.",
+  }
+}
+
+export async function saveInterviewTranscript(sessionId: string, transcript: TranscriptMessage[]) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/transcript`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify({ transcript }),
+      })
+      if (!response.ok) throw new Error(await errorMessage(response, "Unable to save transcript."))
+      return response.json() as Promise<TranscriptMessage[]>
+    } catch {
+      return saveLocalInterviewTranscript(sessionId, transcript)
+    }
+  }
+
+  return saveLocalInterviewTranscript(sessionId, transcript)
+}
+
+export async function saveInterviewAnswersWithContext(
+  sessionId: string,
+  answers: Answer[],
+  transcript?: TranscriptMessage[]
+) {
   if (canUseApi()) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/interviews/${sessionId}/answers`, {
@@ -181,26 +256,40 @@ export async function saveInterviewAnswers(sessionId: string, answers: Answer[])
           "Content-Type": "application/json",
           ...authHeaders(),
         },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, transcript }),
       })
       if (!response.ok) throw new Error(await errorMessage(response, "Unable to save answers."))
       return response.json() as Promise<InterviewSession>
     } catch {
-      return saveLocalInterviewAnswers(sessionId, answers)
+      return saveLocalInterviewAnswers(sessionId, answers, transcript)
     }
   }
 
-  return saveLocalInterviewAnswers(sessionId, answers)
+  return saveLocalInterviewAnswers(sessionId, answers, transcript)
 }
 
-function saveLocalInterviewAnswers(sessionId: string, answers: Answer[]) {
+function saveLocalInterviewAnswers(sessionId: string, answers: Answer[], transcript?: TranscriptMessage[]) {
   const sessions = getStoredSessions()
   const nextSessions = sessions.map((session) =>
-    session.id === sessionId ? { ...session, answers, status: "in-progress" as const } : session
+    session.id === sessionId
+      ? { ...session, answers, transcript: transcript ?? session.transcript, status: "in-progress" as const }
+      : session
   )
 
   setStoredSessions(nextSessions)
   return nextSessions.find((session) => session.id === sessionId) ?? null
+}
+
+function saveLocalInterviewTranscript(sessionId: string, transcript: TranscriptMessage[]) {
+  const sessions = getStoredSessions()
+  setStoredSessions(
+    sessions.map((session) =>
+      session.id === sessionId
+        ? { ...session, transcript, status: session.status === "completed" ? session.status : ("in-progress" as const) }
+        : session
+    )
+  )
+  return transcript
 }
 
 export async function evaluateInterview(sessionId: string, answers: Answer[]) {
@@ -241,20 +330,10 @@ export async function evaluateInterviewWithContext(
           "Content-Type": "application/json",
           ...authHeaders(),
         },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, transcript: context.transcript }),
       })
       if (!response.ok) throw new Error(await errorMessage(response, "Unable to evaluate interview."))
-      const evaluation = (await response.json()) as Evaluation
-      return {
-        ...evaluation,
-        transcript: context.transcript,
-        skillScores: context.skills?.map((skill) => ({
-          name: skill,
-          score: evaluation.totalScore,
-          rationale: "Score generated from the saved interview answers.",
-        })),
-        interviewDomain: context.domain,
-      }
+      return response.json() as Promise<Evaluation>
     } catch (caught) {
       throw caught instanceof Error ? caught : new Error("Unable to evaluate interview.")
     }
@@ -274,7 +353,11 @@ export async function evaluateInterviewWithContext(
   const completeness = Math.round((answeredCount / Math.max(session.questions.length, 1)) * 100)
   const detailScore = Math.min(92, Math.round(58 + averageLength / 12))
   const totalScore = Math.round(detailScore * 0.65 + completeness * 0.35)
-  const skills = context.skills?.length ? context.skills : ["Technical depth", "Communication", "Role fit"]
+  const skills = context.skills?.length
+    ? context.skills
+    : session.evaluationSkills?.length
+      ? session.evaluationSkills
+      : ["Technical depth", "Communication", "Role fit"]
   const skillScores: SkillScore[] = skills.map((skill, index) => {
     const score = Math.max(45, Math.min(96, totalScore + (index % 2 === 0 ? 4 : -3) - index))
 
@@ -315,7 +398,7 @@ export async function evaluateInterviewWithContext(
     ],
     transcript: context.transcript,
     skillScores,
-    interviewDomain: context.domain,
+    interviewDomain: context.domain ?? session.domain,
     evaluationMode: "FALLBACK",
     provider: "LOCAL",
     model: "local",
@@ -330,6 +413,7 @@ export async function evaluateInterviewWithContext(
       ? {
           ...item,
           answers,
+          transcript: context.transcript ?? item.transcript,
           status: "completed" as const,
           completedAt: new Date().toISOString(),
           evaluationId: evaluation.id,

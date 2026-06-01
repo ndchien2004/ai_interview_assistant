@@ -1,10 +1,7 @@
 import { Badge } from "@/components/ui/badge"
-import { InterviewSetupForm } from "@/components/interview-setup-form"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Mic2 } from "lucide-react"
+import { InterviewSetupForm } from "@/components/views/interview/interview-setup-form"
 
-export function NewInterviewView() {
+export function NewInterviewView({ initialMode = "WRITTEN" }: { initialMode?: "WRITTEN" | "LIVE" }) {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -15,14 +12,8 @@ export function NewInterviewView() {
             Generate a resume-aware question set from your target role, seniority, and CV signals.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/interviews/live">
-            <Mic2 className="size-4" />
-            Live mode
-          </Link>
-        </Button>
       </div>
-      <InterviewSetupForm />
+      <InterviewSetupForm initialMode={initialMode} />
     </div>
   )
 }

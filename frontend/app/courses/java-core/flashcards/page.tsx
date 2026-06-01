@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { JavaCoreFlashcardsView } from "@/components/java-core-flashcards-view"
+import { AppShell } from "@/components/common/app-shell"
+import { JavaCoreFlashcardsView } from "@/components/views/practice/java-core-flashcards-view"
 
 export default function JavaCoreFlashcardsPage() {
   return (

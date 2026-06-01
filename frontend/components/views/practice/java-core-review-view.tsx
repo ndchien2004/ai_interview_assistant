@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, Filter, RotateCcw } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { getCourse, getCourseProgress, readLocalProgress } from "@/services/course-service"
 import type { Course, CourseProgress, PracticeQuestion, QuestionDifficulty } from "@/types"

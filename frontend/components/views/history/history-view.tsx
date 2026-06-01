@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Search } from "lucide-react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -83,11 +83,16 @@ export function HistoryView() {
                     {session.seniority} · {session.questionCount} questions · {formatDate(session.createdAt)}
                   </p>
                 </div>
-                <Badge>{session.status}</Badge>
+                <div className="flex flex-wrap gap-2">
+                  <Badge>{session.mode === "LIVE" ? "Live" : "Written"}</Badge>
+                  <Badge>{session.status}</Badge>
+                </div>
                 <Button asChild variant="outline" size="sm">
                   <Link
                     href={
-                      session.evaluationId ? `/results/${session.evaluationId}` : `/interviews/${session.id}`
+                      session.evaluationId
+                        ? `/results/${session.evaluationId}`
+                        : `/interviews/${session.id}${session.mode === "LIVE" ? "?mode=live" : ""}`
                     }
                   >
                     Open

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, Check, Eye, Mic2, RotateCcw } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { createPracticeSession, submitPracticeAttempt } from "@/services/practice-service"

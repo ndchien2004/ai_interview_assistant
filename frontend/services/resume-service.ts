@@ -4,6 +4,12 @@ import { getAuthToken, getCurrentUser, getStoredResumes, makeId, setStoredResume
 import type { Resume } from "@/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+export const RESUME_SERVICE_FALLBACK_EVENT = "ai-interview-resume-service-fallback"
+
+export type ResumeServiceFallbackDetail = {
+  action: "load" | "upload" | "update" | "delete"
+  message: string
+}
 
 export type ResumeUpdateInput = {
   fileName: string
@@ -18,6 +24,8 @@ export type ResumeUpdateInput = {
 
 const canUseApi = () => Boolean(API_BASE_URL && getAuthToken()?.startsWith("ey"))
 
+export const isResumeApiMode = () => canUseApi()
+
 const authHeaders = (): Record<string, string> => {
   const token = getAuthToken()
   return token ? { Authorization: `Bearer ${token}` } : {}
@@ -30,6 +38,7 @@ export async function listResumes() {
       if (!response.ok) throw new Error("Unable to load resumes.")
       return response.json() as Promise<Resume[]>
     } catch {
+      emitFallbackNotice("load")
       return listLocalResumes()
     }
   }
@@ -58,6 +67,7 @@ export async function uploadResume(file: File) {
       if (!response.ok) throw new Error(await errorMessage(response, "Unable to upload resume."))
       return response.json() as Promise<Resume>
     } catch {
+      emitFallbackNotice("upload")
       return uploadLocalResume(file)
     }
   }
@@ -132,6 +142,7 @@ export async function updateResume(id: string, input: ResumeUpdateInput) {
       if (!response.ok) throw new Error(await errorMessage(response, "Unable to update resume."))
       return response.json() as Promise<Resume>
     } catch {
+      emitFallbackNotice("update")
       return updateLocalResume(id, input)
     }
   }
@@ -179,6 +190,7 @@ export async function deleteResume(id: string) {
       if (!response.ok) throw new Error(await errorMessage(response, "Unable to delete resume."))
       return
     } catch {
+      emitFallbackNotice("delete")
       return deleteLocalResume(id)
     }
   }
@@ -222,4 +234,21 @@ function toPlainText(value: string) {
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
     .trim()
+}
+
+function emitFallbackNotice(action: ResumeServiceFallbackDetail["action"]) {
+  if (typeof window === "undefined") return
+
+  const messages: Record<ResumeServiceFallbackDetail["action"], string> = {
+    load: "Resume API was unavailable, so local demo resumes were loaded.",
+    upload: "Resume API was unavailable, so this upload was saved to local demo storage.",
+    update: "Resume API was unavailable, so this update was saved to local demo storage.",
+    delete: "Resume API was unavailable, so this delete only changed local demo storage.",
+  }
+
+  window.dispatchEvent(
+    new CustomEvent<ResumeServiceFallbackDetail>(RESUME_SERVICE_FALLBACK_EVENT, {
+      detail: { action, message: messages[action] },
+    })
+  )
 }

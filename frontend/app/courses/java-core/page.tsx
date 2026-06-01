@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { CourseOverview } from "@/components/course-overview"
+import { AppShell } from "@/components/common/app-shell"
+import { CourseOverview } from "@/components/views/courses/course-overview"
 
 export default function JavaCoreCoursePage() {
   return (

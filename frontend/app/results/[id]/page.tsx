@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { ResultView } from "@/components/result-view"
+import { AppShell } from "@/components/common/app-shell"
+import { ResultView } from "@/components/views/results/result-view"
 
 type ResultPageProps = {
   params: Promise<{ id: string }>

@@ -3,9 +3,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, FileText, Loader2, UploadCloud } from "lucide-react"
+import { ArrowRight, FileText, Loader2, Mic2, PencilLine, UploadCloud } from "lucide-react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,14 +39,30 @@ const questionPlan = (count: number): QuestionCategory[] => {
   return plan.slice(0, count)
 }
 
-export function InterviewSetupForm() {
+const skillOptions = [
+  "Technical depth",
+  "Communication",
+  "Problem solving",
+  "System design",
+  "Product thinking",
+  "Leadership",
+]
+
+export function InterviewSetupForm({ initialMode = "WRITTEN" }: { initialMode?: "WRITTEN" | "LIVE" }) {
   const router = useRouter()
   const [resumes, setResumes] = useState<Resume[]>([])
   const [resumeId, setResumeId] = useState("")
+  const [mode, setMode] = useState<"WRITTEN" | "LIVE">(initialMode)
   const [targetRole, setTargetRole] = useState("Full-stack Developer")
   const [seniority, setSeniority] = useState<InterviewSession["seniority"]>("Junior")
+  const [domain, setDomain] = useState("Full-stack Web Development")
   const [questionCount, setQuestionCount] = useState(5)
   const [focusAreas, setFocusAreas] = useState<string[]>([])
+  const [evaluationSkills, setEvaluationSkills] = useState<string[]>([
+    "Technical depth",
+    "Communication",
+    "Problem solving",
+  ])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -83,10 +99,22 @@ export function InterviewSetupForm() {
   const currentPlan = useMemo(() => questionPlan(questionCount), [questionCount])
   const resumeTooShort = (selectedResume?.parsedText.trim().length ?? 0) < 80
   const resumeFailed = selectedResume?.status === "FAILED"
-  const canSubmit = Boolean(selectedResume) && !resumeFailed && !resumeTooShort && targetRole.trim() && questionCount >= 3 && questionCount <= 8
+  const canSubmit = Boolean(selectedResume)
+    && !resumeFailed
+    && !resumeTooShort
+    && Boolean(targetRole.trim())
+    && questionCount >= 3
+    && questionCount <= 8
+    && (mode === "WRITTEN" || Boolean(domain.trim() && evaluationSkills.length))
 
   const toggleFocusArea = (skill: string) => {
     setFocusAreas((current) =>
+      current.includes(skill) ? current.filter((item) => item !== skill) : [...current, skill]
+    )
+  }
+
+  const toggleEvaluationSkill = (skill: string) => {
+    setEvaluationSkills((current) =>
       current.includes(skill) ? current.filter((item) => item !== skill) : [...current, skill]
     )
   }
@@ -106,8 +134,11 @@ export function InterviewSetupForm() {
         seniority,
         questionCount,
         focusAreas,
+        mode,
+        domain: domain.trim() || targetRole.trim(),
+        evaluationSkills,
       })
-      router.push(`/interviews/${session.id}`)
+      router.push(`/interviews/${session.id}${mode === "LIVE" ? "?mode=live" : ""}`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to create interview.")
     } finally {
@@ -135,6 +166,47 @@ export function InterviewSetupForm() {
   return (
     <form className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]" onSubmit={handleSubmit}>
       <div className="space-y-5">
+        <Card>
+          <CardHeader>
+            <CardTitle>Practice mode</CardTitle>
+            <CardDescription>Choose between written practice and a ChatGPT-style live room.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setMode("WRITTEN")}
+              className={cn(
+                "flex items-start gap-3 rounded-lg border p-4 text-left transition-colors",
+                mode === "WRITTEN" ? "border-foreground bg-muted/60" : "border-border hover:bg-muted/50"
+              )}
+            >
+              <PencilLine className="mt-0.5 size-4" />
+              <span>
+                <span className="block text-sm font-semibold">Written</span>
+                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                  Draft answers, move between questions, and submit when ready.
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("LIVE")}
+              className={cn(
+                "flex items-start gap-3 rounded-lg border p-4 text-left transition-colors",
+                mode === "LIVE" ? "border-foreground bg-muted/60" : "border-border hover:bg-muted/50"
+              )}
+            >
+              <Mic2 className="mt-0.5 size-4" />
+              <span>
+                <span className="block text-sm font-semibold">Live</span>
+                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                  Answer one question at a time with voice capture and transcript.
+                </span>
+              </span>
+            </button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Resume context</CardTitle>
@@ -213,6 +285,18 @@ export function InterviewSetupForm() {
               </div>
             </div>
 
+            {mode === "LIVE" ? (
+              <div className="space-y-2">
+                <Label htmlFor="interview-domain">Interview domain</Label>
+                <Input
+                  id="interview-domain"
+                  value={domain}
+                  onChange={(event) => setDomain(event.target.value)}
+                  placeholder="Backend, Frontend, Data, DevOps..."
+                />
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <Label htmlFor="question-count">Question count</Label>
               <Input
@@ -243,6 +327,31 @@ export function InterviewSetupForm() {
                     >
                       {skill}
                     </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {mode === "LIVE" ? (
+              <div className="space-y-2">
+                <Label>Live scoring focus</Label>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {skillOptions.map((skill) => (
+                    <label
+                      key={skill}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 border-b border-border/80 py-3 text-sm transition-colors",
+                        evaluationSkills.includes(skill) && "border-primary text-foreground"
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={evaluationSkills.includes(skill)}
+                        onChange={() => toggleEvaluationSkill(skill)}
+                        className="size-4"
+                      />
+                      {skill}
+                    </label>
                   ))}
                 </div>
               </div>
@@ -281,7 +390,7 @@ export function InterviewSetupForm() {
 
         <Button type="submit" disabled={loading || !canSubmit} className="w-full">
           {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-          Generate interview
+          {mode === "LIVE" ? "Start live room" : "Generate interview"}
         </Button>
       </aside>
     </form>

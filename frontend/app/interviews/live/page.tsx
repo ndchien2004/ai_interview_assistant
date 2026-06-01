@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { LiveInterviewView } from "@/components/live-interview-view"
+import { redirect } from "next/navigation"
 
 export default function LiveInterviewPage() {
-  return (
-    <AppShell>
-      <LiveInterviewView />
-    </AppShell>
-  )
+  redirect("/interviews/new?mode=live")
 }

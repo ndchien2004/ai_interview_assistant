@@ -3,6 +3,16 @@ export type User = {
   name: string
   email: string
   headline: string
+  dateOfBirth?: string | null
+  dateOfBirthSetAt?: string | null
+  nameChangeCount?: number
+  nameLastChangedAt?: string | null
+  phoneNumber?: string | null
+  phoneVerifiedAt?: string | null
+  avatarUrl?: string | null
+  authProvider?: "LOCAL" | "GOOGLE" | "LOCAL_AND_GOOGLE"
+  passwordSet?: boolean
+  role?: "USER" | "ADMIN"
   createdAt: string
 }
 
@@ -89,6 +99,10 @@ export type InterviewSession = {
   focusAreas?: string[]
   questionPlan?: QuestionCategory[]
   generationMode?: "HYBRID" | "AI" | "BANK"
+  mode?: "WRITTEN" | "LIVE"
+  domain?: string
+  evaluationSkills?: string[]
+  transcript?: TranscriptMessage[]
 }
 
 export type Evaluation = {

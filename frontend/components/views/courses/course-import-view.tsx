@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, FileUp, Upload } from "lucide-react"
 import { ChangeEvent, useMemo, useState } from "react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"

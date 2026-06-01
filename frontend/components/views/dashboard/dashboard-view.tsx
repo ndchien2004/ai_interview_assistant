@@ -4,8 +4,8 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, FileUp, MessageSquareText, Trophy } from "lucide-react"
 
-import { ScoreCard } from "@/components/score-card"
-import { StateBlock } from "@/components/state-block"
+import { ScoreCard } from "@/components/common/score-card"
+import { StateBlock } from "@/components/common/state-block"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -142,7 +142,9 @@ export function DashboardView() {
                 <Link
                   key={session.id}
                   href={
-                    session.evaluationId ? `/results/${session.evaluationId}` : `/interviews/${session.id}`
+                    session.evaluationId
+                      ? `/results/${session.evaluationId}`
+                      : `/interviews/${session.id}${session.mode === "LIVE" ? "?mode=live" : ""}`
                   }
                   className="flex items-center justify-between gap-3 border-b border-border/80 py-3 transition-colors hover:text-foreground last:border-b-0"
                 >
@@ -152,7 +154,10 @@ export function DashboardView() {
                       {session.seniority} · {formatDate(session.createdAt)}
                     </p>
                   </div>
-                  <Badge>{session.status}</Badge>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge>{session.mode === "LIVE" ? "Live" : "Written"}</Badge>
+                    <Badge>{session.status}</Badge>
+                  </div>
                 </Link>
               ))
             ) : (

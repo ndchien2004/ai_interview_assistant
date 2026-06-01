@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowRight, BookOpen, CheckCircle2, RotateCcw, Upload } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { getCourse, getCourseProgress } from "@/services/course-service"
 import type { Course, CourseProgress } from "@/types"

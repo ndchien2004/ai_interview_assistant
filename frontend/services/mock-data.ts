@@ -5,6 +5,16 @@ export const demoUser: User = {
   name: "Alex Morgan",
   email: "alex@example.com",
   headline: "Full-stack developer preparing for AI-assisted interviews",
+  dateOfBirth: null,
+  dateOfBirthSetAt: null,
+  nameChangeCount: 0,
+  nameLastChangedAt: null,
+  phoneNumber: null,
+  phoneVerifiedAt: null,
+  avatarUrl: null,
+  authProvider: "LOCAL",
+  passwordSet: true,
+  role: "USER",
   createdAt: "2026-05-01T09:00:00.000Z",
 }
 

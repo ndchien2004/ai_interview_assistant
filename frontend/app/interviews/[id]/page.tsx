@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { InterviewRoom } from "@/components/interview-room"
+import { AppShell } from "@/components/common/app-shell"
+import { InterviewRoom } from "@/components/views/interview/interview-room"
 
 type InterviewPageProps = {
   params: Promise<{ id: string }>

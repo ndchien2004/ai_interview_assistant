@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, CheckCircle2, Eye, Keyboard, ListFilter, RotateCcw, XCircle } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { StateBlock } from "@/components/state-block"
+import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { getCourse, getCourseProgress, readLocalProgress } from "@/services/course-service"

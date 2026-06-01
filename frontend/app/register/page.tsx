@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { AuthForm } from "@/components/auth-form"
+import { AuthForm } from "@/components/forms/auth-form"
 
 export default function RegisterPage() {
   const artImageUrl = process.env.NEXT_PUBLIC_AUTH_ART_IMAGE_URL
