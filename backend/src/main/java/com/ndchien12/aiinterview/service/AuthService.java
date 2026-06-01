@@ -8,6 +8,7 @@ import com.ndchien12.aiinterview.dto.auth.RegisterRequest;
 import com.ndchien12.aiinterview.dto.auth.ResendOtpRequest;
 import com.ndchien12.aiinterview.dto.auth.VerifyRegistrationRequest;
 import com.ndchien12.aiinterview.dto.user.UserResponse;
+import com.ndchien12.aiinterview.entity.AuthProvider;
 import com.ndchien12.aiinterview.entity.PendingRegistration;
 import com.ndchien12.aiinterview.entity.Role;
 import com.ndchien12.aiinterview.entity.User;
@@ -190,7 +191,8 @@ public class AuthService {
         String name = displayName(googleToken, email);
 
         User user = userRepository.findByEmail(email)
-                .orElseGet(() -> createGoogleUser(email, name, googleToken.getSubject()));
+                .map(existingUser -> connectGoogleUser(existingUser, googleToken))
+                .orElseGet(() -> createGoogleUser(email, name, googleToken));
         pendingRegistrationRepository.deleteByEmail(email);
 
         String token = jwtService.generateToken(UserPrincipal.from(user));
@@ -225,13 +227,27 @@ public class AuthService {
         return "https://accounts.google.com".equals(issuer) || "accounts.google.com".equals(issuer);
     }
 
-    private User createGoogleUser(String email, String name, String subject) {
+    private User createGoogleUser(String email, String name, Jwt googleToken) {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode("google:" + subject + ":" + System.nanoTime()));
+        user.setPasswordHash(passwordEncoder.encode("google:" + googleToken.getSubject() + ":" + System.nanoTime()));
         user.setHeadline("Candidate preparing for AI-assisted interviews");
+        user.setAvatarUrl(googleToken.getClaimAsString("picture"));
+        user.setAuthProvider(AuthProvider.GOOGLE);
+        user.setPasswordSet(false);
         user.setRole(Role.USER);
+        return userRepository.save(user);
+    }
+
+    private User connectGoogleUser(User user, Jwt googleToken) {
+        if (user.getAuthProvider() == AuthProvider.LOCAL) {
+            user.setAuthProvider(AuthProvider.LOCAL_AND_GOOGLE);
+        }
+        if ((user.getAvatarUrl() == null || user.getAvatarUrl().isBlank())
+                && googleToken.getClaimAsString("picture") != null) {
+            user.setAvatarUrl(googleToken.getClaimAsString("picture"));
+        }
         return userRepository.save(user);
     }
 
@@ -241,6 +257,8 @@ public class AuthService {
         user.setEmail(pendingRegistration.getEmail());
         user.setPasswordHash(pendingRegistration.getPasswordHash());
         user.setHeadline("Candidate preparing for AI-assisted interviews");
+        user.setAuthProvider(AuthProvider.LOCAL);
+        user.setPasswordSet(true);
         user.setRole(Role.USER);
         return user;
     }

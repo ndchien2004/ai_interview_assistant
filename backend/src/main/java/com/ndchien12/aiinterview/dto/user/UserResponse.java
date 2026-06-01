@@ -2,8 +2,10 @@ package com.ndchien12.aiinterview.dto.user;
 
 import com.ndchien12.aiinterview.entity.Role;
 import com.ndchien12.aiinterview.entity.User;
+import com.ndchien12.aiinterview.entity.AuthProvider;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record UserResponse(
@@ -11,6 +13,15 @@ public record UserResponse(
         String name,
         String email,
         String headline,
+        LocalDate dateOfBirth,
+        Instant dateOfBirthSetAt,
+        int nameChangeCount,
+        Instant nameLastChangedAt,
+        String phoneNumber,
+        Instant phoneVerifiedAt,
+        String avatarUrl,
+        AuthProvider authProvider,
+        boolean passwordSet,
         Role role,
         Instant createdAt
 ) {
@@ -20,6 +31,15 @@ public record UserResponse(
                 user.getName(),
                 user.getEmail(),
                 user.getHeadline(),
+                user.getDateOfBirth(),
+                user.getDateOfBirthSetAt(),
+                user.getNameChangeCount(),
+                user.getNameLastChangedAt(),
+                user.getPhoneNumber(),
+                user.getPhoneVerifiedAt(),
+                user.getAvatarUrl(),
+                user.getAuthProvider() == null ? AuthProvider.LOCAL : user.getAuthProvider(),
+                user.isPasswordSet(),
                 user.getRole(),
                 user.getCreatedAt()
         );

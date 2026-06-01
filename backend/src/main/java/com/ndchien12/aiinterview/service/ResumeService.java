@@ -160,7 +160,45 @@ public class ResumeService {
                 .replaceAll("-\\n(?=\\p{L})", "")
                 .replaceAll("\\n{3,}", "\n\n");
 
-        return normalized.trim();
+        return formatResumeText(normalized).trim();
+    }
+
+    private String formatResumeText(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        String formatted = value
+                .replaceAll("[\\u25A1\\u25AA\\u2022]", "\n- ")
+                .replaceAll("([a-z0-9)])([A-Z][A-Z ]{4,})(?=[A-Z][a-z]|\\s|$)", "$1\n\n$2")
+                .replaceAll("(20XX|20\\d{2}|Present)([A-Z])", "$1\n$2")
+                .replaceAll("([a-z)])(Bachelor|Master|Associate|Languages|Tools and Software|Operating Systems|Trainee|Sales Associate)\\b", "$1\n$2");
+
+        java.util.List<String> headings = java.util.List.of(
+                "EDUCATION",
+                "TECHNICAL SKILLS",
+                "SKILLS",
+                "RELEVANT INFORMATION TECHNOLOGY PROJECTS",
+                "PROJECTS",
+                "RELEVANT TRAINING",
+                "TRAINING",
+                "WORK HISTORY",
+                "EXPERIENCE",
+                "CERTIFICATIONS",
+                "SUMMARY"
+        );
+
+        for (String heading : headings) {
+            formatted = formatted.replaceAll("(?i)\\s*(" + java.util.regex.Pattern.quote(heading) + ")\\s*", "\n\n$1\n");
+        }
+
+        return formatted
+                .replaceAll("[ \\t]+", " ")
+                .replaceAll(" ?\\| ?", " | ")
+                .replaceAll("\\n[ \\t]+", "\n")
+                .replaceAll("[ \\t]+\\n", "\n")
+                .replaceAll("\\n{3,}", "\n\n")
+                .trim();
     }
 
     private void applyAnalysis(Resume resume, ResumeAnalysisResult analysis) {

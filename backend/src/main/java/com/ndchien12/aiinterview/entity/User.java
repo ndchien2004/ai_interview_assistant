@@ -12,6 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -34,6 +35,52 @@ public class User {
     @Column(length = 240)
     private String headline;
 
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Column(name = "date_of_birth_set_at")
+    private Instant dateOfBirthSetAt;
+
+    @Column(name = "name_change_count", nullable = false, columnDefinition = "integer default 0")
+    private int nameChangeCount = 0;
+
+    @Column(name = "name_last_changed_at")
+    private Instant nameLastChangedAt;
+
+    @Column(name = "phone_number", length = 32)
+    private String phoneNumber;
+
+    @Column(name = "phone_verified_at")
+    private Instant phoneVerifiedAt;
+
+    @Column(name = "pending_phone_number", length = 32)
+    private String pendingPhoneNumber;
+
+    @Column(name = "phone_otp_code_hash")
+    private String phoneOtpCodeHash;
+
+    @Column(name = "phone_otp_expires_at")
+    private Instant phoneOtpExpiresAt;
+
+    @Column(name = "phone_otp_sent_at")
+    private Instant phoneOtpSentAt;
+
+    @Column(name = "phone_otp_attempts", nullable = false, columnDefinition = "integer default 0")
+    private int phoneOtpAttempts = 0;
+
+    @Column(name = "avatar_url", columnDefinition = "TEXT")
+    private String avatarUrl;
+
+    @Column(name = "avatar_public_id", length = 360)
+    private String avatarPublicId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false, length = 40, columnDefinition = "varchar(40) default 'LOCAL'")
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(name = "password_set", nullable = false, columnDefinition = "boolean default true")
+    private boolean passwordSet = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
     private Role role = Role.USER;
@@ -50,12 +97,23 @@ public class User {
         createdAt = now;
         updatedAt = now;
         email = normalizeEmail(email);
+        applyDefaults();
     }
 
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
         email = normalizeEmail(email);
+        applyDefaults();
+    }
+
+    private void applyDefaults() {
+        if (authProvider == null) {
+            authProvider = AuthProvider.LOCAL;
+        }
+        if (role == null) {
+            role = Role.USER;
+        }
     }
 
     private String normalizeEmail(String value) {
@@ -100,6 +158,126 @@ public class User {
 
     public void setHeadline(String headline) {
         this.headline = headline;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Instant getDateOfBirthSetAt() {
+        return dateOfBirthSetAt;
+    }
+
+    public void setDateOfBirthSetAt(Instant dateOfBirthSetAt) {
+        this.dateOfBirthSetAt = dateOfBirthSetAt;
+    }
+
+    public int getNameChangeCount() {
+        return nameChangeCount;
+    }
+
+    public void setNameChangeCount(int nameChangeCount) {
+        this.nameChangeCount = nameChangeCount;
+    }
+
+    public Instant getNameLastChangedAt() {
+        return nameLastChangedAt;
+    }
+
+    public void setNameLastChangedAt(Instant nameLastChangedAt) {
+        this.nameLastChangedAt = nameLastChangedAt;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public Instant getPhoneVerifiedAt() {
+        return phoneVerifiedAt;
+    }
+
+    public void setPhoneVerifiedAt(Instant phoneVerifiedAt) {
+        this.phoneVerifiedAt = phoneVerifiedAt;
+    }
+
+    public String getPendingPhoneNumber() {
+        return pendingPhoneNumber;
+    }
+
+    public void setPendingPhoneNumber(String pendingPhoneNumber) {
+        this.pendingPhoneNumber = pendingPhoneNumber;
+    }
+
+    public String getPhoneOtpCodeHash() {
+        return phoneOtpCodeHash;
+    }
+
+    public void setPhoneOtpCodeHash(String phoneOtpCodeHash) {
+        this.phoneOtpCodeHash = phoneOtpCodeHash;
+    }
+
+    public Instant getPhoneOtpExpiresAt() {
+        return phoneOtpExpiresAt;
+    }
+
+    public void setPhoneOtpExpiresAt(Instant phoneOtpExpiresAt) {
+        this.phoneOtpExpiresAt = phoneOtpExpiresAt;
+    }
+
+    public Instant getPhoneOtpSentAt() {
+        return phoneOtpSentAt;
+    }
+
+    public void setPhoneOtpSentAt(Instant phoneOtpSentAt) {
+        this.phoneOtpSentAt = phoneOtpSentAt;
+    }
+
+    public int getPhoneOtpAttempts() {
+        return phoneOtpAttempts;
+    }
+
+    public void setPhoneOtpAttempts(int phoneOtpAttempts) {
+        this.phoneOtpAttempts = phoneOtpAttempts;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getAvatarPublicId() {
+        return avatarPublicId;
+    }
+
+    public void setAvatarPublicId(String avatarPublicId) {
+        this.avatarPublicId = avatarPublicId;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(AuthProvider authProvider) {
+        this.authProvider = authProvider;
+    }
+
+    public boolean isPasswordSet() {
+        return passwordSet;
+    }
+
+    public void setPasswordSet(boolean passwordSet) {
+        this.passwordSet = passwordSet;
     }
 
     public Role getRole() {

@@ -492,20 +492,20 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
     }
 
     private String cleanParsedResumeText(String value, String fallback) {
-        String cleaned = cleanDisplayText(value);
+        String cleaned = formatResumeText(cleanDisplayText(value));
         if (cleaned.length() < 80) {
-            cleaned = cleanDisplayText(fallback);
+            cleaned = formatResumeText(cleanDisplayText(fallback));
         }
 
         return cleaned
-                .replaceAll("(?m)^\\s*[-*•]\\s{0,2}$", "")
+                .replaceAll("(?m)^\\s*[-*\u2022]\\s{0,2}$", "")
                 .replaceAll("\\n{3,}", "\n\n")
                 .trim();
     }
 
     private String compactSummary(String value, String fallback) {
         String cleaned = cleanDisplayText(value)
-                .replaceAll("(?m)^\\s*[-*•]\\s*", "")
+                .replaceAll("(?m)^\\s*[-*\u2022]\\s*", "")
                 .replaceAll("\\s+", " ")
                 .trim();
 
@@ -530,6 +530,45 @@ public class OpenAiResumeAnalysisService implements ResumeAnalysisService {
                 .replaceAll("(?m)[ ]{2,}", " ")
                 .replaceAll("(?m)^\\s+", "")
                 .replaceAll("(?m)\\s+$", "")
+                .trim();
+    }
+
+    private String formatResumeText(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        String formatted = value
+                .replaceAll("[\\u25A1\\u25AA\\u2022]", "\n- ")
+                .replaceAll("([a-z0-9)])([A-Z][A-Z ]{4,})(?=[A-Z][a-z]|\\s|$)", "$1\n\n$2")
+                .replaceAll("(20XX|20\\d{2}|Present)([A-Z])", "$1\n$2")
+                .replaceAll("([a-z)])(Bachelor|Master|Associate|Languages|Tools and Software|Operating Systems|Trainee|Sales Associate)\\b", "$1\n$2")
+                .replaceAll("([.!?])\\s+(?=[A-Z][a-z]+:)", "$1\n");
+
+        List<String> headings = List.of(
+                "EDUCATION",
+                "TECHNICAL SKILLS",
+                "SKILLS",
+                "RELEVANT INFORMATION TECHNOLOGY PROJECTS",
+                "PROJECTS",
+                "RELEVANT TRAINING",
+                "TRAINING",
+                "WORK HISTORY",
+                "EXPERIENCE",
+                "CERTIFICATIONS",
+                "SUMMARY"
+        );
+
+        for (String heading : headings) {
+            formatted = formatted.replaceAll("(?i)\\s*(" + java.util.regex.Pattern.quote(heading) + ")\\s*", "\n\n$1\n");
+        }
+
+        return formatted
+                .replaceAll("[ \\t]+", " ")
+                .replaceAll(" ?\\| ?", " | ")
+                .replaceAll("\\n[ \\t]+", "\n")
+                .replaceAll("[ \\t]+\\n", "\n")
+                .replaceAll("\\n{3,}", "\n\n")
                 .trim();
     }
 
