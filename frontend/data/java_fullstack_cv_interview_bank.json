@@ -1,360 +1,4821 @@
 {
-  "slug": "java-fullstack-cv-interview-bank",
-  "title": "Java Full-stack",
-  "description": "Bộ câu hỏi trắc nghiệm tiếng Việt giúp ôn Java, Spring Boot, REST API, cơ sở dữ liệu, React, Next.js, Docker và kiểm thử theo nhịp học lặp lại miễn phí.",
+  "title": "Java - Spring Boot - Hibernate",
+  "description": "Bộ 300 câu hỏi tự tạo dựa trên tài liệu MKAI-X Lab Java Hibernate Spring v1.0",
   "sections": [
     {
-      "slug": "java-core",
       "title": "Java Core",
-      "description": "Nền tảng ngôn ngữ Java thường gặp khi học và đi làm.",
-      "sortOrder": 1,
       "questions": [
         {
-          "question": "Vì sao Java được gọi là ngôn ngữ độc lập nền tảng?",
-          "difficulty": "BEGINNER",
+          "question": "JVM là gì?",
           "options": [
-            "Vì mã Java được biên dịch thành bytecode chạy trên JVM của từng hệ điều hành",
-            "Vì Java chỉ chạy trên Windows",
-            "Vì Java không cần biên dịch",
-            "Vì trình duyệt tự chạy mọi chương trình Java"
+            "framework tạo giao diện CSS",
+            "công cụ thiết kế database",
+            "máy ảo thực thi bytecode Java, quản lý class loading, bộ nhớ, GC và JIT",
+            "trình biên dịch TypeScript"
           ],
-          "correctAnswer": "A",
-          "explanation": "Java source code được biên dịch thành bytecode. Bytecode này chạy trên JVM phù hợp với từng nền tảng, nên cùng một chương trình có thể chạy ở nhiều môi trường.",
-          "tags": ["java", "jvm", "co-ban"],
-          "codeSnippet": ""
+          "correctAnswer": "C",
+          "explanation": "JVM là nơi nạp và chạy bytecode .class, giúp Java có tính đa nền tảng.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jvm"
+          ]
         },
         {
-          "question": "Trong Java, so sánh `==` và `equals()` với object khác nhau thế nào?",
-          "difficulty": "BEGINNER",
+          "question": "JDK là gì?",
           "options": [
-            "`==` so sánh tham chiếu, còn `equals()` thường dùng để so sánh giá trị logic",
-            "`==` luôn giống hệt `equals()`",
-            "`equals()` chỉ dùng được với primitive",
-            "`==` tự động gọi `hashCode()`"
+            "môi trường chỉ để chạy HTML",
+            "database engine của Java",
+            "chuẩn REST API",
+            "bộ công cụ phát triển Java gồm javac, java, debugger và thư viện"
           ],
-          "correctAnswer": "A",
-          "explanation": "Với object, `==` kiểm tra hai biến có trỏ tới cùng một object không. `equals()` có thể được override để so sánh nội dung theo logic nghiệp vụ.",
-          "tags": ["java", "equals", "object"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "oop-collections",
-      "title": "OOP và Collections",
-      "description": "Các khái niệm hướng đối tượng và cấu trúc dữ liệu trong Java.",
-      "sortOrder": 2,
-      "questions": [
-        {
-          "question": "Tính đóng gói (encapsulation) trong OOP chủ yếu giúp điều gì?",
+          "correctAnswer": "D",
+          "explanation": "JDK dùng để phát triển ứng dụng Java, bao gồm compiler và runtime cần thiết.",
           "difficulty": "BEGINNER",
-          "options": [
-            "Che giấu trạng thái bên trong và kiểm soát cách dữ liệu được truy cập/thay đổi",
-            "Bắt buộc mọi class phải kế thừa nhau",
-            "Làm chương trình chạy không cần JVM",
-            "Tự động tối ưu mọi câu SQL"
-          ],
-          "correctAnswer": "A",
-          "explanation": "Encapsulation giúp bảo vệ dữ liệu nội bộ của object, thường thông qua private fields và public methods có kiểm soát.",
-          "tags": ["oop", "encapsulation", "java"],
-          "codeSnippet": ""
+          "tags": [
+            "java",
+            "jdk"
+          ]
         },
         {
-          "question": "Điều kiện quan trọng khi override `equals()` trong class dùng với `HashSet` là gì?",
+          "question": "JRE là gì?",
+          "options": [
+            "bộ query SQL của Hibernate",
+            "môi trường chạy ứng dụng Java",
+            "kiểu dữ liệu nguyên thủy",
+            "container IoC của Spring"
+          ],
+          "correctAnswer": "B",
+          "explanation": "JRE cung cấp runtime để chạy chương trình Java; các JDK hiện đại thường đã đi kèm runtime.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jre"
+          ]
+        },
+        {
+          "question": "Bytecode là gì?",
+          "options": [
+            "câu lệnh SQL native",
+            "file cấu hình Spring Boot",
+            "mã trung gian trong file .class được JVM thực thi",
+            "mã CSS sinh từ Java"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Source .java được biên dịch thành bytecode .class, sau đó JVM nạp và thực thi.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "bytecode"
+          ]
+        },
+        {
+          "question": "JIT compiler là gì?",
+          "options": [
+            "annotation validate DTO",
+            "cơ chế tối ưu đoạn code chạy nhiều bằng cách biên dịch sang native code tại runtime",
+            "công cụ tạo migration database",
+            "kiểu collection key-value"
+          ],
+          "correctAnswer": "B",
+          "explanation": "JIT giúp tối ưu hiệu năng khi chương trình đang chạy.",
           "difficulty": "INTERMEDIATE",
-          "options": [
-            "Nếu hai object bằng nhau theo `equals()` thì phải có cùng `hashCode()`",
-            "`hashCode()` phải luôn trả về số ngẫu nhiên",
-            "Không được override `hashCode()`",
-            "`equals()` phải luôn trả về false"
-          ],
-          "correctAnswer": "A",
-          "explanation": "HashSet/HashMap dựa vào hashCode để tìm bucket. Nếu equals đúng nhưng hashCode khác, collection có thể không tìm lại được phần tử.",
-          "tags": ["java", "hashcode", "collections"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "spring-boot",
-      "title": "Spring Boot",
-      "description": "Kiến thức nền tảng khi xây dựng backend với Spring Boot.",
-      "sortOrder": 3,
-      "questions": [
-        {
-          "question": "Annotation `@RestController` trong Spring Boot thường dùng để làm gì?",
-          "difficulty": "BEGINNER",
-          "options": [
-            "Khai báo controller trả dữ liệu trực tiếp dạng response body, thường là JSON",
-            "Tạo bảng trong database",
-            "Mã hóa password tự động",
-            "Chạy migration SQL"
-          ],
-          "correctAnswer": "A",
-          "explanation": "`@RestController` kết hợp `@Controller` và `@ResponseBody`, phù hợp cho REST API trả JSON/XML.",
-          "tags": ["spring", "rest", "controller"],
-          "codeSnippet": ""
+          "tags": [
+            "java",
+            "jit"
+          ]
         },
         {
-          "question": "Dependency Injection trong Spring giúp ích chính ở điểm nào?",
+          "question": "Garbage Collector là gì?",
+          "options": [
+            "cơ chế route HTTP",
+            "annotation tạo bảng",
+            "bộ thu gom object không còn tham chiếu hợp lệ",
+            "công cụ mã hóa JWT"
+          ],
+          "correctAnswer": "C",
+          "explanation": "GC tự động giải phóng bộ nhớ cho object không còn được dùng.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "memory"
+          ]
+        },
+        {
+          "question": "primitive type là gì?",
+          "options": [
+            "kiểu luôn lưu tham chiếu tới object",
+            "cách khai báo REST endpoint",
+            "annotation đánh dấu entity",
+            "kiểu dữ liệu lưu trực tiếp giá trị như int, long, boolean"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Primitive type lưu trực tiếp giá trị, khác với reference type lưu tham chiếu tới object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datatype"
+          ]
+        },
+        {
+          "question": "reference type là gì?",
+          "options": [
+            "cơ chế tự tạo SQL",
+            "kiểu dữ liệu lưu tham chiếu tới object như String, array, class, collection",
+            "biến local bắt buộc static",
+            "kiểu chỉ gồm int và boolean"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Reference type không lưu trực tiếp object trong biến mà lưu tham chiếu tới object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datatype"
+          ]
+        },
+        {
+          "question": "String equals() là gì?",
+          "options": [
+            "so sánh địa chỉ object bằng mọi trường hợp",
+            "tạo thread mới",
+            "so sánh nội dung chuỗi có phân biệt hoa thường",
+            "commit transaction"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Với String, thông thường dùng equals() hoặc equalsIgnoreCase() thay vì == để so sánh nội dung.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "string"
+          ]
+        },
+        {
+          "question": "equalsIgnoreCase() là gì?",
+          "options": [
+            "xóa khoảng trắng hai đầu",
+            "tạo StringBuilder",
+            "tách chuỗi thành mảng",
+            "so sánh nội dung chuỗi không phân biệt hoa thường"
+          ],
+          "correctAnswer": "D",
+          "explanation": "equalsIgnoreCase() phù hợp khi cần so sánh role, mã hoặc input không phân biệt hoa thường.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "string"
+          ]
+        },
+        {
+          "question": "local variable là gì?",
+          "options": [
+            "bean do Spring quản lý",
+            "biến khai báo trong method/block và phải khởi tạo trước khi đọc",
+            "biến dùng chung cho mọi object",
+            "field tự động persist xuống database"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Local variable chỉ tồn tại trong phạm vi block/method và không có giá trị mặc định khi đọc.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "variable"
+          ]
+        },
+        {
+          "question": "instance variable là gì?",
+          "options": [
+            "hằng số toàn cục bắt buộc public",
+            "biến luôn thuộc class",
+            "biến chỉ tồn tại trong if block",
+            "biến thuộc về từng object, mỗi object có bản sao riêng"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Instance variable biểu diễn state của từng object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "variable",
+            "oop"
+          ]
+        },
+        {
+          "question": "static variable là gì?",
+          "options": [
+            "biến bắt buộc là private",
+            "biến không thể thay đổi dù không final",
+            "biến thuộc về class và dùng chung cho mọi object",
+            "biến chỉ tồn tại trong constructor"
+          ],
+          "correctAnswer": "C",
+          "explanation": "static variable gắn với class, không gắn với một instance cụ thể.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "static"
+          ]
+        },
+        {
+          "question": "constant static final là gì?",
+          "options": [
+            "biến local không cần khởi tạo",
+            "method trả về Optional",
+            "hằng số thường khai báo static final và đặt tên UPPER_SNAKE_CASE",
+            "field entity bắt buộc LAZY"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Trong Java, hằng số dùng chung thường viết public static final và đặt tên kiểu UPPER_SNAKE_CASE.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "final"
+          ]
+        },
+        {
+          "question": "ternary operator là gì?",
+          "options": [
+            "toán tử tạo bean",
+            "cơ chế rollback",
+            "toán tử nối database",
+            "toán tử condition ? a : b dùng cho logic ngắn"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Ternary phù hợp với điều kiện đơn giản, tránh lồng quá sâu gây khó đọc.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "operator"
+          ]
+        },
+        {
+          "question": "method signature là gì?",
+          "options": [
+            "tên method và danh sách parameter theo thứ tự kiểu dữ liệu",
+            "return type duy nhất",
+            "modifier public/private",
+            "nội dung thân method"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Return type không phải thành phần để phân biệt overload; signature dựa vào tên và parameter.",
           "difficulty": "INTERMEDIATE",
-          "options": [
-            "Giảm phụ thuộc cứng giữa class và giúp test/thay thế implementation dễ hơn",
-            "Bắt buộc mọi service phải là static",
-            "Làm database không cần transaction",
-            "Tự động sửa lỗi logic trong code"
-          ],
-          "correctAnswer": "A",
-          "explanation": "Spring container quản lý object và inject dependency cần thiết, giúp code ít coupling và dễ mock khi kiểm thử.",
-          "tags": ["spring", "di", "service"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "rest-security",
-      "title": "REST API và Bảo mật",
-      "description": "Thiết kế API, JWT và phân quyền.",
-      "sortOrder": 4,
-      "questions": [
-        {
-          "question": "HTTP status nào phù hợp nhất khi tạo resource thành công qua POST?",
-          "difficulty": "BEGINNER",
-          "options": ["201 Created", "400 Bad Request", "401 Unauthorized", "500 Internal Server Error"],
-          "correctAnswer": "A",
-          "explanation": "`201 Created` thể hiện server đã tạo resource mới thành công. Có thể kèm header Location hoặc body resource.",
-          "tags": ["rest", "http", "api"],
-          "codeSnippet": ""
+          "tags": [
+            "java",
+            "method"
+          ]
         },
         {
-          "question": "JWT thường gồm những phần chính nào?",
+          "question": "parameter là gì?",
+          "options": [
+            "biến khai báo trong phần định nghĩa method",
+            "field trong database",
+            "giá trị thực tế truyền khi gọi method",
+            "annotation query JPQL"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Parameter nằm trong khai báo method, ví dụ calculate(double amount) có parameter amount.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "argument là gì?",
+          "options": [
+            "dependency Spring inject",
+            "giá trị thực tế truyền vào khi gọi method",
+            "biến khai báo trong signature",
+            "class cha trong kế thừa"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Argument là dữ liệu được truyền khi gọi method, ví dụ calculate(1000).",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "overloading là gì?",
+          "options": [
+            "xử lý exception toàn cục",
+            "cùng tên method nhưng khác danh sách parameter",
+            "tự động persist entity",
+            "class con ghi đè method cha"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Overloading xảy ra trong compile-time dựa trên danh sách tham số.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "varargs là gì?",
+          "options": [
+            "scope request",
+            "kiểu dữ liệu bất biến",
+            "annotation REST",
+            "tham số nhận số lượng argument linh hoạt như int... numbers"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Varargs giúp method nhận nhiều giá trị cùng kiểu mà không cần truyền mảng thủ công.",
           "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "StringBuilder là gì?",
           "options": [
-            "Header, payload và signature",
-            "Username, password và database URL",
-            "HTML, CSS và JavaScript",
-            "Request, response và cookie"
+            "công cụ ghép chuỗi nhiều lần hiệu quả hơn nối String liên tục",
+            "cơ chế fetch quan hệ",
+            "kiểu collection không trùng",
+            "server nhúng Tomcat"
           ],
           "correctAnswer": "A",
-          "explanation": "JWT có 3 phần: header mô tả thuật toán, payload chứa claims, signature dùng để kiểm tra token có bị sửa hay không.",
-          "tags": ["jwt", "security", "auth"],
-          "codeSnippet": ""
+          "explanation": "String là immutable, nên ghép chuỗi nhiều lần có thể dùng StringBuilder để hiệu quả hơn.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "string"
+          ]
+        },
+        {
+          "question": "OOP là gì?",
+          "options": [
+            "ngôn ngữ chỉ viết SQL",
+            "lập trình hướng đối tượng tổ chức chương trình quanh object có state và behavior",
+            "cơ chế build Docker image",
+            "mô hình chỉ dùng function global"
+          ],
+          "correctAnswer": "B",
+          "explanation": "OOP trong Java xoay quanh class, object, field, method và các tính chất cốt lõi.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "class là gì?",
+          "options": [
+            "file bytecode bắt buộc",
+            "object đã được khởi tạo",
+            "dòng dữ liệu trong database",
+            "bản thiết kế để tạo object"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Class mô tả field và method; object là instance được tạo từ class.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "object là gì?",
+          "options": [
+            "annotation mapping bảng",
+            "thực thể được tạo từ class",
+            "query method repository",
+            "bản thiết kế chưa khởi tạo"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Object có state và behavior theo class của nó.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "encapsulation là gì?",
+          "options": [
+            "tạo nhiều implementation của một contract",
+            "đóng gói dữ liệu, che giấu field nội bộ và kiểm soát thay đổi qua method",
+            "tải quan hệ sớm",
+            "gom transaction database"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Encapsulation thường dùng private field và method có ý nghĩa nghiệp vụ để bảo vệ trạng thái object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "inheritance là gì?",
+          "options": [
+            "validate input HTTP",
+            "ẩn chi tiết implementation qua interface",
+            "so sánh object trong HashSet",
+            "kế thừa để class con tái sử dụng và mở rộng class cha theo quan hệ is-a"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Java chỉ cho phép một class extends một class trực tiếp, nhưng có thể implements nhiều interface.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "polymorphism là gì?",
+          "options": [
+            "đa hình cho phép biến kiểu cha/interface tham chiếu nhiều implementation khác nhau",
+            "một bảng có nhiều khóa chính",
+            "một DTO có nhiều validation",
+            "một query sinh nhiều transaction"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Khi gọi method override, JVM chọn implementation theo object thực tế tại runtime.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "abstraction là gì?",
+          "options": [
+            "trừu tượng tập trung vào contract cần làm gì thay vì chi tiết làm thế nào",
+            "ghi log password để debug",
+            "luôn dùng EAGER",
+            "xóa object không tham chiếu"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Interface và abstract class là công cụ phổ biến để thể hiện abstraction.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "oop"
+          ]
+        },
+        {
+          "question": "interface là gì?",
+          "options": [
+            "entity luôn cần proxy",
+            "class luôn có field instance bắt buộc",
+            "transaction manager",
+            "contract mà class có thể implements nhiều interface"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Interface phù hợp khi cần tách contract khỏi implementation.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "interface"
+          ]
+        },
+        {
+          "question": "abstract class là gì?",
+          "options": [
+            "contract không có constructor",
+            "class trừu tượng có thể chia sẻ code nền và state chung cho class con",
+            "query tự sinh từ tên method",
+            "kiểu dữ liệu nguyên thủy"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Abstract class có thể có constructor và field instance, nhưng class con chỉ extends một class.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "abstract-class"
+          ]
+        },
+        {
+          "question": "private modifier là gì?",
+          "options": [
+            "dùng để tạo endpoint",
+            "truy cập từ mọi package",
+            "chỉ dành cho bean Spring",
+            "chỉ truy cập được trong cùng class"
+          ],
+          "correctAnswer": "D",
+          "explanation": "private là mức che giấu mạnh nhất trong các access modifier phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "access-modifier"
+          ]
+        },
+        {
+          "question": "protected modifier là gì?",
+          "options": [
+            "truy cập trong cùng package và class con khác package",
+            "mọi nơi không giới hạn",
+            "chỉ trong cùng class",
+            "chỉ dùng trong interface"
+          ],
+          "correctAnswer": "A",
+          "explanation": "protected thường dùng khi muốn class con truy cập một thành phần nhất định.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "access-modifier"
+          ]
+        },
+        {
+          "question": "public modifier là gì?",
+          "options": [
+            "chỉ method static",
+            "chỉ trong cùng package",
+            "truy cập được từ mọi nơi nếu module/classpath cho phép",
+            "chỉ class con"
+          ],
+          "correctAnswer": "C",
+          "explanation": "public là access modifier mở nhất.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "access-modifier"
+          ]
+        },
+        {
+          "question": "final variable là gì?",
+          "options": [
+            "biến bắt buộc static",
+            "biến chỉ dùng trong entity",
+            "biến chỉ được gán một lần",
+            "biến không cần kiểu dữ liệu"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Với reference final, không đổi được tham chiếu nhưng object được trỏ tới vẫn có thể mutable.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "final"
+          ]
+        },
+        {
+          "question": "final method là gì?",
+          "options": [
+            "method bắt buộc static",
+            "method chỉ được gọi một lần",
+            "method không cho class con override",
+            "method tự động rollback"
+          ],
+          "correctAnswer": "C",
+          "explanation": "final method dùng khi muốn cố định hành vi.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "final"
+          ]
+        },
+        {
+          "question": "final class là gì?",
+          "options": [
+            "class bắt buộc abstract",
+            "class luôn là entity",
+            "class không cho kế thừa",
+            "class không tạo object được"
+          ],
+          "correctAnswer": "C",
+          "explanation": "String là ví dụ class final và immutable.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "final"
+          ]
+        },
+        {
+          "question": "enum là gì?",
+          "options": [
+            "kiểu biểu diễn tập giá trị hữu hạn",
+            "cơ chế tạo bean",
+            "kiểu collection có thứ tự",
+            "annotation validate chuỗi"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Enum phù hợp cho trạng thái như NEW, IN_PROGRESS, COMPLETED.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "enum"
+          ]
+        },
+        {
+          "question": "record là gì?",
+          "options": [
+            "annotation entity bắt buộc",
+            "cách tạo thread pool",
+            "kỹ thuật JOIN FETCH",
+            "cách khai báo dữ liệu bất biến gọn, phù hợp DTO đọc/projection đơn giản"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Record thường phù hợp cho DTO; entity JPA cần cân nhắc vì lifecycle và proxy behavior.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "record"
+          ]
+        },
+        {
+          "question": "List là gì?",
+          "options": [
+            "collection có thứ tự, cho phép phần tử trùng và truy cập theo index",
+            "collection key-value",
+            "collection không chứa phần tử trùng",
+            "queue ưu tiên"
+          ],
+          "correctAnswer": "A",
+          "explanation": "List thường dùng cho danh sách project hoặc kết quả tìm kiếm.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "collections"
+          ]
+        },
+        {
+          "question": "Set là gì?",
+          "options": [
+            "collection không chứa phần tử trùng theo equals/hashCode",
+            "map key-value",
+            "chuỗi immutable",
+            "collection luôn cho phép duplicate"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Set phù hợp cho tag, role hoặc mã duy nhất.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "collections"
+          ]
+        },
+        {
+          "question": "Map là gì?",
+          "options": [
+            "collection lưu key-value, key không trùng",
+            "list có index",
+            "collection chỉ lưu primitive",
+            "stream terminal operation"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Map dùng để tra cứu theo ID, code hoặc cache tạm.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "collections"
+          ]
+        },
+        {
+          "question": "Queue là gì?",
+          "options": [
+            "scope của bean",
+            "công cụ mapping entity",
+            "collection xử lý theo hàng đợi",
+            "collection key-value"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Queue phù hợp cho job queue đơn giản hoặc xử lý FIFO/priority tùy implementation.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "collections"
+          ]
+        },
+        {
+          "question": "ArrayList là gì?",
+          "options": [
+            "set không thứ tự",
+            "map dạng cây",
+            "List dựa trên mảng động, get(index) nhanh O(1) và là lựa chọn mặc định",
+            "danh sách liên kết hai chiều"
+          ],
+          "correctAnswer": "C",
+          "explanation": "ArrayList thường là lựa chọn mặc định cho List khi không có yêu cầu đặc thù.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "collections"
+          ]
+        },
+        {
+          "question": "LinkedList là gì?",
+          "options": [
+            "hash table key-value",
+            "immutable string",
+            "List dựa trên danh sách liên kết hai chiều, get(index) O(n)",
+            "mảng động truy cập O(1)"
+          ],
+          "correctAnswer": "C",
+          "explanation": "LinkedList chỉ nên dùng khi hiểu rõ nhu cầu thêm/xóa theo node và chi phí tìm vị trí.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "collections"
+          ]
+        },
+        {
+          "question": "equals/hashCode contract là gì?",
+          "options": [
+            "nếu hai object equals() true thì hashCode() phải giống nhau",
+            "equals không liên quan HashMap",
+            "chỉ cần override hashCode",
+            "hashCode giống nhau thì equals luôn true"
+          ],
+          "correctAnswer": "A",
+          "explanation": "HashSet và HashMap dùng hashCode để tìm bucket và equals để xác định object bằng nhau.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "equals",
+            "hashcode"
+          ]
+        },
+        {
+          "question": "Generics là gì?",
+          "options": [
+            "annotation transaction",
+            "cơ chế garbage collection",
+            "loại query native",
+            "tham số hóa kiểu dữ liệu để tăng type safety và giảm ép kiểu thủ công"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Ví dụ List<String> chỉ nhận String, giúp phát hiện lỗi kiểu dữ liệu sớm.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "generics"
+          ]
+        },
+        {
+          "question": "List<?> là gì?",
+          "options": [
+            "danh sách kiểu chưa biết, đọc an toàn dưới dạng Object",
+            "danh sách chỉ nhận String",
+            "danh sách chỉ ghi Integer",
+            "danh sách chỉ nhận Number con"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Wildcard ? dùng khi chưa biết chính xác kiểu generic.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "generics"
+          ]
+        },
+        {
+          "question": "List<? extends Number> là gì?",
+          "options": [
+            "map key-value",
+            "danh sách Number hoặc class con, phù hợp để đọc dữ liệu",
+            "danh sách chỉ chứa String",
+            "danh sách class cha của Integer phù hợp ghi Integer"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Theo PECS, producer dùng extends.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "generics"
+          ]
+        },
+        {
+          "question": "List<? super Integer> là gì?",
+          "options": [
+            "danh sách Integer hoặc class cha, phù hợp để ghi Integer",
+            "danh sách chỉ đọc Number con",
+            "danh sách immutable",
+            "query JPQL"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Theo PECS, consumer dùng super.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "generics"
+          ]
+        },
+        {
+          "question": "checked exception là gì?",
+          "options": [
+            "exception compiler bắt buộc xử lý hoặc khai báo throws",
+            "lỗi nghiêm trọng JVM",
+            "RuntimeException không cần xử lý",
+            "HTTP status 404"
+          ],
+          "correctAnswer": "A",
+          "explanation": "IOException và SQLException là ví dụ checked exception.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "unchecked exception là gì?",
+          "options": [
+            "DTO validation annotation",
+            "lỗi JVM không thể recover",
+            "exception bắt buộc catch",
+            "exception kế thừa RuntimeException, compiler không bắt buộc xử lý"
+          ],
+          "correctAnswer": "D",
+          "explanation": "IllegalArgumentException và NullPointerException là ví dụ unchecked exception.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "Error là gì?",
+          "options": [
+            "business exception bình thường",
+            "checked exception cần catch",
+            "HTTP query method",
+            "lỗi nghiêm trọng của JVM hoặc môi trường như OutOfMemoryError"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Thông thường không xử lý Error như lỗi nghiệp vụ.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "try-catch là gì?",
+          "options": [
+            "cấu trúc JOIN FETCH",
+            "cấu trúc bao quanh và xử lý đoạn code có thể phát sinh exception",
+            "cấu trúc tạo DTO",
+            "cấu trúc tạo bean"
+          ],
+          "correctAnswer": "B",
+          "explanation": "try chứa code có thể lỗi, catch xử lý exception phù hợp.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "finally là gì?",
+          "options": [
+            "annotation sinh ID",
+            "operation terminal stream",
+            "khối chỉ chạy khi không lỗi",
+            "khối chạy sau try/catch dù có lỗi hay không"
+          ],
+          "correctAnswer": "D",
+          "explanation": "finally thường dùng để giải phóng tài nguyên, dù try-with-resources hiện đại hơn cho AutoCloseable.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "throw là gì?",
+          "options": [
+            "khai báo method có thể ném exception",
+            "bắt exception",
+            "tạo collection",
+            "từ khóa chủ động ném một exception cụ thể"
+          ],
+          "correctAnswer": "D",
+          "explanation": "throw new IllegalArgumentException(...) dùng để ném lỗi.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "throws là gì?",
+          "options": [
+            "bắt exception trong catch",
+            "đóng tài nguyên",
+            "chủ động tạo exception instance",
+            "khai báo method có thể ném exception ra ngoài"
+          ],
+          "correctAnswer": "D",
+          "explanation": "throws xuất hiện trong chữ ký method.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "exception"
+          ]
+        },
+        {
+          "question": "try-with-resources là gì?",
+          "options": [
+            "cơ chế tự fetch EAGER",
+            "cơ chế tự tạo bean singleton",
+            "cơ chế tự serialize JSON",
+            "cơ chế tự đóng tài nguyên implements AutoCloseable"
+          ],
+          "correctAnswer": "D",
+          "explanation": "try-with-resources phù hợp với Connection, InputStream, BufferedReader.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "io",
+            "exception"
+          ]
+        },
+        {
+          "question": "lambda expression là gì?",
+          "options": [
+            "cách viết ngắn implementation của functional interface",
+            "công cụ migration",
+            "cơ chế mapping bảng",
+            "kiểu dữ liệu nguyên thủy"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Lambda kết hợp tốt với Stream API để xử lý collection rõ ràng hơn.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "functional interface là gì?",
+          "options": [
+            "interface chỉ có một abstract method",
+            "class có nhiều constructor",
+            "repository có nhiều query",
+            "entity có primary key"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Predicate, Function, Consumer, Supplier là các functional interface phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "Predicate<T> là gì?",
+          "options": [
+            "biến đổi T thành R",
+            "nhận T và không trả kết quả",
+            "functional interface kiểm tra điều kiện và trả boolean",
+            "cung cấp T"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Predicate thường dùng trong filter.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "Function<T,R> là gì?",
+          "options": [
+            "functional interface biến đổi T thành R",
+            "so sánh để sort",
+            "kiểm tra điều kiện boolean",
+            "tạo thread"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Function thường dùng trong map.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "Consumer<T> là gì?",
+          "options": [
+            "cung cấp giá trị",
+            "functional interface nhận T và thực hiện hành động, không trả kết quả",
+            "trả boolean",
+            "quản lý transaction"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Consumer thường dùng với forEach.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "Supplier<T> là gì?",
+          "options": [
+            "biến đổi T thành R",
+            "so sánh hai object",
+            "functional interface cung cấp hoặc tạo giá trị T",
+            "nhận T và trả void"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Supplier có method get().",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "Comparator<T> là gì?",
+          "options": [
+            "đánh dấu entity",
+            "functional interface so sánh để sắp xếp",
+            "cung cấp giá trị",
+            "lưu key-value"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Comparator có method compare(a,b).",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "lambda"
+          ]
+        },
+        {
+          "question": "Stream là gì?",
+          "options": [
+            "database transaction",
+            "mảng động",
+            "server nhúng",
+            "pipeline xử lý dữ liệu, không phải collection"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Stream gồm source, intermediate operation và terminal operation; mỗi stream chỉ nên consume một lần.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "stream"
+          ]
+        },
+        {
+          "question": "intermediate operation là gì?",
+          "options": [
+            "annotation entity",
+            "operation Stream trả về stream mới và lazy như filter, map, sorted",
+            "source dữ liệu",
+            "operation kích hoạt xử lý cuối cùng"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Intermediate operation chưa chạy ngay cho tới khi có terminal operation.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "stream"
+          ]
+        },
+        {
+          "question": "terminal operation là gì?",
+          "options": [
+            "operation lazy trả stream mới",
+            "operation kích hoạt xử lý Stream và tạo kết quả như toList, count, reduce",
+            "scope singleton",
+            "source stream"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Terminal operation consume stream.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "stream"
+          ]
+        },
+        {
+          "question": "Optional<T> là gì?",
+          "options": [
+            "kiểu biểu diễn giá trị có thể tồn tại hoặc không tồn tại",
+            "collection có index",
+            "thread pool",
+            "annotation sinh ID"
+          ],
+          "correctAnswer": "A",
+          "explanation": "findById của Spring Data JPA thường trả Optional<T>.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "optional"
+          ]
+        },
+        {
+          "question": "orElseThrow là gì?",
+          "options": [
+            "method tạo bean",
+            "method Optional dùng để lấy giá trị hoặc ném exception nếu rỗng",
+            "method sắp xếp list",
+            "method tự động commit DB"
+          ],
+          "correctAnswer": "B",
+          "explanation": "orElseThrow phù hợp khi resource không tồn tại và cần ném ResourceNotFoundException.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "optional"
+          ]
+        },
+        {
+          "question": "LocalDate là gì?",
+          "options": [
+            "giờ không ngày",
+            "class Date-Time API biểu diễn ngày không có giờ và timezone",
+            "ngày giờ có timezone",
+            "timestamp UTC"
+          ],
+          "correctAnswer": "B",
+          "explanation": "LocalDate phù hợp cho ngày sinh, deadline theo ngày.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datetime"
+          ]
+        },
+        {
+          "question": "LocalTime là gì?",
+          "options": [
+            "timestamp UTC",
+            "query SQL",
+            "class biểu diễn giờ không có ngày và timezone",
+            "ngày không giờ"
+          ],
+          "correctAnswer": "C",
+          "explanation": "LocalTime phù hợp cho giờ mở cửa, giờ học.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datetime"
+          ]
+        },
+        {
+          "question": "LocalDateTime là gì?",
+          "options": [
+            "ngày giờ có timezone",
+            "file path",
+            "class biểu diễn ngày giờ không timezone",
+            "mốc thời gian UTC"
+          ],
+          "correctAnswer": "C",
+          "explanation": "LocalDateTime dùng khi không cần timezone cụ thể.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datetime"
+          ]
+        },
+        {
+          "question": "Instant là gì?",
+          "options": [
+            "ngày không timezone",
+            "mốc thời gian UTC",
+            "DTO projection",
+            "giờ không ngày"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Instant phù hợp lưu timestamp sự kiện.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "datetime"
+          ]
+        },
+        {
+          "question": "ZonedDateTime là gì?",
+          "options": [
+            "queue FIFO",
+            "chỉ giờ",
+            "chỉ ngày",
+            "ngày giờ có timezone"
+          ],
+          "correctAnswer": "D",
+          "explanation": "ZonedDateTime dùng khi cần timezone như Asia/Bangkok.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "datetime"
+          ]
+        },
+        {
+          "question": "DateTimeFormatter là gì?",
+          "options": [
+            "class proxy AOP",
+            "class đọc ResultSet",
+            "class format và parse date-time",
+            "class tạo repository"
+          ],
+          "correctAnswer": "C",
+          "explanation": "DateTimeFormatter.ofPattern(\"dd/MM/yyyy\") dùng để định dạng ngày.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datetime"
+          ]
+        },
+        {
+          "question": "JDBC là gì?",
+          "options": [
+            "API nền tảng để Java làm việc với database quan hệ",
+            "framework MVC",
+            "collection framework",
+            "kiểu dữ liệu primitive"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Hibernate và Spring Data JPA cuối cùng vẫn giao tiếp database thông qua JDBC.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jdbc"
+          ]
+        },
+        {
+          "question": "PreparedStatement là gì?",
+          "options": [
+            "annotation REST",
+            "DTO mapper",
+            "công cụ JDBC truyền parameter vào SQL an toàn hơn nối chuỗi",
+            "thread pool"
+          ],
+          "correctAnswer": "C",
+          "explanation": "PreparedStatement giúp giảm nguy cơ SQL Injection.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "jdbc",
+            "security"
+          ]
+        },
+        {
+          "question": "ResultSet là gì?",
+          "options": [
+            "class immutable",
+            "công cụ inject dependency",
+            "enum status",
+            "đối tượng JDBC đọc kết quả trả về từ query"
+          ],
+          "correctAnswer": "D",
+          "explanation": "ResultSet cho phép duyệt từng row và lấy giá trị theo cột.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jdbc"
+          ]
+        },
+        {
+          "question": "Process là gì?",
+          "options": [
+            "object JPA managed",
+            "tiến trình đang chạy có vùng nhớ riêng",
+            "operation stream",
+            "luồng bên trong process"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Process là đơn vị thực thi ở mức hệ điều hành.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "multithreading"
+          ]
+        },
+        {
+          "question": "Thread là gì?",
+          "options": [
+            "tiến trình có vùng nhớ riêng",
+            "luồng thực thi bên trong process, có thể chia sẻ dữ liệu với thread khác",
+            "entity detached",
+            "HTTP response"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Nhiều thread trong cùng process có thể gây vấn đề đồng bộ khi chia sẻ dữ liệu.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "multithreading"
+          ]
+        },
+        {
+          "question": "race condition là gì?",
+          "options": [
+            "kết quả sai do nhiều thread cập nhật dữ liệu dùng chung không đồng bộ",
+            "lỗi query N+1",
+            "lỗi thiếu validation",
+            "lỗi mapping DTO"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Race condition xảy ra khi thứ tự thực thi thread ảnh hưởng kết quả.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "multithreading"
+          ]
+        },
+        {
+          "question": "synchronized là gì?",
+          "options": [
+            "cơ chế tạo endpoint",
+            "cơ chế sinh ID",
+            "cơ chế query động",
+            "cơ chế khóa đơn giản để bảo vệ critical section"
+          ],
+          "correctAnswer": "D",
+          "explanation": "synchronized giúp chỉ một thread vào vùng code nhất định tại một thời điểm.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "multithreading"
+          ]
+        },
+        {
+          "question": "ExecutorService là gì?",
+          "options": [
+            "annotation validate",
+            "công cụ quản lý pool thread thay vì tạo thread thủ công liên tục",
+            "repository abstraction",
+            "entity state"
+          ],
+          "correctAnswer": "B",
+          "explanation": "ExecutorService giúp quản lý task bất đồng bộ và tài nguyên thread tốt hơn.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "multithreading"
+          ]
+        },
+        {
+          "question": "CompletableFuture là gì?",
+          "options": [
+            "HTTP status",
+            "class entity lifecycle",
+            "API hỗ trợ chuỗi tác vụ bất đồng bộ mức cao hơn",
+            "access modifier"
+          ],
+          "correctAnswer": "C",
+          "explanation": "CompletableFuture giúp kết hợp, xử lý kết quả async linh hoạt hơn Thread thủ công.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "multithreading"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: máy ảo thực thi bytecode Java, quản lý class loading, bộ nhớ, GC và JIT?",
+          "options": [
+            "JVM",
+            "String equals()",
+            "Stream",
+            "enum"
+          ],
+          "correctAnswer": "A",
+          "explanation": "JVM là nơi nạp và chạy bytecode .class, giúp Java có tính đa nền tảng.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jvm"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: bộ công cụ phát triển Java gồm javac, java, debugger và thư viện?",
+          "options": [
+            "JVM",
+            "JDK",
+            "Comparator<T>",
+            "PreparedStatement"
+          ],
+          "correctAnswer": "B",
+          "explanation": "JDK dùng để phát triển ứng dụng Java, bao gồm compiler và runtime cần thiết.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jdk"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: môi trường chạy ứng dụng Java?",
+          "options": [
+            "CompletableFuture",
+            "JRE",
+            "argument",
+            "Set"
+          ],
+          "correctAnswer": "B",
+          "explanation": "JRE cung cấp runtime để chạy chương trình Java; các JDK hiện đại thường đã đi kèm runtime.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "jre"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: mã trung gian trong file .class được JVM thực thi?",
+          "options": [
+            "protected modifier",
+            "Consumer<T>",
+            "orElseThrow",
+            "Bytecode"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Source .java được biên dịch thành bytecode .class, sau đó JVM nạp và thực thi.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "bytecode"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: cơ chế tối ưu đoạn code chạy nhiều bằng cách biên dịch sang native code tại runtime?",
+          "options": [
+            "List<? extends Number>",
+            "Error",
+            "JIT compiler",
+            "throw"
+          ],
+          "correctAnswer": "C",
+          "explanation": "JIT giúp tối ưu hiệu năng khi chương trình đang chạy.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "jit"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: bộ thu gom object không còn tham chiếu hợp lệ?",
+          "options": [
+            "String equals()",
+            "ResultSet",
+            "Garbage Collector",
+            "throw"
+          ],
+          "correctAnswer": "C",
+          "explanation": "GC tự động giải phóng bộ nhớ cho object không còn được dùng.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "memory"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: kiểu dữ liệu lưu trực tiếp giá trị như int, long, boolean?",
+          "options": [
+            "Map",
+            "JIT compiler",
+            "checked exception",
+            "primitive type"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Primitive type lưu trực tiếp giá trị, khác với reference type lưu tham chiếu tới object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datatype"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: kiểu dữ liệu lưu tham chiếu tới object như String, array, class, collection?",
+          "options": [
+            "LocalTime",
+            "polymorphism",
+            "List<? super Integer>",
+            "reference type"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Reference type không lưu trực tiếp object trong biến mà lưu tham chiếu tới object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "datatype"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: so sánh nội dung chuỗi có phân biệt hoa thường?",
+          "options": [
+            "final class",
+            "String equals()",
+            "LinkedList",
+            "List<? extends Number>"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Với String, thông thường dùng equals() hoặc equalsIgnoreCase() thay vì == để so sánh nội dung.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "string"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: so sánh nội dung chuỗi không phân biệt hoa thường?",
+          "options": [
+            "Set",
+            "equalsIgnoreCase()",
+            "StringBuilder",
+            "JDK"
+          ],
+          "correctAnswer": "B",
+          "explanation": "equalsIgnoreCase() phù hợp khi cần so sánh role, mã hoặc input không phân biệt hoa thường.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "string"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: biến khai báo trong method/block và phải khởi tạo trước khi đọc?",
+          "options": [
+            "local variable",
+            "race condition",
+            "equalsIgnoreCase()",
+            "final method"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Local variable chỉ tồn tại trong phạm vi block/method và không có giá trị mặc định khi đọc.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "variable"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: biến thuộc về từng object, mỗi object có bản sao riêng?",
+          "options": [
+            "lambda expression",
+            "polymorphism",
+            "public modifier",
+            "instance variable"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Instance variable biểu diễn state của từng object.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "variable",
+            "oop"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: biến thuộc về class và dùng chung cho mọi object?",
+          "options": [
+            "List<? super Integer>",
+            "functional interface",
+            "private modifier",
+            "static variable"
+          ],
+          "correctAnswer": "D",
+          "explanation": "static variable gắn với class, không gắn với một instance cụ thể.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "static"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: hằng số thường khai báo static final và đặt tên UPPER_SNAKE_CASE?",
+          "options": [
+            "Garbage Collector",
+            "abstraction",
+            "varargs",
+            "constant static final"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Trong Java, hằng số dùng chung thường viết public static final và đặt tên kiểu UPPER_SNAKE_CASE.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "final"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: toán tử condition ? a : b dùng cho logic ngắn?",
+          "options": [
+            "LocalDate",
+            "instance variable",
+            "ternary operator",
+            "ExecutorService"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Ternary phù hợp với điều kiện đơn giản, tránh lồng quá sâu gây khó đọc.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "operator"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: tên method và danh sách parameter theo thứ tự kiểu dữ liệu?",
+          "options": [
+            "ternary operator",
+            "method signature",
+            "OOP",
+            "throws"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Return type không phải thành phần để phân biệt overload; signature dựa vào tên và parameter.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: biến khai báo trong phần định nghĩa method?",
+          "options": [
+            "String equals()",
+            "parameter",
+            "class",
+            "Optional<T>"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Parameter nằm trong khai báo method, ví dụ calculate(double amount) có parameter amount.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: giá trị thực tế truyền vào khi gọi method?",
+          "options": [
+            "argument",
+            "try-catch",
+            "Optional<T>",
+            "Garbage Collector"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Argument là dữ liệu được truyền khi gọi method, ví dụ calculate(1000).",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: cùng tên method nhưng khác danh sách parameter?",
+          "options": [
+            "intermediate operation",
+            "List<? super Integer>",
+            "overloading",
+            "functional interface"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Overloading xảy ra trong compile-time dựa trên danh sách tham số.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "java",
+            "method"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: tham số nhận số lượng argument linh hoạt như int... numbers?",
+          "options": [
+            "Garbage Collector",
+            "varargs",
+            "terminal operation",
+            "intermediate operation"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Varargs giúp method nhận nhiều giá trị cùng kiểu mà không cần truyền mảng thủ công.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "java",
+            "method"
+          ]
         }
       ]
     },
     {
-      "slug": "database",
-      "title": "Database và JPA",
-      "description": "SQL, transaction và mapping dữ liệu.",
-      "sortOrder": 5,
+      "title": "Hibernate và Jakarta Persistence",
       "questions": [
         {
-          "question": "Primary key trong bảng database dùng để làm gì?",
-          "difficulty": "BEGINNER",
+          "question": "ORM là gì?",
           "options": [
-            "Định danh duy nhất mỗi dòng trong bảng",
-            "Lưu mật khẩu dạng plain text",
-            "Tự động tạo giao diện người dùng",
-            "Thay thế toàn bộ index"
+            "kiểu dữ liệu primitive",
+            "kỹ thuật tạo giao diện web",
+            "kỹ thuật ánh xạ object trong chương trình với bảng trong database quan hệ",
+            "cơ chế nén bytecode"
           ],
-          "correctAnswer": "A",
-          "explanation": "Primary key đảm bảo mỗi record có định danh duy nhất, thường được dùng để join và truy vấn chính xác.",
-          "tags": ["sql", "database", "primary-key"],
-          "codeSnippet": ""
+          "correctAnswer": "C",
+          "explanation": "ORM giúp làm việc với object thay vì tự viết nhiều SQL thủ công cho CRUD cơ bản.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "hibernate",
+            "orm"
+          ]
         },
         {
-          "question": "Trong JPA, vấn đề N+1 query thường xảy ra khi nào?",
+          "question": "Jakarta Persistence/JPA là gì?",
+          "options": [
+            "database engine",
+            "chuẩn API và annotation cho ORM trong Java",
+            "implementation cụ thể duy nhất",
+            "framework frontend"
+          ],
+          "correctAnswer": "B",
+          "explanation": "JPA là specification; Hibernate là một implementation phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "hibernate"
+          ]
+        },
+        {
+          "question": "Hibernate ORM là gì?",
+          "options": [
+            "collection framework",
+            "trình duyệt web",
+            "implementation ORM phổ biến của Jakarta Persistence",
+            "chuẩn HTTP"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Hibernate thực thi mapping, sinh SQL, quản lý persistence context và dirty checking.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "hibernate",
+            "jpa"
+          ]
+        },
+        {
+          "question": "Spring Data JPA là gì?",
+          "options": [
+            "JVM runtime",
+            "database quan hệ",
+            "template CSS",
+            "abstraction repository giúp thao tác dữ liệu ít boilerplate hơn"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Spring Data JPA thường dùng Hibernate bên dưới khi dùng starter mặc định.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "jpa"
+          ]
+        },
+        {
+          "question": "@Entity trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation đánh dấu class được quản lý như entity và ánh xạ database",
+            "đánh dấu transaction",
+            "đánh dấu field không persist",
+            "đánh dấu REST controller"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Entity cần identity và được persistence context quản lý.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "@Table trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "khai báo khóa chính",
+            "validate input",
+            "annotation tùy chỉnh tên bảng hoặc thông tin bảng",
+            "tạo endpoint HTTP"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Table không bắt buộc nếu tên mặc định phù hợp.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "@Id trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đánh dấu field tạm không lưu DB",
+            "đánh dấu query JPQL",
+            "đánh dấu bean singleton",
+            "annotation đánh dấu primary key của entity"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Mỗi entity cần có ID để xác định identity.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "@GeneratedValue trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation query native",
+            "annotation cấu hình cách sinh ID",
+            "annotation inject dependency",
+            "annotation kiểm tra email"
+          ],
+          "correctAnswer": "B",
+          "explanation": "GenerationType.IDENTITY thường phù hợp auto_increment của MySQL/PostgreSQL serial identity.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "@Column trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation tạo transaction",
+            "annotation log message",
+            "annotation tùy chỉnh cột như nullable, unique, length, name",
+            "annotation định nghĩa quan hệ N-1"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Column giúp ràng buộc mapping giữa field và column.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "@Enumerated(EnumType.STRING) trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "không lưu field xuống DB",
+            "lưu enum dạng chuỗi trong database",
+            "tạo primary key",
+            "lưu enum theo thứ tự ordinal"
+          ],
+          "correctAnswer": "B",
+          "explanation": "EnumType.STRING dễ đọc và an toàn hơn ORDINAL khi thay đổi thứ tự enum.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "enum"
+          ]
+        },
+        {
+          "question": "EnumType.ORDINAL risk là gì?",
+          "options": [
+            "lưu enum theo số thứ tự có thể làm dữ liệu cũ bị hiểu sai khi đổi thứ tự enum",
+            "chỉ dùng cho String",
+            "luôn tốt hơn STRING",
+            "không bao giờ lưu được DB"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Tài liệu khuyến nghị ưu tiên EnumType.STRING cho nghiệp vụ thông thường.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "enum"
+          ]
+        },
+        {
+          "question": "@Transient trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đánh dấu quan hệ owning side",
+            "đánh dấu REST endpoint",
+            "annotation đánh dấu field không persist xuống database",
+            "đánh dấu khóa chính"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Transient dùng cho field tính toán tạm thời trong entity.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "protected no-args constructor là gì?",
+          "options": [
+            "constructor không tham số thường cần cho entity JPA",
+            "bắt buộc public static final",
+            "chỉ dùng cho record",
+            "dùng để mapping DTO"
+          ],
+          "correctAnswer": "A",
+          "explanation": "JPA cần constructor không tham số để tạo entity qua reflection/proxy.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "persistence context là gì?",
+          "options": [
+            "HTTP request body",
+            "môi trường quản lý tập entity đang được theo dõi",
+            "thread pool",
+            "file cấu hình YAML"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Persistence context theo dõi managed entity và hỗ trợ dirty checking.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "hibernate"
+          ]
+        },
+        {
+          "question": "EntityManager là gì?",
+          "options": [
+            "class logger",
+            "DTO mapper",
+            "HTTP dispatcher",
+            "API thao tác trạng thái entity như persist, find, remove, merge"
+          ],
+          "correctAnswer": "D",
+          "explanation": "EntityManager là interface trung tâm của JPA để làm việc với persistence context.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "entitymanager"
+          ]
+        },
+        {
+          "question": "dirty checking là gì?",
+          "options": [
+            "tự format JSON",
+            "tự validate DTO không cần @Valid",
+            "tự tạo Controller",
+            "cơ chế Hibernate tự phát hiện thay đổi field của managed entity"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Khi entity managed thay đổi trong transaction, Hibernate có thể đồng bộ xuống DB khi flush/commit.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "hibernate",
+            "dirty-checking"
+          ]
+        },
+        {
+          "question": "transient entity state là gì?",
+          "options": [
+            "entity đã đánh dấu xóa",
+            "object mới tạo chưa được persistence context quản lý",
+            "entity đã tách context",
+            "entity đang được theo dõi"
+          ],
+          "correctAnswer": "B",
+          "explanation": "new Project() trước khi persist thường ở trạng thái transient/new.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity-lifecycle"
+          ]
+        },
+        {
+          "question": "managed entity state là gì?",
+          "options": [
+            "entity bị remove",
+            "entity không còn gắn context",
+            "object mới chưa persist",
+            "entity đang được EntityManager/persistence context theo dõi"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Managed entity có thể được dirty checking.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity-lifecycle"
+          ]
+        },
+        {
+          "question": "detached entity state là gì?",
+          "options": [
+            "entity mới chưa có ID",
+            "query DTO",
+            "entity đang bị xóa",
+            "entity từng managed nhưng không còn gắn với persistence context"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Detached entity không còn được theo dõi thay đổi tự động.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "entity-lifecycle"
+          ]
+        },
+        {
+          "question": "removed entity state là gì?",
+          "options": [
+            "entity đang query read-only",
+            "DTO response",
+            "entity được đánh dấu xóa khỏi database",
+            "entity mới tạo"
+          ],
+          "correctAnswer": "C",
+          "explanation": "remove đánh dấu entity để delete khi flush/commit.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity-lifecycle"
+          ]
+        },
+        {
+          "question": "persist là gì?",
+          "options": [
+            "đồng bộ context xuống DB",
+            "copy detached sang managed",
+            "xác nhận transaction",
+            "đưa entity mới vào managed state để insert"
+          ],
+          "correctAnswer": "D",
+          "explanation": "persist dùng với entity mới.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entitymanager"
+          ]
+        },
+        {
+          "question": "find là gì?",
+          "options": [
+            "khóa transaction",
+            "xóa entity",
+            "validate DTO",
+            "tìm entity theo primary key"
+          ],
+          "correctAnswer": "D",
+          "explanation": "EntityManager.find hoặc repository.findById dùng để tìm theo ID.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entitymanager"
+          ]
+        },
+        {
+          "question": "remove là gì?",
+          "options": [
+            "đưa entity mới vào context",
+            "đánh dấu entity để delete",
+            "tạo projection",
+            "copy detached"
+          ],
+          "correctAnswer": "B",
+          "explanation": "remove dùng để xóa entity managed.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entitymanager"
+          ]
+        },
+        {
+          "question": "merge là gì?",
+          "options": [
+            "copy trạng thái detached entity sang managed instance phù hợp",
+            "khởi tạo Spring Boot",
+            "xóa row ngay lập tức",
+            "validate HTTP body"
+          ],
+          "correctAnswer": "A",
+          "explanation": "merge không đơn giản là gắn lại cùng object; nó copy state sang managed instance.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "entitymanager"
+          ]
+        },
+        {
+          "question": "flush là gì?",
+          "options": [
+            "đồng bộ thay đổi persistence context xuống database nhưng chưa chắc commit",
+            "tạo DTO",
+            "xóa context khỏi JVM",
+            "xác nhận transaction cuối cùng"
+          ],
+          "correctAnswer": "A",
+          "explanation": "flush gửi SQL xuống DB, còn commit mới xác nhận transaction.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "transaction"
+          ]
+        },
+        {
+          "question": "commit là gì?",
+          "options": [
+            "chỉ tạo query plan",
+            "xác nhận transaction để thay đổi trở thành chính thức",
+            "chỉ validate input",
+            "chỉ format SQL"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Commit hoàn tất transaction; rollback sẽ hủy thay đổi trong transaction.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "transaction"
+          ]
+        },
+        {
+          "question": "@ManyToOne trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "quan hệ nhiều-nhiều",
+            "quan hệ một-một",
+            "annotation khai báo quan hệ nhiều entity con thuộc một entity cha",
+            "field không persist"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Trong ví dụ Project-Lecturer, Project dùng @ManyToOne tới Lecturer.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@OneToMany trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation khóa chính",
+            "annotation khai báo một entity cha có nhiều entity con",
+            "quan hệ nhiều-một ở bảng con",
+            "annotation query native"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Lecturer có thể có List<Project> với @OneToMany(mappedBy=\"lecturer\").",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@JoinColumn trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation validate size",
+            "annotation khai báo cột foreign key ở owning side",
+            "annotation transaction",
+            "annotation tạo bean"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Owning side là phía chứa foreign key và thường khai báo @JoinColumn.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "owning side là gì?",
+          "options": [
+            "phía quản lý foreign key trong quan hệ JPA",
+            "phía chỉ dùng DTO",
+            "phía luôn không có @JoinColumn",
+            "phía luôn là collection"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Trong quan hệ 1 Lecturer - N Project, Project là owning side vì bảng projects chứa lecturer_id.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "mappedBy là gì?",
+          "options": [
+            "kiểu sinh khóa chính",
+            "tên bảng database",
+            "HTTP method",
+            "thuộc tính chỉ inverse side, trỏ tới field quan hệ ở owning side"
+          ],
+          "correctAnswer": "D",
+          "explanation": "mappedBy = \"lecturer\" nghĩa là quan hệ được quản lý bởi field lecturer ở Project.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "helper method quan hệ hai phía là gì?",
+          "options": [
+            "method serialize JSON",
+            "method như addProject/removeProject để đồng bộ cả collection và reference ngược",
+            "method sinh token",
+            "method tự tạo database"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Helper method tránh tình trạng hai phía quan hệ trong memory không đồng bộ.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@OneToOne trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "quan hệ nhiều-một",
+            "quan hệ nhiều-nhiều",
+            "annotation quan hệ một-một",
+            "query native"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Ví dụ User - UserProfile có thể dùng @OneToOne.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@ManyToMany trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation không persist",
+            "annotation quan hệ nhiều-nhiều, thường cần bảng trung gian",
+            "quan hệ một-nhiều có foreign key ở con",
+            "annotation validate"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Ví dụ User - Roles có thể là N-N, nhưng thực tế nhiều hệ thống tách entity trung gian.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "mapping"
+          ]
+        },
+        {
+          "question": "FetchType.LAZY là gì?",
+          "options": [
+            "xóa entity con khi remove khỏi collection",
+            "khóa row khi đọc",
+            "chỉ tải quan hệ khi truy cập",
+            "luôn tải quan hệ ngay lập tức"
+          ],
+          "correctAnswer": "C",
+          "explanation": "LAZY thường được ưu tiên cho collection và quan hệ có thể lớn.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "fetch"
+          ]
+        },
+        {
+          "question": "FetchType.EAGER là gì?",
+          "options": [
+            "cố tải quan hệ sớm",
+            "không bao giờ sinh query",
+            "chỉ tải khi truy cập",
+            "chỉ dùng với DTO"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Không nên đổi mọi quan hệ sang EAGER vì có thể tạo query nặng và khó kiểm soát.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "fetch"
+          ]
+        },
+        {
+          "question": "CascadeType.PERSIST là gì?",
+          "options": [
+            "persist entity cha thì persist entity con phù hợp",
+            "khóa bản ghi",
+            "tải quan hệ bằng join",
+            "xóa con khi remove khỏi collection"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Cascade cần dùng theo lifecycle thực sự của quan hệ.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "cascade"
+          ]
+        },
+        {
+          "question": "CascadeType.MERGE là gì?",
+          "options": [
+            "khóa pessimistic",
+            "persist mới con",
+            "remove con",
+            "merge entity cha thì merge entity con"
+          ],
+          "correctAnswer": "D",
+          "explanation": "MERGE lan truyền thao tác merge tới entity liên quan.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "cascade"
+          ]
+        },
+        {
+          "question": "CascadeType.REMOVE là gì?",
+          "options": [
+            "chỉ tạo query method",
+            "chỉ validate DTO",
+            "chỉ tải quan hệ LAZY",
+            "remove entity cha thì remove entity con"
+          ],
+          "correctAnswer": "D",
+          "explanation": "REMOVE cần dùng cẩn thận vì có thể xóa dữ liệu liên quan.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "cascade"
+          ]
+        },
+        {
+          "question": "CascadeType.ALL là gì?",
+          "options": [
+            "chỉ bao gồm PERSIST",
+            "bao gồm các cascade chính, không nên dùng máy móc",
+            "không có REMOVE",
+            "chỉ dùng cho query"
+          ],
+          "correctAnswer": "B",
+          "explanation": "CascadeType.ALL tiện nhưng phải hiểu lifecycle cha-con trước khi dùng.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "cascade"
+          ]
+        },
+        {
+          "question": "orphanRemoval=true là gì?",
+          "options": [
+            "entity con bị loại khỏi collection cha có thể bị xóa khỏi database",
+            "khóa bản ghi",
+            "tải relation khi truy cập",
+            "tạo DTO"
+          ],
+          "correctAnswer": "A",
+          "explanation": "orphanRemoval khác cascade remove; nó xử lý orphan khi bị bỏ khỏi quan hệ cha.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "cascade"
+          ]
+        },
+        {
+          "question": "N+1 query là gì?",
+          "options": [
+            "lỗi thiếu primary key",
+            "lỗi validate DTO",
+            "lỗi circular dependency",
+            "lỗi 1 query lấy danh sách rồi N query phụ tải quan hệ"
+          ],
+          "correctAnswer": "D",
+          "explanation": "N+1 là lỗi hiệu năng phổ biến khi dùng ORM và fetch không được kiểm soát.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "hibernate",
+            "performance"
+          ]
+        },
+        {
+          "question": "JOIN FETCH là gì?",
+          "options": [
+            "cơ chế sinh ID",
+            "annotation validate input",
+            "thread pool",
+            "JPQL dùng để tải quan hệ cần thiết trong cùng query theo use case"
+          ],
+          "correctAnswer": "D",
+          "explanation": "JOIN FETCH là một giải pháp kiểm soát N+1 khi cần dữ liệu quan hệ.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "jpql",
+            "performance"
+          ]
+        },
+        {
+          "question": "@EntityGraph trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation tạo controller",
+            "annotation format date",
+            "cách khai báo graph tải dữ liệu cho query repository",
+            "annotation đánh dấu DTO"
+          ],
+          "correctAnswer": "C",
+          "explanation": "EntityGraph giúp định nghĩa quan hệ cần fetch cho một query cụ thể.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "performance"
+          ]
+        },
+        {
+          "question": "DTO projection là gì?",
+          "options": [
+            "lưu enum ordinal",
+            "expose toàn bộ entity",
+            "chỉ lấy đúng trường cần trả ra client",
+            "tải mọi relation EAGER"
+          ],
+          "correctAnswer": "C",
+          "explanation": "DTO projection giúp giảm payload và kiểm soát dữ liệu lấy từ DB.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "performance",
+            "dto"
+          ]
+        },
+        {
+          "question": "batch fetching là gì?",
+          "options": [
+            "bỏ validation",
+            "giảm số query khi tải collection/proxy theo batch",
+            "xóa mọi quan hệ",
+            "tắt transaction"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Batch fetching không gộp thành một join nhưng có thể giảm số query phụ.",
           "difficulty": "ADVANCED",
-          "options": [
-            "Khi tải một danh sách entity rồi lazy-load quan hệ cho từng entity",
-            "Khi chỉ chạy đúng một câu SQL",
-            "Khi entity không có id",
-            "Khi dùng biến final trong Java"
-          ],
-          "correctAnswer": "A",
-          "explanation": "N+1 xảy ra khi query đầu lấy N entity, sau đó mỗi entity lại phát sinh thêm query để lấy quan hệ. Có thể xử lý bằng fetch join, entity graph hoặc DTO projection.",
-          "tags": ["jpa", "performance", "database"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "react-next",
-      "title": "React và Next.js",
-      "description": "Kiến thức frontend hiện đại với React/Next.",
-      "sortOrder": 6,
-      "questions": [
-        {
-          "question": "Trong React, state dùng để làm gì?",
-          "difficulty": "BEGINNER",
-          "options": [
-            "Lưu dữ liệu thay đổi theo thời gian và làm component render lại khi cập nhật",
-            "Khai báo route backend",
-            "Tạo bảng database",
-            "Mã hóa JWT"
-          ],
-          "correctAnswer": "A",
-          "explanation": "State là dữ liệu nội bộ của component. Khi state thay đổi, React render lại UI liên quan.",
-          "tags": ["react", "state", "frontend"],
-          "codeSnippet": ""
+          "tags": [
+            "hibernate",
+            "performance"
+          ]
         },
         {
-          "question": "Trong Next.js App Router, file `page.tsx` thường đại diện cho điều gì?",
-          "difficulty": "BEGINNER",
+          "question": "không expose entity trực tiếp là gì?",
           "options": [
-            "UI của một route",
-            "Cấu hình database",
-            "Service gửi email",
-            "File migration SQL"
+            "map entity sang DTO để kiểm soát dữ liệu và tránh vấn đề fetch/JSON",
+            "luôn trả entity cho nhanh",
+            "luôn đổi sang EAGER",
+            "luôn dùng native SQL"
           ],
           "correctAnswer": "A",
-          "explanation": "Trong App Router, mỗi thư mục route có thể chứa `page.tsx` để định nghĩa nội dung trang cho route đó.",
-          "tags": ["nextjs", "app-router", "frontend"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "typescript",
-      "title": "TypeScript",
-      "description": "Type safety trong frontend.",
-      "sortOrder": 7,
-      "questions": [
-        {
-          "question": "TypeScript giúp ích gì so với JavaScript thuần?",
-          "difficulty": "BEGINNER",
-          "options": [
-            "Phát hiện nhiều lỗi kiểu dữ liệu trước khi chạy chương trình",
-            "Thay thế hoàn toàn trình duyệt",
-            "Làm CSS không cần viết nữa",
-            "Tự động deploy ứng dụng"
-          ],
-          "correctAnswer": "A",
-          "explanation": "TypeScript thêm hệ thống kiểu tĩnh, giúp IDE và compiler phát hiện lỗi sớm hơn.",
-          "tags": ["typescript", "frontend", "types"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Union type trong TypeScript phù hợp nhất khi nào?",
+          "explanation": "Entity là model persistence, không nên vô thức dùng làm API contract.",
           "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "dto"
+          ]
+        },
+        {
+          "question": "JPQL là gì?",
           "options": [
-            "Khi một giá trị chỉ có thể thuộc một vài kiểu hoặc literal cụ thể",
-            "Khi muốn tắt type checking",
-            "Khi muốn biến mọi giá trị thành string",
-            "Khi viết SQL query"
+            "ngôn ngữ template frontend",
+            "file cấu hình",
+            "truy vấn trực tiếp tên bảng SQL",
+            "truy vấn theo entity và field thay vì bảng/cột trực tiếp"
+          ],
+          "correctAnswer": "D",
+          "explanation": "JPQL viết như SELECT p FROM Project p WHERE p.name LIKE :keyword.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "jpql"
+          ]
+        },
+        {
+          "question": "native SQL là gì?",
+          "options": [
+            "annotation validate",
+            "truy vấn trực tiếp bảng và cột database",
+            "stream pipeline",
+            "truy vấn theo entity field"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Native query hữu ích khi cần tính năng SQL đặc thù DB.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "sql"
+          ]
+        },
+        {
+          "question": "query method là gì?",
+          "options": [
+            "query bắt buộc viết native SQL",
+            "method final",
+            "Spring Data sinh query từ tên method repository",
+            "method controller trả view"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Ví dụ findByNameContainingIgnoreCase(keyword).",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "repository"
+          ]
+        },
+        {
+          "question": "@Query trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation đánh dấu bean service",
+            "annotation scope request",
+            "annotation viết JPQL/native query rõ ràng trong repository",
+            "annotation validate field"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Query phù hợp khi query method quá dài hoặc cần JPQL cụ thể.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-data-jpa",
+            "query"
+          ]
+        },
+        {
+          "question": "Specification là gì?",
+          "options": [
+            "cách tạo embedded server",
+            "kiểu primitive",
+            "cách sinh ID",
+            "cách ghép điều kiện động bằng Criteria API"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Specification phù hợp bộ lọc động nhiều điều kiện.",
+          "difficulty": "ADVANCED",
+          "tags": [
+            "spring-data-jpa",
+            "specification"
+          ]
+        },
+        {
+          "question": "Pageable là gì?",
+          "options": [
+            "annotation REST",
+            "object chứa lỗi API",
+            "interface mô tả thông tin phân trang và sắp xếp",
+            "entity state"
+          ],
+          "correctAnswer": "C",
+          "explanation": "PageRequest.of(page, size, Sort.by(...)) tạo Pageable.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "pagination"
+          ]
+        },
+        {
+          "question": "Page<T> là gì?",
+          "options": [
+            "entity manager",
+            "kết quả phân trang chứa dữ liệu và metadata như total pages/elements",
+            "collection không thứ tự",
+            "bean scope"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Repository có thể trả Page<Project> khi nhận Pageable.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "pagination"
+          ]
+        },
+        {
+          "question": "@Param trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation validate DTO",
+            "annotation tạo bean",
+            "annotation sinh ID",
+            "annotation đặt tên parameter trong @Query"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@Param(\"keyword\") liên kết tham số method với named parameter trong JPQL.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "query"
+          ]
+        },
+        {
+          "question": "@Transactional service layer trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đặt trong DTO để validate",
+            "đặt trong entity để tự lưu DB",
+            "chỉ đặt ở controller mọi trường hợp",
+            "transaction thường đặt ở service method vì service mô tả use case nghiệp vụ"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Service điều phối nhiều repository và là transaction boundary phù hợp.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "transaction",
+            "jpa"
+          ]
+        },
+        {
+          "question": "transaction atomicity là gì?",
+          "options": [
+            "chỉ format SQL",
+            "chỉ tạo endpoint",
+            "chỉ serialize JSON",
+            "nhóm thao tác thành đơn vị hoặc thành công toàn bộ hoặc rollback"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Transaction giúp dữ liệu nhất quán khi use case gồm nhiều thao tác DB.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "transaction",
+            "jpa"
+          ]
+        },
+        {
+          "question": "optimistic locking là gì?",
+          "options": [
+            "dùng @Version để phát hiện dữ liệu bị người khác sửa trước commit",
+            "khóa bản ghi ngay khi đọc",
+            "tắt transaction",
+            "luôn dùng synchronized"
           ],
           "correctAnswer": "A",
-          "explanation": "Union type như `'loading' | 'success' | 'error'` giúp biểu diễn tập trạng thái hợp lệ và hạn chế giá trị sai.",
-          "tags": ["typescript", "union", "types"],
-          "codeSnippet": "type Status = 'loading' | 'success' | 'error'"
+          "explanation": "Optimistic locking phù hợp khi xung đột ít xảy ra.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "locking"
+          ]
+        },
+        {
+          "question": "pessimistic locking là gì?",
+          "options": [
+            "khóa bản ghi khi đọc/cập nhật để kiểm soát xung đột cao",
+            "không ảnh hưởng throughput",
+            "chỉ dùng DTO",
+            "chỉ phát hiện bằng @Version"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Pessimistic locking cần cân nhắc deadlock và throughput.",
+          "difficulty": "ADVANCED",
+          "tags": [
+            "jpa",
+            "locking"
+          ]
+        },
+        {
+          "question": "@Version trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "field dùng cho optimistic locking",
+            "field tạo REST route",
+            "field validate email",
+            "field không persist"
+          ],
+          "correctAnswer": "A",
+          "explanation": "@Version giúp phát hiện lost update trong optimistic locking.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "locking"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: kỹ thuật ánh xạ object trong chương trình với bảng trong database quan hệ?",
+          "options": [
+            "ORM",
+            "@Param",
+            "merge",
+            "@Table"
+          ],
+          "correctAnswer": "A",
+          "explanation": "ORM giúp làm việc với object thay vì tự viết nhiều SQL thủ công cho CRUD cơ bản.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "hibernate",
+            "orm"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: chuẩn API và annotation cho ORM trong Java?",
+          "options": [
+            "protected no-args constructor",
+            "persistence context",
+            "Spring Data JPA",
+            "Jakarta Persistence/JPA"
+          ],
+          "correctAnswer": "D",
+          "explanation": "JPA là specification; Hibernate là một implementation phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "hibernate"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: implementation ORM phổ biến của Jakarta Persistence?",
+          "options": [
+            "Hibernate ORM",
+            "native SQL",
+            "flush",
+            "Pageable"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Hibernate thực thi mapping, sinh SQL, quản lý persistence context và dirty checking.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "hibernate",
+            "jpa"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: abstraction repository giúp thao tác dữ liệu ít boilerplate hơn?",
+          "options": [
+            "ORM",
+            "JPQL",
+            "native SQL",
+            "Spring Data JPA"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Spring Data JPA thường dùng Hibernate bên dưới khi dùng starter mặc định.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "jpa"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation đánh dấu class được quản lý như entity và ánh xạ database?",
+          "options": [
+            "persist",
+            "@GeneratedValue",
+            "@Entity",
+            "FetchType.LAZY"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Entity cần identity và được persistence context quản lý.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation tùy chỉnh tên bảng hoặc thông tin bảng?",
+          "options": [
+            "N+1 query",
+            "EnumType.ORDINAL risk",
+            "@Table",
+            "transaction atomicity"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Table không bắt buộc nếu tên mặc định phù hợp.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation đánh dấu primary key của entity?",
+          "options": [
+            "pessimistic locking",
+            "@Id",
+            "ORM",
+            "Hibernate ORM"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Mỗi entity cần có ID để xác định identity.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation cấu hình cách sinh ID?",
+          "options": [
+            "persist",
+            "@Entity",
+            "@ManyToMany",
+            "@GeneratedValue"
+          ],
+          "correctAnswer": "D",
+          "explanation": "GenerationType.IDENTITY thường phù hợp auto_increment của MySQL/PostgreSQL serial identity.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation tùy chỉnh cột như nullable, unique, length, name?",
+          "options": [
+            "Hibernate ORM",
+            "JOIN FETCH",
+            "@GeneratedValue",
+            "@Column"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@Column giúp ràng buộc mapping giữa field và column.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: lưu enum dạng chuỗi trong database?",
+          "options": [
+            "transient entity state",
+            "pessimistic locking",
+            "@Param",
+            "@Enumerated(EnumType.STRING)"
+          ],
+          "correctAnswer": "D",
+          "explanation": "EnumType.STRING dễ đọc và an toàn hơn ORDINAL khi thay đổi thứ tự enum.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "enum"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: lưu enum theo số thứ tự có thể làm dữ liệu cũ bị hiểu sai khi đổi thứ tự enum?",
+          "options": [
+            "CascadeType.MERGE",
+            "EnumType.ORDINAL risk",
+            "dirty checking",
+            "JPQL"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Tài liệu khuyến nghị ưu tiên EnumType.STRING cho nghiệp vụ thông thường.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "enum"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation đánh dấu field không persist xuống database?",
+          "options": [
+            "@Column",
+            "Hibernate ORM",
+            "@Transient",
+            "Jakarta Persistence/JPA"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Transient dùng cho field tính toán tạm thời trong entity.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: constructor không tham số thường cần cho entity JPA?",
+          "options": [
+            "protected no-args constructor",
+            "pessimistic locking",
+            "@GeneratedValue",
+            "Hibernate ORM"
+          ],
+          "correctAnswer": "A",
+          "explanation": "JPA cần constructor không tham số để tạo entity qua reflection/proxy.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "entity"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: môi trường quản lý tập entity đang được theo dõi?",
+          "options": [
+            "managed entity state",
+            "merge",
+            "Jakarta Persistence/JPA",
+            "persistence context"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Persistence context theo dõi managed entity và hỗ trợ dirty checking.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "hibernate"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: API thao tác trạng thái entity như persist, find, remove, merge?",
+          "options": [
+            "Spring Data JPA",
+            "FetchType.EAGER",
+            "không expose entity trực tiếp",
+            "EntityManager"
+          ],
+          "correctAnswer": "D",
+          "explanation": "EntityManager là interface trung tâm của JPA để làm việc với persistence context.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "jpa",
+            "entitymanager"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: cơ chế Hibernate tự phát hiện thay đổi field của managed entity?",
+          "options": [
+            "merge",
+            "dirty checking",
+            "@OneToOne",
+            "CascadeType.REMOVE"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Khi entity managed thay đổi trong transaction, Hibernate có thể đồng bộ xuống DB khi flush/commit.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "hibernate",
+            "dirty-checking"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: object mới tạo chưa được persistence context quản lý?",
+          "options": [
+            "optimistic locking",
+            "transient entity state",
+            "@Version",
+            "@ManyToOne"
+          ],
+          "correctAnswer": "B",
+          "explanation": "new Project() trước khi persist thường ở trạng thái transient/new.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity-lifecycle"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: entity đang được EntityManager/persistence context theo dõi?",
+          "options": [
+            "merge",
+            "managed entity state",
+            "CascadeType.REMOVE",
+            "find"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Managed entity có thể được dirty checking.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "jpa",
+            "entity-lifecycle"
+          ]
         }
       ]
     },
     {
-      "slug": "testing",
-      "title": "Testing",
-      "description": "Kiểm thử backend và frontend.",
-      "sortOrder": 8,
+      "title": "Spring Core, Spring MVC và Spring Boot",
       "questions": [
         {
-          "question": "Unit test thường tập trung kiểm tra điều gì?",
-          "difficulty": "BEGINNER",
+          "question": "Spring Framework là gì?",
           "options": [
-            "Một đơn vị nhỏ của code như function hoặc service trong điều kiện kiểm soát",
-            "Toàn bộ hệ thống production",
-            "Tốc độ mạng của người dùng",
-            "Giao diện Photoshop"
+            "database NoSQL",
+            "trình duyệt web",
+            "ngôn ngữ lập trình mới",
+            "hạ tầng xây dựng ứng dụng Java theo module với IoC/DI"
           ],
-          "correctAnswer": "A",
-          "explanation": "Unit test kiểm tra logic nhỏ, nhanh, ít phụ thuộc hệ thống ngoài để phát hiện lỗi sớm.",
-          "tags": ["testing", "unit-test"],
-          "codeSnippet": ""
+          "correctAnswer": "D",
+          "explanation": "Spring cung cấp container và nhiều module hỗ trợ backend Java.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring"
+          ]
         },
         {
-          "question": "Mock trong test thường dùng để làm gì?",
-          "difficulty": "INTERMEDIATE",
+          "question": "IoC là gì?",
           "options": [
-            "Thay thế dependency thật bằng đối tượng giả có hành vi kiểm soát được",
-            "Tạo database production",
-            "Tăng kích thước bundle frontend",
-            "Tự động sửa bug"
+            "object tự new toàn bộ dependency",
+            "database tự tạo bảng",
+            "client tự serialize entity",
+            "đảo quyền kiểm soát việc tạo và lắp ráp object cho container"
           ],
-          "correctAnswer": "A",
-          "explanation": "Mock giúp cô lập phần code đang test khỏi dependency như API, database, email service.",
-          "tags": ["testing", "mock", "backend"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "docker-deploy",
-      "title": "Docker và Deploy",
-      "description": "Đóng gói và triển khai ứng dụng.",
-      "sortOrder": 9,
-      "questions": [
-        {
-          "question": "Docker image là gì?",
+          "correctAnswer": "D",
+          "explanation": "IoC giúp code nghiệp vụ không phải tự quản lý toàn bộ vòng đời dependency.",
           "difficulty": "BEGINNER",
-          "options": [
-            "Gói bất biến chứa ứng dụng và môi trường cần thiết để chạy container",
-            "Một loại database quan hệ",
-            "Một ngôn ngữ lập trình mới",
-            "Một file ảnh dùng trong UI"
-          ],
-          "correctAnswer": "A",
-          "explanation": "Image là blueprint để tạo container, thường chứa runtime, dependency và ứng dụng.",
-          "tags": ["docker", "deploy"],
-          "codeSnippet": ""
+          "tags": [
+            "spring",
+            "ioc"
+          ]
         },
         {
-          "question": "Biến môi trường thường dùng để làm gì khi deploy?",
+          "question": "DI là gì?",
+          "options": [
+            "query tự động rollback",
+            "entity tự persist khi tạo",
+            "dependency được truyền từ bên ngoài thay vì tự new bên trong class",
+            "DTO tự map DB"
+          ],
+          "correctAnswer": "C",
+          "explanation": "DI làm dependency rõ ràng, dễ test và giảm coupling.",
           "difficulty": "BEGINNER",
-          "options": [
-            "Cấu hình khác nhau giữa local, staging và production mà không hard-code vào source",
-            "Thay thế toàn bộ source code",
-            "Lưu ảnh đại diện người dùng",
-            "Tự động viết test"
-          ],
-          "correctAnswer": "A",
-          "explanation": "Environment variables giúp cấu hình database URL, API key, mode chạy... theo từng môi trường.",
-          "tags": ["deploy", "env", "config"],
-          "codeSnippet": ""
-        }
-      ]
-    },
-    {
-      "slug": "architecture",
-      "title": "Kiến trúc ứng dụng",
-      "description": "Tư duy thiết kế app full-stack dễ bảo trì.",
-      "sortOrder": 10,
-      "questions": [
-        {
-          "question": "Vì sao nên tách controller, service và repository trong backend?",
-          "difficulty": "INTERMEDIATE",
-          "options": [
-            "Để tách trách nhiệm: nhận request, xử lý nghiệp vụ và truy cập dữ liệu",
-            "Để mọi class dài hơn",
-            "Để tránh phải viết test",
-            "Để frontend gọi thẳng database"
-          ],
-          "correctAnswer": "A",
-          "explanation": "Tách layer giúp code rõ trách nhiệm, dễ test, dễ thay đổi và tránh logic nghiệp vụ nằm lẫn trong controller.",
-          "tags": ["architecture", "backend", "service"],
-          "codeSnippet": ""
+          "tags": [
+            "spring",
+            "di"
+          ]
         },
         {
-          "question": "DTO trong API thường dùng để làm gì?",
-          "difficulty": "INTERMEDIATE",
+          "question": "Bean là gì?",
           "options": [
-            "Định nghĩa dữ liệu request/response rõ ràng, không lộ trực tiếp entity nội bộ",
-            "Thay thế mọi validation",
-            "Chạy background job",
-            "Tạo index database"
+            "HTTP status",
+            "row trong database",
+            "file .class bytecode",
+            "object do Spring container quản lý"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Bean được instantiate, configure và assemble bởi ApplicationContext.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean"
+          ]
+        },
+        {
+          "question": "ApplicationContext là gì?",
+          "options": [
+            "Spring IoC container chịu trách nhiệm tạo, cấu hình và lắp ráp bean",
+            "server Tomcat",
+            "database transaction",
+            "repository query"
           ],
           "correctAnswer": "A",
-          "explanation": "DTO giúp kiểm soát contract API, tránh lộ field nhạy cảm và tách model persistence khỏi model giao tiếp.",
-          "tags": ["architecture", "dto", "api"],
-          "codeSnippet": ""
+          "explanation": "ApplicationContext là context chính của ứng dụng Spring.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "ioc"
+          ]
+        },
+        {
+          "question": "constructor injection là gì?",
+          "options": [
+            "inject qua biến global tĩnh",
+            "cách inject dependency qua constructor, được khuyến nghị",
+            "inject qua SQL",
+            "tự new trong method"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Constructor injection giúp dependency rõ ràng, dễ test và hỗ trợ field final.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "di"
+          ]
+        },
+        {
+          "question": "@Component trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đánh dấu HTTP GET",
+            "stereotype annotation đăng ký bean Spring tổng quát",
+            "đánh dấu validation",
+            "đánh dấu entity JPA"
+          ],
+          "correctAnswer": "B",
+          "explanation": "@Component dùng cho bean tổng quát khi không thuộc semantic cụ thể.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean"
+          ]
+        },
+        {
+          "question": "@Service trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "stereotype annotation cho bean tầng xử lý nghiệp vụ",
+            "controller trả JSON",
+            "entity database",
+            "bean truy cập dữ liệu thuần"
+          ],
+          "correctAnswer": "A",
+          "explanation": "@Service thể hiện semantic business/service layer.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "service"
+          ]
+        },
+        {
+          "question": "@Repository trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "controller REST",
+            "DTO response",
+            "configuration profile",
+            "stereotype annotation cho bean tầng truy cập dữ liệu"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@Repository thể hiện data access layer.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "repository"
+          ]
+        },
+        {
+          "question": "@Controller trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation logging",
+            "annotation entity",
+            "annotation query",
+            "annotation cho MVC controller có thể trả view"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Trong REST API thường dùng @RestController thay vì @Controller thuần.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "controller"
+          ]
+        },
+        {
+          "question": "@RestController trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation chỉ tạo database",
+            "annotation đóng transaction",
+            "controller REST thường trả JSON",
+            "annotation mapping entity"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@RestController kết hợp @Controller và @ResponseBody.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "rest"
+          ]
+        },
+        {
+          "question": "@Configuration trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "class exception",
+            "class entity",
+            "class DTO",
+            "class cấu hình Java-based"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@Configuration chứa các @Bean factory method.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "configuration"
+          ]
+        },
+        {
+          "question": "@Bean trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đánh dấu primary key",
+            "đăng ký bean từ một factory method",
+            "đánh dấu field không persist",
+            "đánh dấu HTTP endpoint"
+          ],
+          "correctAnswer": "B",
+          "explanation": "@Bean dùng khi cần tự tạo object và đưa vào Spring container.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean"
+          ]
+        },
+        {
+          "question": "@ComponentScan trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "scan bytecode để GC",
+            "scan bảng database",
+            "chỉ định package scan component",
+            "scan HTTP body"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Spring Boot thường scan từ package của main class trở xuống.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "component-scan"
+          ]
+        },
+        {
+          "question": "singleton scope là gì?",
+          "options": [
+            "mỗi lần getBean một instance",
+            "mỗi session một instance",
+            "một bean instance cho mỗi ApplicationContext",
+            "mỗi request một instance"
+          ],
+          "correctAnswer": "C",
+          "explanation": "singleton là scope mặc định; service singleton không nên giữ mutable state theo request.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "prototype scope là gì?",
+          "options": [
+            "một instance mỗi HTTP session",
+            "một instance cho cả context",
+            "tạo bean mới khi request từ container",
+            "một instance mỗi DB row"
+          ],
+          "correctAnswer": "C",
+          "explanation": "prototype ít dùng trong backend thông thường.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "request scope là gì?",
+          "options": [
+            "một bean cho mỗi HTTP request",
+            "một bean cho mỗi transaction",
+            "một bean cho toàn context",
+            "một bean cho mỗi class"
+          ],
+          "correctAnswer": "A",
+          "explanation": "request scope chỉ có ý nghĩa trong web context.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "session scope là gì?",
+          "options": [
+            "một bean cho mỗi field",
+            "một bean cho mỗi entity",
+            "một bean cho mỗi HTTP session",
+            "một bean cho mỗi query"
+          ],
+          "correctAnswer": "C",
+          "explanation": "REST API stateless cần cân nhắc kỹ khi dùng session scope.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "AOP là gì?",
+          "options": [
+            "biên dịch bytecode",
+            "tách cross-cutting concern khỏi logic nghiệp vụ chính",
+            "format date",
+            "mapping object sang bảng"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Logging, transaction, authorization và monitoring là ví dụ cross-cutting concern.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "Aspect là gì?",
+          "options": [
+            "object proxy",
+            "điều kiện chọn advice",
+            "điểm join trong method",
+            "module chứa cross-cutting concern"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Aspect gom logic như logging/transaction tách khỏi business code.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "Join point là gì?",
+          "options": [
+            "HTTP status",
+            "query SQL",
+            "class cấu hình",
+            "điểm trong quá trình thực thi, với Spring AOP thường là method execution"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Join point là nơi advice có thể được áp dụng.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "Pointcut là gì?",
+          "options": [
+            "entity state",
+            "object trung gian",
+            "điều kiện chọn join point cần áp dụng advice",
+            "logic chạy trước/sau method"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Pointcut xác định method nào bị aspect tác động.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "Advice là gì?",
+          "options": [
+            "DTO contract",
+            "HTTP method",
+            "entity managed",
+            "logic chạy trước, sau hoặc xung quanh join point"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Advice là phần behavior được thêm vào qua AOP.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "Proxy AOP là gì?",
+          "options": [
+            "file cấu hình",
+            "object trung gian chặn lời gọi để bổ sung behavior",
+            "class enum",
+            "object database row"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Spring AOP thường dùng proxy; self-invocation có thể không đi qua proxy.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "@Transactional readOnly trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "tạo HTTP 201",
+            "bắt buộc rollback mọi exception",
+            "gợi ý transaction chỉ đọc, dùng cho query use case",
+            "xóa entity orphan"
+          ],
+          "correctAnswer": "C",
+          "explanation": "readOnly=true nên dùng cho use case chỉ đọc để rõ intent.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "transaction"
+          ]
+        },
+        {
+          "question": "@Transactional propagation trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "mức độ cô lập transaction",
+            "cách method tham gia hoặc tạo transaction",
+            "HTTP status",
+            "thời gian timeout"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Propagation quyết định dùng transaction hiện có hay tạo transaction mới.",
+          "difficulty": "ADVANCED",
+          "tags": [
+            "spring",
+            "transaction"
+          ]
+        },
+        {
+          "question": "@Transactional isolation trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "cách inject bean",
+            "cách đặt endpoint",
+            "cách scan component",
+            "mức độ cô lập giữa các transaction"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Isolation liên quan tới dirty read, non-repeatable read, phantom read tùy DB.",
+          "difficulty": "ADVANCED",
+          "tags": [
+            "spring",
+            "transaction"
+          ]
+        },
+        {
+          "question": "@Transactional rollbackFor trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "khai báo loại exception cần rollback khi rule mặc định chưa đủ",
+            "khai báo URL endpoint",
+            "khai báo profile dev",
+            "khai báo sort field"
+          ],
+          "correctAnswer": "A",
+          "explanation": "rollbackFor hữu ích khi muốn rollback với checked exception cụ thể.",
+          "difficulty": "ADVANCED",
+          "tags": [
+            "spring",
+            "transaction"
+          ]
+        },
+        {
+          "question": "@Transactional timeout trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "giới hạn ký tự DTO",
+            "giới hạn thời gian transaction",
+            "giới hạn port server",
+            "giới hạn số bean"
+          ],
+          "correctAnswer": "B",
+          "explanation": "timeout giúp tránh transaction chạy quá lâu.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "transaction"
+          ]
+        },
+        {
+          "question": "Spring MVC là gì?",
+          "options": [
+            "JDK compiler",
+            "ORM implementation",
+            "thread pool",
+            "web framework theo mô hình MVC, dùng DispatcherServlet xử lý request"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Với REST API, @RestController nhận request, gọi service và trả JSON.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc"
+          ]
+        },
+        {
+          "question": "DispatcherServlet là gì?",
+          "options": [
+            "garbage collector",
+            "front controller nhận request và tìm handler phù hợp",
+            "entity manager",
+            "repository proxy"
+          ],
+          "correctAnswer": "B",
+          "explanation": "DispatcherServlet là thành phần trung tâm của Spring MVC request flow.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-mvc"
+          ]
+        },
+        {
+          "question": "Controller responsibility là gì?",
+          "options": [
+            "quản lý transaction sâu",
+            "thao tác trực tiếp DB phức tạp",
+            "nhận request, bind dữ liệu, gọi service và trả response",
+            "viết toàn bộ business logic"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Controller không nên chứa business logic để giữ separation of concerns.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "controller"
+          ]
+        },
+        {
+          "question": "@RequestMapping trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đánh dấu primary key",
+            "đánh dấu entity",
+            "đánh dấu bean scope",
+            "khai báo mapping URL chung cho controller hoặc method"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Ví dụ @RequestMapping(\"/api/projects\") đặt base path.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@GetMapping trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "cập nhật một phần",
+            "xóa dữ liệu",
+            "tạo mới dữ liệu",
+            "mapping HTTP GET để đọc dữ liệu"
+          ],
+          "correctAnswer": "D",
+          "explanation": "GET thường dùng cho đọc resource.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@PostMapping trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đọc dữ liệu",
+            "chỉ cập nhật một field",
+            "xóa dữ liệu",
+            "mapping HTTP POST để tạo mới dữ liệu"
+          ],
+          "correctAnswer": "D",
+          "explanation": "POST /api/projects thường dùng để tạo Project.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@PutMapping trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "mapping HTTP PUT để cập nhật toàn bộ hoặc theo contract",
+            "xóa resource",
+            "mở transaction readOnly",
+            "chỉ đọc dữ liệu"
+          ],
+          "correctAnswer": "A",
+          "explanation": "PUT thường dùng cập nhật resource theo contract.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@PatchMapping trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đọc danh sách",
+            "xóa toàn bộ",
+            "tạo database",
+            "mapping HTTP PATCH để cập nhật một phần"
+          ],
+          "correctAnswer": "D",
+          "explanation": "PATCH /api/projects/10/status là ví dụ cập nhật trạng thái.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@DeleteMapping trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "tạo mới resource",
+            "validate DTO",
+            "lấy resource",
+            "mapping HTTP DELETE để xóa resource"
+          ],
+          "correctAnswer": "D",
+          "explanation": "DELETE thường trả 204 No Content nếu xóa thành công và không trả body.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "mapping"
+          ]
+        },
+        {
+          "question": "@PathVariable trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "lấy bean từ context",
+            "lấy giá trị từ biến trên đường dẫn URL",
+            "lấy JSON body",
+            "lấy field entity"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Ví dụ /api/projects/{id} bind id vào parameter.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "binding"
+          ]
+        },
+        {
+          "question": "@RequestBody trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "lấy path variable",
+            "đánh dấu transaction",
+            "bind JSON body thành object/DTO",
+            "khai báo query method"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@RequestBody thường đi với POST/PUT/PATCH.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "binding"
+          ]
+        },
+        {
+          "question": "ResponseEntity là gì?",
+          "options": [
+            "đối tượng giúp tùy chỉnh status, header và body response",
+            "functional interface",
+            "entity lifecycle",
+            "repository database"
+          ],
+          "correctAnswer": "A",
+          "explanation": "ResponseEntity.status(HttpStatus.CREATED).body(response) trả 201 kèm body.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "response"
+          ]
+        },
+        {
+          "question": "Spring Boot là gì?",
+          "options": [
+            "database server",
+            "giúp tạo ứng dụng Spring standalone production-grade với cấu hình tối thiểu",
+            "thay thế hoàn toàn Java",
+            "template engine bắt buộc"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Spring Boot tăng tốc phát triển nhờ starter, auto-configuration và embedded server.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot"
+          ]
+        },
+        {
+          "question": "starter dependency là gì?",
+          "options": [
+            "nhóm dependency đóng gói theo mục đích như web, data-jpa",
+            "annotation validate DTO",
+            "cơ chế GC",
+            "HTTP status"
+          ],
+          "correctAnswer": "A",
+          "explanation": "spring-boot-starter-web và spring-boot-starter-data-jpa là ví dụ starter.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "starter"
+          ]
+        },
+        {
+          "question": "auto-configuration là gì?",
+          "options": [
+            "tự viết business logic",
+            "tự sinh câu hỏi",
+            "tự xóa database",
+            "tự cấu hình bean dựa trên dependency, property và bean hiện có"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Auto-configuration giúp giảm cấu hình thủ công trong Spring Boot.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-boot",
+            "auto-configuration"
+          ]
+        },
+        {
+          "question": "embedded server là gì?",
+          "options": [
+            "database nhúng bắt buộc",
+            "DTO mapper",
+            "JVM compiler",
+            "server nhúng như Tomcat giúp chạy ứng dụng bằng java -jar"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Spring Boot web app có thể chạy standalone mà không cần deploy WAR thủ công lên server ngoài.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "tomcat"
+          ]
+        },
+        {
+          "question": "application.properties/yaml là gì?",
+          "options": [
+            "nơi cấu hình bên ngoài source code",
+            "nơi chứa query result",
+            "nơi viết entity",
+            "nơi viết bytecode"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Cấu hình datasource, JPA, profile... thường đặt trong application.properties hoặc YAML.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "configuration"
+          ]
+        },
+        {
+          "question": "profile là gì?",
+          "options": [
+            "cơ chế khóa DB",
+            "cơ chế stream",
+            "cơ chế tách cấu hình theo môi trường dev, test, prod",
+            "cơ chế tạo object Java"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Profile giúp mỗi môi trường dùng cấu hình riêng.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "profile"
+          ]
+        },
+        {
+          "question": "Actuator là gì?",
+          "options": [
+            "class DTO",
+            "database migration",
+            "template frontend",
+            "cung cấp endpoint theo dõi và tương tác với ứng dụng như health"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Actuator health là endpoint phổ biến để kiểm tra trạng thái ứng dụng.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "actuator"
+          ]
+        },
+        {
+          "question": "@SpringBootApplication trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation entity",
+            "annotation validation",
+            "annotation repository query",
+            "annotation main app thường gộp configuration, auto-configuration và component scanning"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Đặt @SpringBootApplication ở main class để khởi chạy SpringApplication.run(...).",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot"
+          ]
+        },
+        {
+          "question": "ddl-auto=update warning là gì?",
+          "options": [
+            "không nên mặc định dùng ddl-auto=update trong production",
+            "chỉ dành cho frontend",
+            "luôn tốt nhất cho production",
+            "bắt buộc khi dùng DTO"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Production nên dùng migration tool như Flyway hoặc Liquibase để quản lý schema.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-boot",
+            "jpa",
+            "migration"
+          ]
+        },
+        {
+          "question": "không hard-code password là gì?",
+          "options": [
+            "không ghi thẳng password/secret trong source hoặc config public",
+            "đặt password trong DTO response",
+            "luôn log token để debug",
+            "đẩy secret lên GitHub"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Secret nên được quản lý qua biến môi trường hoặc secret manager.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "security"
+          ]
+        },
+        {
+          "question": "Controller-Service-Repository là gì?",
+          "options": [
+            "mọi logic đặt trong controller",
+            "không cần DTO",
+            "mọi logic đặt trong entity",
+            "kiến trúc tách controller nhận request, service xử lý nghiệp vụ, repository truy cập dữ liệu"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Mô hình này giúp code rõ trách nhiệm, dễ test và dễ bảo trì.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-boot",
+            "architecture"
+          ]
+        },
+        {
+          "question": "Service layer responsibility là gì?",
+          "options": [
+            "lưu password",
+            "trả view HTML trực tiếp",
+            "xử lý use case, business validation, điều phối repository và đặt transaction",
+            "chỉ chứa annotation @Column"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Business validation nên nằm ở Service layer.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "service"
+          ]
+        },
+        {
+          "question": "Repository responsibility là gì?",
+          "options": [
+            "serialize JSON",
+            "bind HTTP body",
+            "chứa business rule phức tạp",
+            "truy cập dữ liệu, khai báo query và thao tác persistence"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Repository không nên chứa rule nghiệp vụ phức tạp.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "repository"
+          ]
+        },
+        {
+          "question": "DTO là gì?",
+          "options": [
+            "thread pool",
+            "entity managed bởi Hibernate",
+            "server nhúng",
+            "contract dữ liệu vào/ra API, tách API khỏi entity"
+          ],
+          "correctAnswer": "D",
+          "explanation": "DTO giúp validation, che giấu entity và kiểm soát payload.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "dto"
+          ]
+        },
+        {
+          "question": "Mapper là gì?",
+          "options": [
+            "tạo thread",
+            "chuyển đổi entity sang DTO và ngược lại",
+            "thực hiện query DB bên trong",
+            "quản lý HTTP session"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Mapper không nên query database bên trong để tránh trộn trách nhiệm.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "mapper"
+          ]
+        },
+        {
+          "question": "@NotBlank trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "đánh dấu primary key",
+            "giới hạn độ dài",
+            "validation annotation yêu cầu chuỗi không null, không rỗng và không chỉ khoảng trắng",
+            "yêu cầu số không null"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@NotBlank thường dùng cho tên project, email dạng chuỗi bắt buộc.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "validation"
+          ]
+        },
+        {
+          "question": "@Size trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "validation annotation giới hạn độ dài/kích thước",
+            "tạo response status",
+            "đánh dấu query",
+            "kiểm tra object không null"
+          ],
+          "correctAnswer": "A",
+          "explanation": "@Size(max=200) giới hạn tên project không vượt 200 ký tự.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "validation"
+          ]
+        },
+        {
+          "question": "@NotNull trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "map URL",
+            "yêu cầu chuỗi không blank",
+            "validation annotation yêu cầu giá trị không null",
+            "giới hạn độ dài"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@NotNull phù hợp cho lecturerId bắt buộc.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "validation"
+          ]
+        },
+        {
+          "question": "@Valid trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "tạo bean singleton",
+            "đánh dấu entity",
+            "bật auto-configuration",
+            "kích hoạt validation cho object request trong Controller"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Quên @Valid khiến annotation validation trong DTO không được kích hoạt.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "validation"
+          ]
+        },
+        {
+          "question": "@RestControllerAdvice trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation tạo global exception handler cho REST",
+            "annotation repository",
+            "annotation path variable",
+            "annotation entity"
+          ],
+          "correctAnswer": "A",
+          "explanation": "@RestControllerAdvice kết hợp @ExceptionHandler để chuẩn hóa response lỗi.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "exception-handling"
+          ]
+        },
+        {
+          "question": "@ExceptionHandler trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation cấu hình datasource",
+            "annotation sinh ID",
+            "annotation xử lý một loại exception cụ thể",
+            "annotation sort query"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Ví dụ xử lý ResourceNotFoundException trả 404.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "exception-handling"
+          ]
+        },
+        {
+          "question": "ApiError response là gì?",
+          "options": [
+            "bean definition",
+            "thread state",
+            "entity relation",
+            "body lỗi chuẩn hóa gồm timestamp, status, code, message"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Response lỗi chuẩn hóa giúp client xử lý lỗi nhất quán.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "exception-handling"
+          ]
+        },
+        {
+          "question": "HTTP 200 OK là gì?",
+          "options": [
+            "input validation fail",
+            "status cho đọc hoặc cập nhật thành công",
+            "tạo tài nguyên thành công",
+            "không tìm thấy resource"
+          ],
+          "correctAnswer": "B",
+          "explanation": "200 OK là status thành công phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "HTTP 201 Created là gì?",
+          "options": [
+            "status cho tạo tài nguyên thành công",
+            "lỗi server",
+            "xóa thành công không body",
+            "không tìm thấy"
+          ],
+          "correctAnswer": "A",
+          "explanation": "POST tạo resource thường trả 201 Created.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "HTTP 204 No Content là gì?",
+          "options": [
+            "xung đột nghiệp vụ",
+            "tạo mới thành công có body",
+            "status cho xóa thành công và không trả body",
+            "validation fail"
+          ],
+          "correctAnswer": "C",
+          "explanation": "DELETE thành công thường trả 204 nếu không cần body.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "HTTP 400 Bad Request là gì?",
+          "options": [
+            "lỗi server bất ngờ",
+            "xung đột nghiệp vụ",
+            "không tìm thấy resource",
+            "status cho input sai format hoặc validation fail"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Validation fail từ DTO thường map thành 400.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "HTTP 404 Not Found là gì?",
+          "options": [
+            "tạo mới thành công",
+            "validation fail",
+            "status cho resource không tồn tại",
+            "xóa không body"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Không tìm thấy Project theo id thường trả 404.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "HTTP 409 Conflict là gì?",
+          "options": [
+            "xóa thành công",
+            "lỗi server không dự kiến",
+            "đọc thành công",
+            "status cho xung đột nghiệp vụ như email đã tồn tại"
+          ],
+          "correctAnswer": "D",
+          "explanation": "409 phù hợp khi request hợp lệ về format nhưng xung đột trạng thái nghiệp vụ.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "HTTP 500 Internal Server Error là gì?",
+          "options": [
+            "xung đột nghiệp vụ",
+            "status cho lỗi server không dự kiến và không lộ chi tiết nhạy cảm",
+            "validation fail",
+            "không tìm thấy"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Không nên trả stack trace kỹ thuật trực tiếp cho client.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "http",
+            "rest"
+          ]
+        },
+        {
+          "question": "JpaRepository là gì?",
+          "options": [
+            "Date-Time formatter",
+            "interface cung cấp sẵn CRUD và pagination cho entity",
+            "REST controller",
+            "JVM module"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Spring Data tạo proxy repository tại runtime, không cần viết implementation CRUD phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "repository"
+          ]
+        },
+        {
+          "question": "existsByEmailIgnoreCase là gì?",
+          "options": [
+            "query method kiểm tra email tồn tại không phân biệt hoa thường",
+            "tạo transaction",
+            "tìm tất cả entity",
+            "xóa theo ID"
+          ],
+          "correctAnswer": "A",
+          "explanation": "existsBy... thường dùng cho business validation trùng dữ liệu.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "query-method"
+          ]
+        },
+        {
+          "question": "findByEmailIgnoreCase là gì?",
+          "options": [
+            "xóa relation",
+            "format response",
+            "đếm tất cả row",
+            "query method tìm entity theo email không phân biệt hoa thường"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Có thể trả Optional<Lecturer> để xử lý không tìm thấy.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "query-method"
+          ]
+        },
+        {
+          "question": "findByNameContainingIgnoreCase là gì?",
+          "options": [
+            "tạo projection",
+            "lọc status và sort name",
+            "kiểm tra tồn tại email",
+            "query method tìm name chứa keyword không phân biệt hoa thường"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Containing + IgnoreCase là pattern query method phổ biến.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "query-method"
+          ]
+        },
+        {
+          "question": "findByLecturerId là gì?",
+          "options": [
+            "xóa tất cả dữ liệu",
+            "validate DTO",
+            "query method tìm Project theo lecturer.id",
+            "tìm Lecturer theo Project name"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Spring Data có thể đi qua nested property lecturer.id.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-data-jpa",
+            "query-method"
+          ]
+        },
+        {
+          "question": "findByStatusOrderByNameAsc là gì?",
+          "options": [
+            "query method lọc status và sắp xếp name tăng dần",
+            "tìm name chứa keyword",
+            "kiểm tra email tồn tại",
+            "phân trang mặc định"
+          ],
+          "correctAnswer": "A",
+          "explanation": "OrderByNameAsc trong tên method biểu diễn sắp xếp tăng dần theo name.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-data-jpa",
+            "query-method"
+          ]
+        },
+        {
+          "question": "PageRequest.of là gì?",
+          "options": [
+            "factory method tạo Pageable từ page, size và Sort",
+            "tạo ApplicationContext",
+            "tạo entity ID",
+            "tạo ResponseEntity"
+          ],
+          "correctAnswer": "A",
+          "explanation": "PageRequest.of(page, size, Sort.by(\"name\").ascending()) dùng cho pagination.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "pagination"
+          ]
+        },
+        {
+          "question": "Sort.by là gì?",
+          "options": [
+            "khai báo bean scope",
+            "khai báo HTTP status",
+            "khai báo exception handler",
+            "khai báo tiêu chí sắp xếp cho query phân trang"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Sort.by(\"name\").ascending() sắp xếp theo name tăng dần.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-data-jpa",
+            "pagination"
+          ]
+        },
+        {
+          "question": "Unit test là gì?",
+          "options": [
+            "test web layer riêng",
+            "test method/class độc lập và mock dependency",
+            "test query/mapping DB",
+            "test toàn bộ app context"
+          ],
+          "correctAnswer": "B",
+          "explanation": "JUnit và Mockito thường dùng cho unit test.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "testing",
+            "unit-test"
+          ]
+        },
+        {
+          "question": "Repository test là gì?",
+          "options": [
+            "test logging",
+            "test controller only",
+            "test service isolated",
+            "kiểm tra query và mapping repository"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@DataJpaTest thường dùng cho repository slice test.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "testing",
+            "spring-data-jpa"
+          ]
+        },
+        {
+          "question": "Controller slice test là gì?",
+          "options": [
+            "test mapping DB",
+            "kiểm tra web layer riêng",
+            "test mọi tầng thật",
+            "test GC"
+          ],
+          "correctAnswer": "B",
+          "explanation": "@WebMvcTest và MockMvc thường dùng để test controller.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "testing",
+            "spring-mvc"
+          ]
+        },
+        {
+          "question": "Integration test là gì?",
+          "options": [
+            "test enum",
+            "kiểm tra ApplicationContext và luồng nhiều tầng",
+            "test method độc lập duy nhất",
+            "test equals/hashCode"
+          ],
+          "correctAnswer": "B",
+          "explanation": "@SpringBootTest thường dùng cho integration test.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "testing",
+            "spring-boot"
+          ]
+        },
+        {
+          "question": "JUnit là gì?",
+          "options": [
+            "embedded server",
+            "validation annotation",
+            "framework phổ biến để viết test trong Java",
+            "ORM implementation"
+          ],
+          "correctAnswer": "C",
+          "explanation": "JUnit dùng để khai báo và chạy test case.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "testing",
+            "junit"
+          ]
+        },
+        {
+          "question": "Mockito là gì?",
+          "options": [
+            "thư viện mock dependency trong unit test",
+            "database engine",
+            "framework MVC",
+            "JVM compiler"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Mockito giúp giả lập repository khi test service.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "testing",
+            "mockito"
+          ]
+        },
+        {
+          "question": "@Mock trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "annotation Mockito tạo mock object",
+            "đánh dấu REST path",
+            "tạo bean Spring thật",
+            "đánh dấu entity"
+          ],
+          "correctAnswer": "A",
+          "explanation": "@Mock ProjectRepository tạo dependency giả cho unit test.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "testing",
+            "mockito"
+          ]
+        },
+        {
+          "question": "@InjectMocks trong Java/Spring thường dùng để làm gì?",
+          "options": [
+            "inject bean vào Spring context",
+            "annotation Mockito inject mock vào class cần test",
+            "tạo HTTP response",
+            "map DTO"
+          ],
+          "correctAnswer": "B",
+          "explanation": "@InjectMocks ProjectServiceImpl giúp test service với dependency mock.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "testing",
+            "mockito"
+          ]
+        },
+        {
+          "question": "assertThrows là gì?",
+          "options": [
+            "assertion kiểm tra code có ném exception mong đợi",
+            "format date",
+            "kiểm tra response JSON",
+            "tạo query method"
+          ],
+          "correctAnswer": "A",
+          "explanation": "assertThrows(ResourceNotFoundException.class, () -> ...) dùng trong unit test lỗi.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "testing",
+            "junit"
+          ]
+        },
+        {
+          "question": "Logging SLF4J là gì?",
+          "options": [
+            "in password ra console",
+            "tạo entity",
+            "mapping DTO",
+            "ghi log qua Logger để theo dõi hành vi ứng dụng"
+          ],
+          "correctAnswer": "D",
+          "explanation": "LoggerFactory.getLogger(...) thường dùng để tạo logger.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "logging",
+            "spring"
+          ]
+        },
+        {
+          "question": "log.info là gì?",
+          "options": [
+            "xóa dữ liệu",
+            "ghi lỗi nghiêm trọng duy nhất",
+            "validate DTO",
+            "ghi thông tin bình thường về luồng xử lý"
+          ],
+          "correctAnswer": "D",
+          "explanation": "log.info(\"Creating project...\") dùng cho sự kiện bình thường có ích.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "logging"
+          ]
+        },
+        {
+          "question": "log.warn là gì?",
+          "options": [
+            "ghi cảnh báo như dữ liệu không tìm thấy hoặc tình huống bất thường nhẹ",
+            "tạo endpoint",
+            "commit transaction",
+            "ghi password"
+          ],
+          "correctAnswer": "A",
+          "explanation": "log.warn phù hợp cho tình huống cần chú ý nhưng chưa chắc là lỗi hệ thống.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "logging"
+          ]
+        },
+        {
+          "question": "không log secret là gì?",
+          "options": [
+            "log token để debug dễ hơn",
+            "không ghi password, token, secret hoặc dữ liệu nhạy cảm không cần thiết",
+            "luôn log mọi request body",
+            "log password dạng plain text"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Log có thể bị lưu lâu và nhiều người truy cập, nên tránh dữ liệu nhạy cảm.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "logging",
+            "security"
+          ]
+        },
+        {
+          "question": "Swagger/OpenAPI là gì?",
+          "options": [
+            "collection type",
+            "JVM runtime",
+            "công cụ tài liệu hóa và thử REST API",
+            "ORM implementation"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Swagger/OpenAPI giúp mô tả endpoint, request/response để dễ test và trao đổi API.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "openapi"
+          ]
+        },
+        {
+          "question": "REST request flow là gì?",
+          "options": [
+            "DB -> Controller -> Browser only",
+            "Client -> DispatcherServlet -> Controller -> Service -> Repository -> Hibernate -> DB -> DTO -> JSON response",
+            "Service -> Controller -> Repository ngược chiều",
+            "Client -> Entity -> CSS -> JVM"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Luồng request REST chuẩn giúp xác định đúng trách nhiệm từng tầng.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring-mvc",
+            "architecture"
+          ]
+        },
+        {
+          "question": "Global exception flow là gì?",
+          "options": [
+            "exception tự động sửa input",
+            "exception luôn trả stack trace",
+            "exception được @RestControllerAdvice chuyển thành response lỗi chuẩn hóa",
+            "exception bị bỏ qua"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Global handler giúp API trả lỗi nhất quán.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "exception-handling"
+          ]
+        },
+        {
+          "question": "business validation ở Service là gì?",
+          "options": [
+            "Controller viết toàn bộ rule",
+            "Service kiểm tra nghiệp vụ như Lecturer tồn tại trước khi tạo Project",
+            "DTO tự query database",
+            "Repository tự quyết định HTTP status"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Service layer là nơi phù hợp để kiểm tra use case và điều phối repository.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "architecture"
+          ]
+        },
+        {
+          "question": "không expose entity vô thức là gì?",
+          "options": [
+            "đổi mọi relation EAGER",
+            "luôn trả entity cho mọi endpoint",
+            "bỏ DTO vì thừa",
+            "không trả toàn bộ entity làm API contract nếu chưa kiểm soát dữ liệu"
+          ],
+          "correctAnswer": "D",
+          "explanation": "DTO giúp tránh lộ field, vòng lặp JSON và vấn đề fetch.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "dto",
+            "jpa"
+          ]
+        },
+        {
+          "question": "separation of concerns là gì?",
+          "options": [
+            "repository gọi HTTP client tùy tiện",
+            "mỗi tầng/class giữ trách nhiệm rõ ràng",
+            "mọi logic dồn vào controller",
+            "mapper query DB"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Tách trách nhiệm giúp code dễ đọc, test và bảo trì.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "architecture"
+          ]
+        },
+        {
+          "question": "transaction boundary là gì?",
+          "options": [
+            "ranh giới transaction thường đặt ở service use case",
+            "ranh giới chỉ đặt ở DTO",
+            "ranh giới luôn đặt ở entity",
+            "ranh giới đặt trong mapper"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Service là nơi gom các thao tác DB thành một đơn vị nghiệp vụ.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "transaction",
+            "architecture"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: hạ tầng xây dựng ứng dụng Java theo module với IoC/DI?",
+          "options": [
+            "@Transactional propagation",
+            "HTTP 204 No Content",
+            "@PutMapping",
+            "Spring Framework"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Spring cung cấp container và nhiều module hỗ trợ backend Java.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: đảo quyền kiểm soát việc tạo và lắp ráp object cho container?",
+          "options": [
+            "Join point",
+            "Aspect",
+            "IoC",
+            "@RequestBody"
+          ],
+          "correctAnswer": "C",
+          "explanation": "IoC giúp code nghiệp vụ không phải tự quản lý toàn bộ vòng đời dependency.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "ioc"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: dependency được truyền từ bên ngoài thay vì tự new bên trong class?",
+          "options": [
+            "không expose entity vô thức",
+            "Unit test",
+            "@GetMapping",
+            "DI"
+          ],
+          "correctAnswer": "D",
+          "explanation": "DI làm dependency rõ ràng, dễ test và giảm coupling.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "di"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: object do Spring container quản lý?",
+          "options": [
+            "Bean",
+            "Integration test",
+            "@PostMapping",
+            "Spring Boot"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Bean được instantiate, configure và assemble bởi ApplicationContext.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: Spring IoC container chịu trách nhiệm tạo, cấu hình và lắp ráp bean?",
+          "options": [
+            "ApplicationContext",
+            "IoC",
+            "HTTP 200 OK",
+            "không hard-code password"
+          ],
+          "correctAnswer": "A",
+          "explanation": "ApplicationContext là context chính của ứng dụng Spring.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "ioc"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: cách inject dependency qua constructor, được khuyến nghị?",
+          "options": [
+            "constructor injection",
+            "không expose entity vô thức",
+            "Repository responsibility",
+            "@Valid"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Constructor injection giúp dependency rõ ràng, dễ test và hỗ trợ field final.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "di"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: stereotype annotation đăng ký bean Spring tổng quát?",
+          "options": [
+            "@PostMapping",
+            "singleton scope",
+            "@Component",
+            "findByStatusOrderByNameAsc"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@Component dùng cho bean tổng quát khi không thuộc semantic cụ thể.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: stereotype annotation cho bean tầng xử lý nghiệp vụ?",
+          "options": [
+            "Repository responsibility",
+            "assertThrows",
+            "JUnit",
+            "@Service"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@Service thể hiện semantic business/service layer.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "service"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: stereotype annotation cho bean tầng truy cập dữ liệu?",
+          "options": [
+            "profile",
+            "@Mock",
+            "@RequestMapping",
+            "@Repository"
+          ],
+          "correctAnswer": "D",
+          "explanation": "@Repository thể hiện data access layer.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "repository"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: annotation cho MVC controller có thể trả view?",
+          "options": [
+            "@Mock",
+            "@Transactional rollbackFor",
+            "@Controller",
+            "@RestController"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Trong REST API thường dùng @RestController thay vì @Controller thuần.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "controller"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: controller REST thường trả JSON?",
+          "options": [
+            "@Transactional timeout",
+            "log.warn",
+            "@RestController",
+            "HTTP 409 Conflict"
+          ],
+          "correctAnswer": "C",
+          "explanation": "@RestController kết hợp @Controller và @ResponseBody.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring-mvc",
+            "rest"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: class cấu hình Java-based?",
+          "options": [
+            "Advice",
+            "@Configuration",
+            "Sort.by",
+            "JpaRepository"
+          ],
+          "correctAnswer": "B",
+          "explanation": "@Configuration chứa các @Bean factory method.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "configuration"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: đăng ký bean từ một factory method?",
+          "options": [
+            "@Bean",
+            "constructor injection",
+            "DI",
+            "Repository test"
+          ],
+          "correctAnswer": "A",
+          "explanation": "@Bean dùng khi cần tự tạo object và đưa vào Spring container.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: chỉ định package scan component?",
+          "options": [
+            "@ComponentScan",
+            "HTTP 409 Conflict",
+            "@Transactional rollbackFor",
+            "existsByEmailIgnoreCase"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Spring Boot thường scan từ package của main class trở xuống.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "component-scan"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: một bean instance cho mỗi ApplicationContext?",
+          "options": [
+            "session scope",
+            "singleton scope",
+            "PageRequest.of",
+            "JUnit"
+          ],
+          "correctAnswer": "B",
+          "explanation": "singleton là scope mặc định; service singleton không nên giữ mutable state theo request.",
+          "difficulty": "BEGINNER",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: tạo bean mới khi request từ container?",
+          "options": [
+            "không log secret",
+            "Integration test",
+            "prototype scope",
+            "Logging SLF4J"
+          ],
+          "correctAnswer": "C",
+          "explanation": "prototype ít dùng trong backend thông thường.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: một bean cho mỗi HTTP request?",
+          "options": [
+            "Swagger/OpenAPI",
+            "request scope",
+            "findByEmailIgnoreCase",
+            "@PostMapping"
+          ],
+          "correctAnswer": "B",
+          "explanation": "request scope chỉ có ý nghĩa trong web context.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: một bean cho mỗi HTTP session?",
+          "options": [
+            "không hard-code password",
+            "log.info",
+            "session scope",
+            "IoC"
+          ],
+          "correctAnswer": "C",
+          "explanation": "REST API stateless cần cân nhắc kỹ khi dùng session scope.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "bean-scope"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: tách cross-cutting concern khỏi logic nghiệp vụ chính?",
+          "options": [
+            "AOP",
+            "DI",
+            "@ExceptionHandler",
+            "@PatchMapping"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Logging, transaction, authorization và monitoring là ví dụ cross-cutting concern.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
+        },
+        {
+          "question": "Khái niệm nào phù hợp nhất với mô tả: module chứa cross-cutting concern?",
+          "options": [
+            "@Component",
+            "Aspect",
+            "REST request flow",
+            "ApplicationContext"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Aspect gom logic như logging/transaction tách khỏi business code.",
+          "difficulty": "INTERMEDIATE",
+          "tags": [
+            "spring",
+            "aop"
+          ]
         }
       ]
     }
