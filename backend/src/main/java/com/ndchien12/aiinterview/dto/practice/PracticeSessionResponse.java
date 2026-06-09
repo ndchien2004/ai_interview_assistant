@@ -1,6 +1,7 @@
 package com.ndchien12.aiinterview.dto.practice;
 
 import com.ndchien12.aiinterview.dto.course.QuestionResponse;
+import com.ndchien12.aiinterview.dto.course.QuestionProgressResponse;
 import com.ndchien12.aiinterview.entity.FlashcardStatusFilter;
 import com.ndchien12.aiinterview.entity.PracticeSession;
 import com.ndchien12.aiinterview.entity.PracticeSessionMode;
@@ -15,6 +16,7 @@ public record PracticeSessionResponse(
         UUID id,
         String courseSlug,
         PracticeSessionMode mode,
+        String deckSlug,
         String topic,
         QuestionDifficulty difficulty,
         FlashcardStatusFilter statusFilter,
@@ -22,17 +24,28 @@ public record PracticeSessionResponse(
         Instant createdAt,
         Instant completedAt,
         QuestionResponse nextQuestion,
-        List<PracticeAttemptResponse> attempts
+        List<PracticeAttemptResponse> attempts,
+        QuestionProgressResponse lastProgress
 ) {
     public static PracticeSessionResponse from(
             PracticeSession session,
             QuestionResponse nextQuestion,
             List<PracticeAttemptResponse> attempts
     ) {
+        return from(session, nextQuestion, attempts, null);
+    }
+
+    public static PracticeSessionResponse from(
+            PracticeSession session,
+            QuestionResponse nextQuestion,
+            List<PracticeAttemptResponse> attempts,
+            QuestionProgressResponse lastProgress
+    ) {
         return new PracticeSessionResponse(
                 session.getId(),
                 session.getCourse().getSlug(),
                 session.getMode(),
+                session.getDeckFilter(),
                 session.getTopicFilter(),
                 session.getDifficultyFilter(),
                 session.getStatusFilter(),
@@ -40,7 +53,8 @@ public record PracticeSessionResponse(
                 session.getCreatedAt(),
                 session.getCompletedAt(),
                 nextQuestion,
-                attempts
+                attempts,
+                lastProgress
         );
     }
 }

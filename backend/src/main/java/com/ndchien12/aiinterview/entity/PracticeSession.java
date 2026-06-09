@@ -42,6 +42,9 @@ public class PracticeSession {
     @Column(name = "topic_filter", length = 120)
     private String topicFilter;
 
+    @Column(name = "deck_filter", length = 140)
+    private String deckFilter;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "difficulty_filter", length = 40)
     private QuestionDifficulty difficultyFilter;
@@ -113,6 +116,14 @@ public class PracticeSession {
 
     public void setTopicFilter(String topicFilter) {
         this.topicFilter = topicFilter;
+    }
+
+    public String getDeckFilter() {
+        return deckFilter;
+    }
+
+    public void setDeckFilter(String deckFilter) {
+        this.deckFilter = deckFilter;
     }
 
     public QuestionDifficulty getDifficultyFilter() {

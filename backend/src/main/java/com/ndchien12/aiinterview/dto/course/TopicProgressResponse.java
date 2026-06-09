@@ -4,6 +4,11 @@ public record TopicProgressResponse(
         String topic,
         long total,
         long attempted,
-        long mastered
+        long mastered,
+        long correct,
+        long incorrect,
+        long due,
+        long learning,
+        int masteryPercentage
 ) {
 }

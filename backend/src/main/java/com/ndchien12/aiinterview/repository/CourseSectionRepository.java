@@ -11,5 +11,11 @@ import java.util.UUID;
 public interface CourseSectionRepository extends JpaRepository<CourseSection, UUID> {
     List<CourseSection> findByCourseOrderBySortOrderAsc(Course course);
 
+    List<CourseSection> findByCourseAndActiveTrueOrderBySortOrderAsc(Course course);
+
     Optional<CourseSection> findByCourseAndSlug(Course course, String slug);
+
+    Optional<CourseSection> findByCourseAndSlugAndActiveTrue(Course course, String slug);
+
+    boolean existsByCourseAndSlug(Course course, String slug);
 }

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 public record CreatePracticeSessionRequest(
         @NotBlank String courseSlug,
         PracticeSessionMode mode,
+        String deckSlug,
         String topic,
         QuestionDifficulty difficulty,
         FlashcardStatusFilter status

@@ -1,0 +1,41 @@
+{
+  "title": "Java cơ bản",
+  "description": "Bộ câu hỏi mẫu để import vào FreeCard.",
+  "sections": [
+    {
+      "title": "Java Core",
+      "slug": "java-core",
+      "description": "Nền tảng Java.",
+      "sortOrder": 1,
+      "questions": [
+        {
+          "question": "JVM dùng để làm gì?",
+          "options": [
+            "Chạy bytecode Java",
+            "Tạo giao diện CSS",
+            "Quản lý DNS",
+            "Thiết kế database"
+          ],
+          "correctAnswer": "A",
+          "explanation": "JVM thực thi bytecode đã được biên dịch từ mã nguồn Java.",
+          "difficulty": "BEGINNER",
+          "tags": ["java", "jvm"],
+          "codeSnippet": ""
+        },
+        {
+          "question": "Trong Java, `equals()` thường dùng để làm gì?",
+          "options": [
+            "So sánh logic/nội dung giữa hai object",
+            "Luôn so sánh địa chỉ bộ nhớ",
+            "Chỉ dùng cho kiểu int",
+            "Tự động lưu object vào database"
+          ],
+          "correctAnswer": "A",
+          "explanation": "`equals()` có thể được override để định nghĩa thế nào là bằng nhau theo nghiệp vụ.",
+          "difficulty": "BEGINNER",
+          "tags": ["java", "object"]
+        }
+      ]
+    }
+  ]
+}

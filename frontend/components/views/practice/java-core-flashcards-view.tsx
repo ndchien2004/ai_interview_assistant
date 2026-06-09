@@ -72,12 +72,12 @@ export function JavaCoreFlashcardsView() {
 
       const confidence = progressByQuestionId[item.id]?.confidence
       if (statusFilter === "UNSEEN") return !confidence
-      if (statusFilter === "LEARNING") return Boolean(confidence && confidence !== "MASTERED")
-      if (statusFilter === "MASTERED") return confidence === "MASTERED"
+      if (statusFilter === "LEARNING") return Boolean(confidence && !progressByQuestionId[item.id]?.mastered)
+      if (statusFilter === "MASTERED") return progressByQuestionId[item.id]?.mastered
       return true
     })
   }, [course, difficultyFilter, progressByQuestionId, statusFilter, topicFilter])
-  const known = filteredQuestions.filter((item) => progressByQuestionId[item.id]?.confidence === "MASTERED").length
+  const known = filteredQuestions.filter((item) => progressByQuestionId[item.id]?.mastered).length
   const total = filteredQuestions.length || progress?.totalQuestions || course?.questionCount || 0
   const remaining = Math.max(total - known, 0)
   const completion = total ? Math.round((known / total) * 100) : 0
@@ -194,9 +194,10 @@ export function JavaCoreFlashcardsView() {
     <div className="mx-auto max-w-5xl space-y-7">
       <BackHeader />
 
-      <section className="grid gap-4 border-b border-border pb-6 sm:grid-cols-3">
+      <section className="grid gap-4 border-b border-border pb-6 sm:grid-cols-4">
         <Metric label="Known" value={`${known}/${total}`} />
         <Metric label="Remaining" value={remaining.toString()} />
+        <Metric label="Due now" value={(progress.dueQuestions ?? 0).toString()} />
         <Metric label="Deck mastery" value={`${completion}%`} />
       </section>
 

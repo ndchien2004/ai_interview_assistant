@@ -41,6 +41,15 @@ public class UserQuestionProgress {
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount;
 
+    @Column(name = "correct_count", nullable = false)
+    private int correctCount;
+
+    @Column(name = "incorrect_count", nullable = false)
+    private int incorrectCount;
+
+    @Column(name = "correct_streak", nullable = false)
+    private int correctStreak;
+
     @Column(nullable = false)
     private boolean mastered;
 
@@ -88,6 +97,30 @@ public class UserQuestionProgress {
 
     public void setAttemptCount(int attemptCount) {
         this.attemptCount = attemptCount;
+    }
+
+    public int getCorrectCount() {
+        return correctCount;
+    }
+
+    public void setCorrectCount(int correctCount) {
+        this.correctCount = correctCount;
+    }
+
+    public int getIncorrectCount() {
+        return incorrectCount;
+    }
+
+    public void setIncorrectCount(int incorrectCount) {
+        this.incorrectCount = incorrectCount;
+    }
+
+    public int getCorrectStreak() {
+        return correctStreak;
+    }
+
+    public void setCorrectStreak(int correctStreak) {
+        this.correctStreak = correctStreak;
     }
 
     public boolean isMastered() {

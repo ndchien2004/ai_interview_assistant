@@ -38,6 +38,15 @@ public class PracticeAttempt {
     @Column(name = "answer_text", columnDefinition = "TEXT")
     private String answerText;
 
+    @Column(name = "selected_option_index")
+    private Integer selectedOptionIndex;
+
+    @Column(name = "correct")
+    private Boolean correct;
+
+    @Column(name = "time_spent_seconds")
+    private Integer timeSpentSeconds;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
     private PracticeConfidence confidence;
@@ -88,6 +97,30 @@ public class PracticeAttempt {
 
     public void setAnswerText(String answerText) {
         this.answerText = answerText;
+    }
+
+    public Integer getSelectedOptionIndex() {
+        return selectedOptionIndex;
+    }
+
+    public void setSelectedOptionIndex(Integer selectedOptionIndex) {
+        this.selectedOptionIndex = selectedOptionIndex;
+    }
+
+    public Boolean getCorrect() {
+        return correct;
+    }
+
+    public void setCorrect(Boolean correct) {
+        this.correct = correct;
+    }
+
+    public Integer getTimeSpentSeconds() {
+        return timeSpentSeconds;
+    }
+
+    public void setTimeSpentSeconds(Integer timeSpentSeconds) {
+        this.timeSpentSeconds = timeSpentSeconds;
     }
 
     public PracticeConfidence getConfidence() {

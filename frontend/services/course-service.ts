@@ -8,9 +8,11 @@ import type {
   CourseImportResponse,
   CourseProgress,
   CourseSection,
+  FlashcardStudyFilters,
   ImportDelimiterMode,
   ParsedImportPreview,
   PracticeQuestion,
+  QuestionProgress,
   QuestionDifficulty,
 } from "@/types"
 
@@ -86,11 +88,283 @@ export async function getCourseProgress(slug = COURSE_SLUG) {
   return readMockProgress(slug, mockJavaCourse())
 }
 
+export async function listCourseQuestions(slug = COURSE_SLUG, filters: FlashcardStudyFilters = {}) {
+  if (canUseApi()) {
+    try {
+      const params = new URLSearchParams()
+      if (filters.deckSlug) params.set("deckSlug", filters.deckSlug)
+      if (filters.topic) params.set("topic", filters.topic)
+      if (filters.difficulty) params.set("difficulty", filters.difficulty)
+      if (filters.status && filters.status !== "ALL") params.set("status", filters.status)
+      if (typeof filters.due === "boolean") params.set("due", String(filters.due))
+      if (filters.q?.trim()) params.set("q", filters.q.trim())
+      const query = params.toString()
+      return await apiGet<PracticeQuestion[]>(`/api/courses/${slug}/questions${query ? `?${query}` : ""}`)
+    } catch {
+      return filterLocalQuestions(mockJavaCourse(), filters)
+    }
+  }
+
+  return filterLocalQuestions(mockJavaCourse(), filters)
+}
+
+export async function createCourse(payload: AdminCoursePayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error(`Không thể tạo học phần: ${response.status}`)
+    return response.json() as Promise<Course>
+  }
+
+  return {
+    id: makeId("course"),
+    title: payload.title,
+    slug: payload.slug,
+    description: payload.description,
+    active: payload.active,
+    questionCount: 0,
+    sections: [],
+  } satisfies Course
+}
+
+export async function updateCourse(slug: string, payload: AdminCoursePayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${slug}`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error(`KhĂ´ng thá»ƒ sá»­a há»c pháº§n: ${response.status}`)
+    return response.json() as Promise<Course>
+  }
+
+  return {
+    id: makeId("course"),
+    title: payload.title,
+    slug: payload.slug,
+    description: payload.description,
+    active: payload.active,
+    questionCount: 0,
+    sections: [],
+  } satisfies Course
+}
+
+export async function deleteCourse(slug: string) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${slug}`, {
+      method: "DELETE",
+      headers: headers(),
+    })
+    if (!response.ok) throw new Error(`KhĂ´ng thá»ƒ xĂ³a há»c pháº§n: ${response.status}`)
+  }
+}
+
+export async function getQuestionProgress(slug = COURSE_SLUG) {
+  if (canUseApi()) {
+    try {
+      return await apiGet<QuestionProgress[]>(`/api/courses/${slug}/progress/questions`)
+    } catch {
+      return Object.entries(readLocalProgress()).map(([questionId, progress]) => ({ questionId, ...progress }))
+    }
+  }
+
+  return Object.entries(readLocalProgress()).map(([questionId, progress]) => ({ questionId, ...progress }))
+}
+
 export type AdminCoursePayload = {
   title: string
   slug: string
   description: string
   active: boolean
+}
+
+export type DeckJsonImportPayload = {
+  title?: string
+  description?: string
+  sections: Array<{
+    title: string
+    slug?: string
+    description?: string
+    sortOrder?: number
+    questions: Array<{
+      question: string
+      options: string[]
+      correctAnswer: "A" | "B" | "C" | "D"
+      explanation: string
+      difficulty?: QuestionDifficulty
+      tags?: string[]
+      codeSnippet?: string
+    }>
+  }>
+}
+
+export async function createDeck(payload: AdminCoursePayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/decks`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error(`Không thể tạo bộ thẻ: ${response.status}`)
+    return response.json() as Promise<Course>
+  }
+
+  return {
+    id: makeId("deck"),
+    title: payload.title,
+    slug: payload.slug,
+    description: payload.description,
+    active: payload.active,
+    questionCount: 0,
+    sections: [],
+  } satisfies Course
+}
+
+export type CourseDeckPayload = {
+  title: string
+  slug: string
+  description: string
+  sortOrder?: number
+}
+
+export type DeckQuestionUpdatePayload = {
+  question: string
+  options: string[]
+  correctOptionIndex: number
+  explanation: string
+}
+
+export async function createCourseDeck(courseSlug: string, payload: CourseDeckPayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${courseSlug}/decks`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ ...payload, sortOrder: payload.sortOrder ?? 0 }),
+    })
+    if (!response.ok) throw new Error(`Không thể tạo bộ thẻ: ${response.status}`)
+    return response.json() as Promise<CourseSection>
+  }
+
+  return {
+    id: makeId("section"),
+    slug: payload.slug,
+    title: payload.title,
+    description: payload.description,
+    sortOrder: payload.sortOrder ?? 0,
+    questions: [],
+  } satisfies CourseSection
+}
+
+export async function updateCourseDeck(courseSlug: string, deckSlug: string, payload: CourseDeckPayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${courseSlug}/decks/${deckSlug}`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify({ ...payload, sortOrder: payload.sortOrder ?? 0 }),
+    })
+    if (!response.ok) throw new Error(`KhĂ´ng thá»ƒ sá»­a bá»™ tháº»: ${response.status}`)
+    return response.json() as Promise<CourseSection>
+  }
+
+  return {
+    id: makeId("section"),
+    slug: payload.slug,
+    title: payload.title,
+    description: payload.description,
+    sortOrder: payload.sortOrder ?? 0,
+    questions: [],
+  } satisfies CourseSection
+}
+
+export async function deleteCourseDeck(courseSlug: string, deckSlug: string) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${courseSlug}/decks/${deckSlug}`, {
+      method: "DELETE",
+      headers: headers(),
+    })
+    if (!response.ok) throw new Error(`KhĂ´ng thá»ƒ xĂ³a bá»™ tháº»: ${response.status}`)
+  }
+}
+
+export async function updateCourseDeckQuestion(
+  courseSlug: string,
+  deckSlug: string,
+  questionId: string,
+  payload: DeckQuestionUpdatePayload
+) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${courseSlug}/decks/${deckSlug}/questions/${questionId}`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error(`KhĂ´ng thá»ƒ sá»­a cĂ¢u há»i: ${response.status}`)
+    return response.json() as Promise<PracticeQuestion>
+  }
+
+  const existing = getLocalCourseDeck(deckSlug).questions.find((question) => question.id === questionId)
+  if (!existing) throw new Error("KhĂ´ng tĂ¬m tháº¥y cĂ¢u há»i.")
+  return {
+    ...existing,
+    question: payload.question,
+    options: payload.options,
+    correctOptionIndex: payload.correctOptionIndex,
+    shortAnswer: payload.options[payload.correctOptionIndex],
+    detailedAnswer: payload.explanation,
+    explanation: payload.explanation,
+    keyPoints: [payload.options[payload.correctOptionIndex]],
+  } satisfies PracticeQuestion
+}
+
+export async function getCourseDeck(courseSlug: string, deckSlug: string) {
+  if (canUseApi()) {
+    try {
+      return await apiGet<CourseSection>(`/api/courses/${courseSlug}/decks/${deckSlug}`)
+    } catch {
+      return getLocalCourseDeck(deckSlug)
+    }
+  }
+
+  return getLocalCourseDeck(deckSlug)
+}
+
+export async function importDeckJson(slug: string, payload: DeckJsonImportPayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/decks/${slug}/imports/json`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error(`Không thể import JSON: ${response.status}`)
+    return response.json() as Promise<CourseImportResponse>
+  }
+
+  return importDeckJsonLocally(slug, payload)
+}
+
+export async function importCourseDeckJson(courseSlug: string, deckSlug: string, payload: DeckJsonImportPayload) {
+  if (canUseApi()) {
+    const response = await fetch(`${API_BASE_URL}/api/courses/${courseSlug}/decks/${deckSlug}/imports/json`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error(`Không thể import JSON: ${response.status}`)
+    return response.json() as Promise<CourseImportResponse>
+  }
+
+  return importDeckJsonLocally(deckSlug, {
+    ...payload,
+    sections: [
+      {
+        title: getLocalCourseDeck(deckSlug).title,
+        questions: payload.sections.flatMap((section) => section.questions),
+      },
+    ],
+  })
 }
 
 export type AdminSectionPayload = {
@@ -107,6 +381,9 @@ export type AdminQuestionPayload = {
   question: string
   shortAnswer: string
   detailedAnswer: string
+  options: string[]
+  correctOptionIndex: number
+  explanation: string
   keyPoints: string[]
   commonMistakes: string[]
   difficulty: QuestionDifficulty
@@ -162,9 +439,24 @@ async function apiAdmin<T>(path: string, method: "POST" | "PUT" | "DELETE", body
 
 export function readMockProgress(slug: string, course: Course): CourseProgress {
   const progress = readLocalProgress()
+  const now = new Date()
   const questions = course.sections?.flatMap((section) => section.questions) ?? []
   const attempted = questions.filter((question) => progress[question.id]).length
-  const mastered = questions.filter((question) => progress[question.id]?.confidence === "MASTERED").length
+  const mastered = questions.filter((question) => progress[question.id]?.mastered).length
+  const correctAnswers = questions.reduce((total, question) => total + (progress[question.id]?.correctCount ?? 0), 0)
+  const incorrectAnswers = questions.reduce((total, question) => total + (progress[question.id]?.incorrectCount ?? 0), 0)
+  const due = questions.filter((question) => {
+    const item = progress[question.id]
+    return item ? new Date(item.nextReviewAt) <= now : false
+  }).length
+  const learning = questions.filter((question) => {
+    const item = progress[question.id]
+    return item ? !item.mastered : false
+  }).length
+  const lastStudyAt = Object.values(progress)
+    .map((item) => item.lastAttemptAt)
+    .sort()
+    .at(-1) ?? null
   const scoreMap: Record<string, number> = { AGAIN: 1, HARD: 2, GOOD: 3, MASTERED: 4 }
   const averageConfidence =
     attempted === 0
@@ -173,23 +465,41 @@ export function readMockProgress(slug: string, course: Course): CourseProgress {
         attempted
 
   const topics = Object.values(
-    questions.reduce<Record<string, { topic: string; total: number; attempted: number; mastered: number }>>(
+    questions.reduce<Record<string, { topic: string; total: number; attempted: number; mastered: number; correct: number; incorrect: number }>>(
       (acc, question) => {
-        acc[question.topic] ??= { topic: question.topic, total: 0, attempted: 0, mastered: 0 }
+        acc[question.topic] ??= { topic: question.topic, total: 0, attempted: 0, mastered: 0, correct: 0, incorrect: 0 }
         acc[question.topic].total += 1
         if (progress[question.id]) acc[question.topic].attempted += 1
-        if (progress[question.id]?.confidence === "MASTERED") acc[question.topic].mastered += 1
+        if (progress[question.id]?.mastered) acc[question.topic].mastered += 1
+        acc[question.topic].correct += progress[question.id]?.correctCount ?? 0
+        acc[question.topic].incorrect += progress[question.id]?.incorrectCount ?? 0
         return acc
       },
       {}
     )
-  )
+  ).map((topic) => ({
+    ...topic,
+    due: questions.filter((question) => {
+      const item = progress[question.id]
+      return question.topic === topic.topic && item ? new Date(item.nextReviewAt) <= now : false
+    }).length,
+    learning: questions.filter((question) => question.topic === topic.topic && progress[question.id] && !progress[question.id].mastered)
+      .length,
+    masteryPercentage: topic.total ? Math.round((topic.mastered / topic.total) * 100) : 0,
+  }))
 
   return {
     courseSlug: slug,
     totalQuestions: questions.length,
     attemptedQuestions: attempted,
     masteredQuestions: mastered,
+    correctAnswers,
+    incorrectAnswers,
+    dueQuestions: due,
+    learningQuestions: learning,
+    streakDays: calculateLocalStreak(progress),
+    lastStudyAt,
+    accuracyPercentage: correctAnswers + incorrectAnswers ? Math.round((correctAnswers / (correctAnswers + incorrectAnswers)) * 100) : 0,
     masteryPercentage: questions.length ? Math.round((mastered / questions.length) * 100) : 0,
     averageConfidence,
     topics,
@@ -199,10 +509,33 @@ export function readMockProgress(slug: string, course: Course): CourseProgress {
 export function readLocalProgress() {
   if (typeof window === "undefined") return {}
   try {
-    return JSON.parse(window.localStorage.getItem(LOCAL_PROGRESS_KEY) ?? "{}") as Record<
+    const raw = JSON.parse(window.localStorage.getItem(LOCAL_PROGRESS_KEY) ?? "{}") as Record<
       string,
-      { confidence: string; answerText?: string }
+      Partial<Omit<QuestionProgress, "questionId">>
     >
+    const normalized = Object.fromEntries(
+      Object.entries(raw).map(([questionId, item]) => {
+        const confidence = (item.confidence ?? "AGAIN") as QuestionProgress["confidence"]
+        const lastAttemptAt = item.lastAttemptAt ?? new Date().toISOString()
+        const nextReviewAt = item.nextReviewAt ?? nextLocalReviewAt(new Date(lastAttemptAt), confidence)
+        return [
+          questionId,
+          {
+            confidence,
+            answerText: item.answerText,
+            attemptCount: item.attemptCount ?? 1,
+            correctCount: item.correctCount ?? 0,
+            incorrectCount: item.incorrectCount ?? 0,
+            correctStreak: item.correctStreak ?? 0,
+            mastered: item.mastered ?? confidence === "MASTERED",
+            lastAttemptAt,
+            nextReviewAt,
+            due: new Date(nextReviewAt) <= new Date(),
+          },
+        ]
+      })
+    )
+    return normalized as Record<string, Omit<QuestionProgress, "questionId">>
   } catch {
     return {}
   }
@@ -210,8 +543,131 @@ export function readLocalProgress() {
 
 export function writeLocalProgress(questionId: string, confidence: string, answerText?: string) {
   const progress = readLocalProgress()
-  progress[questionId] = { confidence, answerText }
+  const now = new Date()
+  const nextReviewAt = nextLocalReviewAt(now, confidence)
+  progress[questionId] = {
+    confidence: confidence as QuestionProgress["confidence"],
+    answerText,
+    attemptCount: (progress[questionId]?.attemptCount ?? 0) + 1,
+    correctCount: progress[questionId]?.correctCount ?? 0,
+    incorrectCount: progress[questionId]?.incorrectCount ?? 0,
+    correctStreak: progress[questionId]?.correctStreak ?? 0,
+    mastered: confidence === "MASTERED",
+    lastAttemptAt: now.toISOString(),
+    nextReviewAt,
+    due: new Date(nextReviewAt) <= new Date(),
+  }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
+}
+
+export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOptionIndex: number) {
+  const progress = readLocalProgress()
+  const previous = progress[question.id]
+  const correct = selectedOptionIndex === question.correctOptionIndex
+  const correctStreak = correct ? (previous?.correctStreak ?? 0) + 1 : 0
+  const confidence: QuestionProgress["confidence"] = correct ? (correctStreak >= 2 ? "MASTERED" : "GOOD") : "AGAIN"
+  const now = new Date()
+  const nextReviewAt = nextLocalReviewAt(now, confidence)
+
+  progress[question.id] = {
+    confidence,
+    attemptCount: (previous?.attemptCount ?? 0) + 1,
+    correctCount: (previous?.correctCount ?? 0) + (correct ? 1 : 0),
+    incorrectCount: (previous?.incorrectCount ?? 0) + (correct ? 0 : 1),
+    correctStreak,
+    mastered: confidence === "MASTERED",
+    lastAttemptAt: now.toISOString(),
+    nextReviewAt,
+    due: new Date(nextReviewAt) <= new Date(),
+  }
+  window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
+  return { questionId: question.id, ...progress[question.id], selectedOptionIndex, correct }
+}
+
+export function writeLocalMatchProgress(questionIds: string[]) {
+  const progress = readLocalProgress()
+  const now = new Date()
+  for (const questionId of questionIds) {
+    const previous = progress[questionId]
+    const alreadyMastered = previous?.mastered ?? false
+    const confidence: QuestionProgress["confidence"] = alreadyMastered ? "MASTERED" : "GOOD"
+    progress[questionId] = {
+      confidence,
+      attemptCount: (previous?.attemptCount ?? 0) + 1,
+      correctCount: (previous?.correctCount ?? 0) + 1,
+      incorrectCount: previous?.incorrectCount ?? 0,
+      correctStreak: (previous?.correctStreak ?? 0) + 1,
+      mastered: alreadyMastered,
+      lastAttemptAt: now.toISOString(),
+      nextReviewAt: nextLocalReviewAt(now, confidence),
+      due: false,
+    }
+  }
+  window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
+}
+
+function filterLocalQuestions(course: Course, filters: FlashcardStudyFilters) {
+  const progress = readLocalProgress()
+  const now = new Date()
+  const query = filters.q?.trim().toLowerCase()
+
+  return (course.sections?.flatMap((section) => section.questions) ?? []).filter((question) => {
+    if (filters.deckSlug) {
+      const section = course.sections?.find((item) => item.slug === filters.deckSlug)
+      if (!section?.questions.some((item) => item.id === question.id)) return false
+    }
+    const item = progress[question.id]
+    if (filters.topic && question.topic !== filters.topic) return false
+    if (filters.difficulty && question.difficulty !== filters.difficulty) return false
+    if (filters.status === "UNSEEN" && item) return false
+    if (filters.status === "LEARNING" && (!item || item.mastered)) return false
+    if (filters.status === "MASTERED" && !item?.mastered) return false
+    if (typeof filters.due === "boolean") {
+      const isDue = item ? new Date(item.nextReviewAt) <= now : false
+      if (filters.due !== isDue) return false
+    }
+    if (query) {
+      const haystack = [question.question, question.shortAnswer, question.topic, question.tags.join(" ")]
+        .join(" ")
+        .toLowerCase()
+      if (!haystack.includes(query)) return false
+    }
+    return true
+  })
+}
+
+function getLocalCourseDeck(deckSlug: string) {
+  const course = mockJavaCourse()
+  const section = course.sections?.find((item) => item.slug === deckSlug)
+  if (!section) throw new Error("Không tìm thấy bộ thẻ.")
+  return section
+}
+
+function nextLocalReviewAt(now: Date, confidence: string) {
+  const next = new Date(now)
+  if (confidence === "AGAIN") next.setMinutes(next.getMinutes() + 10)
+  else if (confidence === "HARD") next.setDate(next.getDate() + 1)
+  else if (confidence === "GOOD") next.setDate(next.getDate() + 3)
+  else next.setDate(next.getDate() + 14)
+  return next.toISOString()
+}
+
+function calculateLocalStreak(progress: Record<string, Omit<QuestionProgress, "questionId">>) {
+  const dates = new Set(
+    Object.values(progress)
+      .map((item) => item.lastAttemptAt?.slice(0, 10))
+      .filter(Boolean)
+  )
+  const latest = Array.from(dates).sort().at(-1)
+  if (!latest) return 0
+
+  const cursor = new Date(`${latest}T00:00:00.000Z`)
+  let streak = 0
+  while (dates.has(cursor.toISOString().slice(0, 10))) {
+    streak += 1
+    cursor.setUTCDate(cursor.getUTCDate() - 1)
+  }
+  return streak
 }
 
 function mockJavaCourse(): Course {
@@ -319,6 +775,9 @@ function importQuestionsLocally(slug: string, payload: CourseImportPayload): Cou
     detailedAnswer: row.answer,
     keyPoints: [row.answer],
     commonMistakes: ["Marking the card as mastered before you can recall the answer."],
+    options: [row.answer, "Chưa chính xác", "Không liên quan", "Thiếu dữ kiện"],
+    correctOptionIndex: 0,
+    explanation: row.answer,
     difficulty: payload.difficulty,
     topic: payload.topic.trim(),
     tags: ["imported", "user-flashcard"],
@@ -334,6 +793,53 @@ function importQuestionsLocally(slug: string, payload: CourseImportPayload): Cou
     invalidRows: preview.invalidRows,
     createdQuestions,
   }
+}
+
+function importDeckJsonLocally(slug: string, payload: DeckJsonImportPayload): CourseImportResponse {
+  const existing = readImportedQuestions()
+  const createdQuestions: PracticeQuestion[] = []
+  const invalidRows: CourseImportResponse["invalidRows"] = []
+  let sortOrder = mockJavaCourse().questionCount + 1
+
+  payload.sections.forEach((section, sectionIndex) => {
+    section.questions.forEach((question, questionIndex) => {
+      const rowNumber = sectionIndex * 1000 + questionIndex + 1
+      const correctOptionIndex = answerLetterToIndex(question.correctAnswer)
+      if (!question.question?.trim() || question.options.length !== 4 || correctOptionIndex < 0) {
+        invalidRows.push({ rowNumber, raw: question.question || "", reason: "Câu hỏi phải có 4 đáp án và đáp án đúng A/B/C/D" })
+        return
+      }
+      createdQuestions.push({
+        id: makeId("imported-question"),
+        question: question.question.trim(),
+        shortAnswer: question.options[correctOptionIndex],
+        detailedAnswer: question.explanation || question.options[correctOptionIndex],
+        keyPoints: [question.options[correctOptionIndex]],
+        commonMistakes: ["Đọc câu hỏi quá nhanh."],
+        options: question.options.map((option) => option.trim()),
+        correctOptionIndex,
+        explanation: question.explanation || question.options[correctOptionIndex],
+        difficulty: question.difficulty ?? "BEGINNER",
+        topic: section.title.trim(),
+        tags: question.tags ?? ["imported"],
+        codeSnippet: question.codeSnippet || null,
+        sortOrder: sortOrder++,
+      })
+    })
+  })
+
+  if (!createdQuestions.length) throw new Error("File JSON không có câu hỏi hợp lệ")
+  writeImportedQuestions([...existing, ...createdQuestions])
+  return {
+    importedCount: createdQuestions.length,
+    skippedCount: invalidRows.length,
+    invalidRows,
+    createdQuestions,
+  }
+}
+
+function answerLetterToIndex(value: string) {
+  return { A: 0, B: 1, C: 2, D: 3 }[value?.trim().toUpperCase() as "A" | "B" | "C" | "D"] ?? -1
 }
 
 function readImportedQuestions() {
@@ -363,14 +869,13 @@ function buildSeedQuestion(section: QuestionBankSectionSeed, seed: QuestionBankQ
   return {
     id: `${section.slug}-${index + 1}`,
     question: seed.question,
-    shortAnswer: seed.answerGuide,
-    detailedAnswer: `${seed.answerGuide} In a strong interview answer, connect this to a CV project, mention tradeoffs, and close with a concrete production example.`,
-    keyPoints: seed.keyPoints,
-    commonMistakes: [
-      "Only giving a memorized definition without a project example.",
-      `Skipping tradeoffs, failure modes, or production constraints for ${section.title}.`,
-      "Not adjusting depth to the target role and seniority.",
-    ],
+    shortAnswer: seed.options[answerLetterToIndex(seed.correctAnswer)],
+    detailedAnswer: seed.explanation,
+    keyPoints: [seed.options[answerLetterToIndex(seed.correctAnswer)]],
+    commonMistakes: ["Đọc câu hỏi quá nhanh.", "Chọn đáp án quen mắt mà chưa xem giải thích."],
+    options: seed.options,
+    correctOptionIndex: answerLetterToIndex(seed.correctAnswer),
+    explanation: seed.explanation,
     difficulty: seed.difficulty,
     topic: section.title,
     tags: seed.tags,
@@ -397,8 +902,9 @@ type QuestionBankSectionSeed = {
 type QuestionBankQuestionSeed = {
   question: string
   difficulty: QuestionDifficulty
-  answerGuide: string
-  keyPoints: string[]
+  options: string[]
+  correctAnswer: "A" | "B" | "C" | "D"
+  explanation: string
   tags: string[]
   codeSnippet?: string
 }

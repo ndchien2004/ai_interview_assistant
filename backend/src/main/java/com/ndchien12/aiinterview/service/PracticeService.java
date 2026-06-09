@@ -1,10 +1,12 @@
 package com.ndchien12.aiinterview.service;
 
 import com.ndchien12.aiinterview.dto.course.QuestionResponse;
+import com.ndchien12.aiinterview.dto.course.QuestionProgressResponse;
 import com.ndchien12.aiinterview.dto.practice.CreatePracticeSessionRequest;
 import com.ndchien12.aiinterview.dto.practice.PracticeAttemptResponse;
 import com.ndchien12.aiinterview.dto.practice.PracticeSessionResponse;
 import com.ndchien12.aiinterview.dto.practice.SubmitAttemptRequest;
+import com.ndchien12.aiinterview.dto.practice.SubmitMatchRequest;
 import com.ndchien12.aiinterview.entity.Course;
 import com.ndchien12.aiinterview.entity.FlashcardStatusFilter;
 import com.ndchien12.aiinterview.entity.PracticeAttempt;
@@ -69,12 +71,15 @@ public class PracticeService {
         session.setUser(user);
         session.setCourse(course);
         session.setMode(resolveMode(request.mode()));
+        session.setDeckFilter(normalizeSlug(request.deckSlug()));
         session.setTopicFilter(normalizeTopic(request.topic()));
         session.setDifficultyFilter(request.difficulty());
         session.setStatusFilter(request.status() == null ? FlashcardStatusFilter.ALL : request.status());
         PracticeSession saved = sessionRepository.save(session);
+        PracticeQuestion next = selectNextQuestion(user, saved, List.of());
+        completeSessionIfNeeded(saved, next);
 
-        return toResponse(saved, selectNextQuestion(user, saved, List.of()));
+        return toResponse(saved, next);
     }
 
     @Transactional(readOnly = true)
@@ -100,35 +105,59 @@ public class PracticeService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this session course");
         }
 
+        Boolean correct = null;
+        PracticeConfidence confidence = request.confidence();
+        if (request.selectedOptionIndex() != null) {
+            int selected = request.selectedOptionIndex();
+            if (selected < 0 || selected > 3) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Đáp án được chọn phải nằm trong khoảng 0 đến 3");
+            }
+            correct = selected == question.getCorrectOptionIndex();
+            confidence = confidenceFromChoice(user, question, correct);
+        }
+        if (confidence == null) {
+            confidence = PracticeConfidence.AGAIN;
+        }
+
         PracticeAttempt attempt = new PracticeAttempt();
         attempt.setSession(session);
         attempt.setUser(user);
         attempt.setQuestion(question);
         attempt.setAnswerText(request.answerText());
-        attempt.setConfidence(request.confidence());
+        attempt.setSelectedOptionIndex(request.selectedOptionIndex());
+        attempt.setCorrect(correct);
+        attempt.setTimeSpentSeconds(request.timeSpentSeconds());
+        attempt.setConfidence(confidence);
         attemptRepository.save(attempt);
-        updateProgress(user, question, request.confidence());
+        updateProgress(user, question, confidence, correct);
+        UserQuestionProgress updatedProgress = progressRepository.findByUserAndQuestion(user, question)
+                .orElseThrow(() -> new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Progress was not saved"));
 
         List<PracticeAttempt> attempts = attemptRepository.findBySessionOrderByCreatedAtAsc(session);
         PracticeQuestion next = selectNextQuestion(user, session, attempts);
 
-        if (next == null) {
-            session.setStatus(PracticeSessionStatus.COMPLETED);
-            session.setCompletedAt(Instant.now());
-            sessionRepository.save(session);
-        }
+        completeSessionIfNeeded(session, next);
 
-        return toResponse(session, next);
+        return toResponse(session, next, QuestionProgressResponse.from(updatedProgress, Instant.now()));
     }
 
     private PracticeSessionResponse toResponse(PracticeSession session, PracticeQuestion nextQuestion) {
+        return toResponse(session, nextQuestion, null);
+    }
+
+    private PracticeSessionResponse toResponse(
+            PracticeSession session,
+            PracticeQuestion nextQuestion,
+            QuestionProgressResponse lastProgress
+    ) {
         List<PracticeAttemptResponse> attempts = attemptRepository.findBySessionOrderByCreatedAtAsc(session).stream()
                 .map(PracticeAttemptResponse::from)
                 .toList();
         return PracticeSessionResponse.from(
                 session,
                 nextQuestion == null ? null : QuestionResponse.from(nextQuestion),
-                attempts
+                attempts,
+                lastProgress
         );
     }
 
@@ -137,8 +166,14 @@ public class PracticeService {
             PracticeSession session,
             List<PracticeAttempt> sessionAttempts
     ) {
-        if (session.getMode() == PracticeSessionMode.FLASHCARD) {
+        if (session.getMode() == PracticeSessionMode.FLASHCARD || session.getMode() == PracticeSessionMode.LEARN) {
             return selectNextFlashcardQuestion(user, session, sessionAttempts);
+        }
+        if (session.getMode() == PracticeSessionMode.REVIEW_DUE) {
+            return selectNextDueQuestion(user, session, sessionAttempts);
+        }
+        if (session.getMode() == PracticeSessionMode.TEST || session.getMode() == PracticeSessionMode.MATCH) {
+            return selectNextTestQuestion(user, session, sessionAttempts);
         }
 
         return selectNextInterviewQuestion(user, session.getCourse(), sessionAttempts);
@@ -217,6 +252,47 @@ public class PracticeService {
                                 .orElse(null)));
     }
 
+    private PracticeQuestion selectNextDueQuestion(
+            User user,
+            PracticeSession session,
+            List<PracticeAttempt> sessionAttempts
+    ) {
+        Instant now = Instant.now();
+        Set<UUID> attemptedInSession = sessionAttempts.stream()
+                .map(attempt -> attempt.getQuestion().getId())
+                .collect(Collectors.toSet());
+        return progressRepository.findByUserAndQuestionCourseSlug(user, session.getCourse().getSlug()).stream()
+                .filter(item -> !attemptedInSession.contains(item.getQuestion().getId()))
+                .filter(item -> !item.getNextReviewAt().isAfter(now))
+                .filter(item -> matchesSessionFilters(item.getQuestion(), session, item))
+                .sorted(Comparator
+                        .comparing(UserQuestionProgress::getNextReviewAt)
+                        .thenComparing(item -> item.getQuestion().getSortOrder()))
+                .map(UserQuestionProgress::getQuestion)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private PracticeQuestion selectNextTestQuestion(
+            User user,
+            PracticeSession session,
+            List<PracticeAttempt> sessionAttempts
+    ) {
+        Map<UUID, UserQuestionProgress> progressByQuestionId = progressRepository
+                .findByUserAndQuestionCourseSlug(user, session.getCourse().getSlug())
+                .stream()
+                .collect(Collectors.toMap(item -> item.getQuestion().getId(), item -> item));
+        Set<UUID> attemptedInSession = sessionAttempts.stream()
+                .map(attempt -> attempt.getQuestion().getId())
+                .collect(Collectors.toSet());
+
+        return questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(session.getCourse()).stream()
+                .filter(question -> !attemptedInSession.contains(question.getId()))
+                .filter(question -> matchesSessionFilters(question, session, progressByQuestionId.get(question.getId())))
+                .findFirst()
+                .orElse(null);
+    }
+
     private boolean matchesSessionFilters(
             PracticeQuestion question,
             PracticeSession session,
@@ -226,6 +302,9 @@ public class PracticeService {
             return true;
         }
         if (session.getTopicFilter() != null && !session.getTopicFilter().equals(question.getTopic())) {
+            return false;
+        }
+        if (session.getDeckFilter() != null && !session.getDeckFilter().equals(question.getSection().getSlug())) {
             return false;
         }
         if (session.getDifficultyFilter() != null && session.getDifficultyFilter() != question.getDifficulty()) {
@@ -243,7 +322,17 @@ public class PracticeService {
         };
     }
 
-    private void updateProgress(User user, PracticeQuestion question, PracticeConfidence confidence) {
+    private PracticeConfidence confidenceFromChoice(User user, PracticeQuestion question, boolean correct) {
+        if (!correct) {
+            return PracticeConfidence.AGAIN;
+        }
+        int previousStreak = progressRepository.findByUserAndQuestion(user, question)
+                .map(UserQuestionProgress::getCorrectStreak)
+                .orElse(0);
+        return previousStreak >= 1 ? PracticeConfidence.MASTERED : PracticeConfidence.GOOD;
+    }
+
+    private void updateProgress(User user, PracticeQuestion question, PracticeConfidence confidence, Boolean correct) {
         Instant now = Instant.now();
         UserQuestionProgress progress = progressRepository.findByUserAndQuestion(user, question)
                 .orElseGet(() -> {
@@ -256,18 +345,94 @@ public class PracticeService {
 
         progress.setConfidence(confidence);
         progress.setAttemptCount(progress.getAttemptCount() + 1);
+        if (correct != null) {
+            if (correct) {
+                progress.setCorrectCount(progress.getCorrectCount() + 1);
+                progress.setCorrectStreak(progress.getCorrectStreak() + 1);
+            } else {
+                progress.setIncorrectCount(progress.getIncorrectCount() + 1);
+                progress.setCorrectStreak(0);
+            }
+        }
         progress.setMastered(confidence == PracticeConfidence.MASTERED);
         progress.setLastAttemptAt(now);
         progress.setNextReviewAt(nextReviewAt(now, confidence));
         progressRepository.save(progress);
     }
 
+    @Transactional
+    public PracticeSessionResponse submitMatch(UUID sessionId, SubmitMatchRequest request, String email) {
+        User user = findUser(email);
+        PracticeSession session = findOwnedSession(sessionId, user);
+        if (session.getMode() != PracticeSessionMode.MATCH) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Session is not a match mode session");
+        }
+
+        Instant now = Instant.now();
+        for (UUID questionId : request.questionIds()) {
+            PracticeQuestion question = questionRepository.findById(questionId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Question not found"));
+            if (!question.getCourse().getId().equals(session.getCourse().getId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this session course");
+            }
+            if (!matchesSessionFilters(question, session, progressRepository.findByUserAndQuestion(user, question).orElse(null))) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this match session");
+            }
+
+            PracticeAttempt attempt = new PracticeAttempt();
+            attempt.setSession(session);
+            attempt.setUser(user);
+            attempt.setQuestion(question);
+            attempt.setCorrect(true);
+            attempt.setTimeSpentSeconds(request.timeSpentSeconds());
+            attempt.setConfidence(PracticeConfidence.GOOD);
+            attemptRepository.save(attempt);
+            updateMatchProgress(user, question, now);
+        }
+
+        session.setStatus(PracticeSessionStatus.COMPLETED);
+        session.setCompletedAt(now);
+        sessionRepository.save(session);
+
+        return toResponse(session, null);
+    }
+
+    private void updateMatchProgress(User user, PracticeQuestion question, Instant now) {
+        UserQuestionProgress progress = progressRepository.findByUserAndQuestion(user, question)
+                .orElseGet(() -> {
+                    UserQuestionProgress created = new UserQuestionProgress();
+                    created.setUser(user);
+                    created.setQuestion(question);
+                    created.setAttemptCount(0);
+                    return created;
+                });
+        boolean alreadyMastered = progress.isMastered();
+        progress.setConfidence(alreadyMastered ? PracticeConfidence.MASTERED : PracticeConfidence.GOOD);
+        progress.setAttemptCount(progress.getAttemptCount() + 1);
+        progress.setCorrectCount(progress.getCorrectCount() + 1);
+        progress.setCorrectStreak(progress.getCorrectStreak() + 1);
+        progress.setMastered(alreadyMastered);
+        progress.setLastAttemptAt(now);
+        progress.setNextReviewAt(nextReviewAt(now, progress.getConfidence()));
+        progressRepository.save(progress);
+    }
+
+    private void completeSessionIfNeeded(PracticeSession session, PracticeQuestion next) {
+        if (next != null || session.getStatus() == PracticeSessionStatus.COMPLETED) {
+            return;
+        }
+
+        session.setStatus(PracticeSessionStatus.COMPLETED);
+        session.setCompletedAt(Instant.now());
+        sessionRepository.save(session);
+    }
+
     private Instant nextReviewAt(Instant now, PracticeConfidence confidence) {
         return switch (confidence) {
             case AGAIN -> now.plus(10, ChronoUnit.MINUTES);
             case HARD -> now.plus(1, ChronoUnit.DAYS);
-            case GOOD -> now.plus(3, ChronoUnit.DAYS);
-            case MASTERED -> now.plus(14, ChronoUnit.DAYS);
+            case GOOD -> now.plus(1, ChronoUnit.DAYS);
+            case MASTERED -> now.plus(7, ChronoUnit.DAYS);
         };
     }
 
@@ -280,6 +445,13 @@ public class PracticeService {
             return null;
         }
         return topic.trim();
+    }
+
+    private String normalizeSlug(String slug) {
+        if (slug == null || slug.isBlank()) {
+            return null;
+        }
+        return slug.trim().toLowerCase();
     }
 
     private PracticeSession findOwnedSession(UUID sessionId, User user) {

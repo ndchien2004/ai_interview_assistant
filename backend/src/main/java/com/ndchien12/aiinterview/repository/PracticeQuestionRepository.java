@@ -1,6 +1,7 @@
 package com.ndchien12.aiinterview.repository;
 
 import com.ndchien12.aiinterview.entity.Course;
+import com.ndchien12.aiinterview.entity.CourseSection;
 import com.ndchien12.aiinterview.entity.PracticeQuestion;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,6 +14,12 @@ public interface PracticeQuestionRepository extends JpaRepository<PracticeQuesti
     long countByCourseAndActiveTrue(Course course);
 
     long countByCourse(Course course);
+
+    long countBySectionAndActiveTrue(CourseSection section);
+
+    long countBySection(CourseSection section);
+
+    List<PracticeQuestion> findBySectionAndActiveTrueOrderBySortOrderAsc(CourseSection section);
 
     List<PracticeQuestion> findByCourseAndTopicAndActiveTrueOrderBySortOrderAsc(Course course, String topic);
 }

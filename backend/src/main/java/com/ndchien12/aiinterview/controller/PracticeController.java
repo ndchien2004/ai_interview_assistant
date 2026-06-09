@@ -3,6 +3,7 @@ package com.ndchien12.aiinterview.controller;
 import com.ndchien12.aiinterview.dto.practice.CreatePracticeSessionRequest;
 import com.ndchien12.aiinterview.dto.practice.PracticeSessionResponse;
 import com.ndchien12.aiinterview.dto.practice.SubmitAttemptRequest;
+import com.ndchien12.aiinterview.dto.practice.SubmitMatchRequest;
 import com.ndchien12.aiinterview.service.PracticeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -47,5 +48,14 @@ public class PracticeController {
             Authentication authentication
     ) {
         return practiceService.submitAttempt(id, request, authentication.getName());
+    }
+
+    @PostMapping("/{id}/matches")
+    public PracticeSessionResponse submitMatch(
+            @PathVariable UUID id,
+            @Valid @RequestBody SubmitMatchRequest request,
+            Authentication authentication
+    ) {
+        return practiceService.submitMatch(id, request, authentication.getName());
     }
 }

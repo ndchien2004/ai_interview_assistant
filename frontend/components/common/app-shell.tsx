@@ -9,13 +9,10 @@ import {
   BookOpen,
   ChevronsLeft,
   ChevronsRight,
-  FileText,
-  History,
   LayoutDashboard,
   LogOut,
   Menu,
   Moon,
-  Sparkles,
   Sun,
   UserRound,
   X,
@@ -26,12 +23,35 @@ import { getCurrentUser, logout, USER_CHANGE_EVENT } from "@/services/auth-servi
 import type { User } from "@/types"
 import { cn } from "@/lib/utils"
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/upload", label: "Resume", icon: FileText },
-  { href: "/interviews/new", label: "New interview", icon: Sparkles },
-  { href: "/courses/java-core", label: "Java + Full-stack", icon: BookOpen },
-  { href: "/history", label: "History", icon: History },
+type NavItem = {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  isActive: (pathname: string) => boolean
+}
+
+const navItems: NavItem[] = [
+  {
+    href: "/courses/java-core",
+    label: "Trang chủ",
+    icon: LayoutDashboard,
+    isActive: (pathname) =>
+      pathname === "/courses/java-core" ||
+      (pathname.startsWith("/courses/java-core/") &&
+        !pathname.startsWith("/courses/java-core/cards") &&
+        !pathname.startsWith("/courses/java-core/import")),
+  },
+  {
+    href: "/courses",
+    label: "Bộ thẻ",
+    icon: BookOpen,
+    isActive: (pathname) =>
+      pathname === "/courses" ||
+      (pathname.startsWith("/courses/") && !pathname.startsWith("/courses/java-core")) ||
+      pathname.startsWith("/courses/java-core/cards") ||
+      pathname.startsWith("/courses/java-core/import"),
+  },
+  { href: "/profile", label: "Hồ sơ", icon: UserRound, isActive: (pathname) => pathname.startsWith("/profile") },
 ]
 
 const SIDEBAR_COLLAPSED_KEY = "ai-interview-sidebar-collapsed"
@@ -49,6 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [theme, setTheme] = useState<Theme>("light")
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const activeNavHref = navItems.find((item) => item.isActive(pathname))?.href
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -124,7 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-background px-6">
         <div className="text-center">
           <div className="mx-auto mb-4 h-px w-20 animate-pulse bg-primary/40" />
-          <p className="text-sm text-muted-foreground">Preparing your workspace...</p>
+          <p className="text-sm text-muted-foreground">Đang chuẩn bị không gian học...</p>
         </div>
       </div>
     )
@@ -146,20 +167,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         >
           <Link
-            href="/dashboard"
+            href="/courses/java-core"
             className={cn("flex items-center gap-2 font-semibold", sidebarCollapsed && "lg:justify-center")}
-            title="AI Interview"
+            title="FreeCard"
           >
             <BarChart3 className="size-5 text-sidebar-foreground" />
-            <span className={cn(sidebarCollapsed && "lg:hidden")}>AI Interview</span>
+            <span className={cn(sidebarCollapsed && "lg:hidden")}>FreeCard</span>
           </Link>
           <Button
             variant="ghost"
             size="icon-sm"
             className="hidden lg:inline-flex"
             onClick={toggleSidebar}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={sidebarCollapsed ? "Mở rộng menu" : "Thu gọn menu"}
+            title={sidebarCollapsed ? "Mở rộng menu" : "Thu gọn menu"}
           >
             {sidebarCollapsed ? <ChevronsRight /> : <ChevronsLeft />}
           </Button>
@@ -168,7 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             size="icon-sm"
             className="lg:hidden"
             onClick={() => setMenuOpen(false)}
-            aria-label="Close navigation"
+            aria-label="Đóng điều hướng"
           >
             <X />
           </Button>
@@ -177,7 +198,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="mt-8 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+            const active = item.href === activeNavHref
 
             return (
               <Link
@@ -225,11 +246,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             size={sidebarCollapsed ? "icon-sm" : "sm"}
             className={cn("mt-3 w-full", sidebarCollapsed && "lg:w-8")}
             onClick={handleLogout}
-            title="Sign out"
-            aria-label="Sign out"
+            title="Đăng xuất"
+            aria-label="Đăng xuất"
           >
             <LogOut className="size-4" />
-            <span className={cn(sidebarCollapsed && "lg:hidden")}>Sign out</span>
+            <span className={cn(sidebarCollapsed && "lg:hidden")}>Đăng xuất</span>
           </Button>
         </div>
       </aside>
@@ -237,7 +258,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {menuOpen ? (
         <button
           className="fixed inset-0 z-30 bg-black/30 lg:hidden"
-          aria-label="Close navigation overlay"
+          aria-label="Đóng lớp phủ điều hướng"
           onClick={() => setMenuOpen(false)}
         />
       ) : null}
@@ -250,7 +271,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               size="icon-sm"
               className="lg:hidden"
               onClick={() => setMenuOpen(true)}
-              aria-label="Open navigation"
+              aria-label="Mở điều hướng"
             >
               <Menu />
             </Button>
@@ -259,8 +280,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 variant="outline"
                 size="icon-sm"
                 onClick={toggleTheme}
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                aria-label={theme === "dark" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối"}
+                title={theme === "dark" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối"}
               >
                 {theme === "dark" ? <Sun /> : <Moon />}
               </Button>
@@ -269,7 +290,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   type="button"
                   onClick={() => setProfileOpen((current) => !current)}
                   className="flex size-9 items-center justify-center overflow-hidden rounded-full border border-border text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                  aria-label="Open profile menu"
+                  aria-label="Mở menu hồ sơ"
                   aria-expanded={profileOpen}
                 >
                   <UserAvatar user={user} />
@@ -288,7 +309,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       </div>
                     </div>
                     <div className="py-1">
-                      <DropdownLink href="/profile" label="Profile" icon={UserRound} onClick={() => setProfileOpen(false)} />
+                      <DropdownLink href="/profile" label="Hồ sơ" icon={UserRound} onClick={() => setProfileOpen(false)} />
                     </div>
                     <div className="border-t border-border p-2">
                       <button
@@ -297,7 +318,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
                       >
                         <LogOut className="size-4" />
-                        Sign out
+                        Đăng xuất
                       </button>
                     </div>
                   </div>

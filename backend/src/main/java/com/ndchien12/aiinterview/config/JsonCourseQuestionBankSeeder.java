@@ -15,9 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class JsonCourseQuestionBankSeeder implements CommandLineRunner {
@@ -45,9 +47,14 @@ public class JsonCourseQuestionBankSeeder implements CommandLineRunner {
     public void run(String... args) {
         QuestionBank bank = loadBank();
         Course course = courseRepository.findBySlug(bank.slug()).orElseGet(() -> createCourse(bank));
-        Set<String> existingQuestions = new HashSet<>();
-        questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(course)
-                .forEach(question -> existingQuestions.add(question.getQuestion()));
+        course.setTitle(bank.title().trim());
+        course.setDescription(bank.description().trim());
+        course.setActive(true);
+        courseRepository.save(course);
+        List<PracticeQuestion> existing = questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(course);
+        Map<String, PracticeQuestion> existingQuestions = existing.stream()
+                .collect(Collectors.toMap(PracticeQuestion::getQuestion, question -> question, (left, right) -> left));
+        Set<String> seedQuestions = new HashSet<>();
 
         int sortOrder = Math.toIntExact(questionRepository.countByCourse(course)) + 1;
         for (SectionSeed sectionSeed : bank.sections()) {
@@ -55,28 +62,36 @@ public class JsonCourseQuestionBankSeeder implements CommandLineRunner {
                     .orElseGet(() -> createSection(course, sectionSeed));
 
             for (QuestionSeed questionSeed : sectionSeed.questions()) {
-                if (existingQuestions.contains(questionSeed.question())) {
-                    continue;
-                }
-
-                PracticeQuestion question = new PracticeQuestion();
+                PracticeQuestion question = existingQuestions.getOrDefault(questionSeed.question(), new PracticeQuestion());
                 question.setCourse(course);
                 question.setSection(section);
                 question.setQuestion(questionSeed.question().trim());
-                question.setShortAnswer(questionSeed.answerGuide().trim());
+                question.setShortAnswer(questionSeed.options().get(correctOptionIndex(questionSeed.correctAnswer())).trim());
                 question.setDetailedAnswer(detailedAnswer(sectionSeed, questionSeed));
-                question.setKeyPoints(new ArrayList<>(questionSeed.keyPoints()));
-                question.setCommonMistakes(defaultMistakes(sectionSeed.title()));
+                question.setKeyPoints(new ArrayList<>(List.of(question.getShortAnswer())));
+                question.setCommonMistakes(defaultMistakes());
+                question.setOptions(new ArrayList<>(questionSeed.options()));
+                question.setCorrectOptionIndex(correctOptionIndex(questionSeed.correctAnswer()));
+                question.setExplanation(questionSeed.explanation().trim());
                 question.setDifficulty(questionSeed.difficulty());
                 question.setTopic(sectionSeed.title());
                 question.setTags(new ArrayList<>(questionSeed.tags()));
                 question.setCodeSnippet(blankToNull(questionSeed.codeSnippet()));
                 question.setActive(true);
-                question.setSortOrder(sortOrder++);
+                if (question.getId() == null) {
+                    question.setSortOrder(sortOrder++);
+                }
                 questionRepository.save(question);
-                existingQuestions.add(question.getQuestion());
+                seedQuestions.add(question.getQuestion());
             }
         }
+
+        existing.stream()
+                .filter(question -> !seedQuestions.contains(question.getQuestion()))
+                .forEach(question -> {
+                    question.setActive(false);
+                    questionRepository.save(question);
+                });
     }
 
     private QuestionBank loadBank() {
@@ -108,16 +123,25 @@ public class JsonCourseQuestionBankSeeder implements CommandLineRunner {
     }
 
     private String detailedAnswer(SectionSeed section, QuestionSeed question) {
-        return "%s In a strong interview answer, define the concept, connect it to the candidate's CV or project work, explain tradeoffs, and close with a concrete production example. Key signals: %s."
-                .formatted(question.answerGuide().trim(), String.join(", ", question.keyPoints()));
+        return question.explanation().trim();
     }
 
-    private List<String> defaultMistakes(String topic) {
+    private List<String> defaultMistakes() {
         return List.of(
-                "Only giving a memorized definition without a project example.",
-                "Skipping tradeoffs, failure modes, or production constraints for " + topic + ".",
-                "Not adjusting depth to the target role and seniority."
+                "Đọc câu hỏi quá nhanh.",
+                "Chọn đáp án quen mắt mà chưa kiểm tra giải thích.",
+                "Nhầm giữa khái niệm gần giống nhau."
         );
+    }
+
+    private int correctOptionIndex(String correctAnswer) {
+        return switch (correctAnswer.trim().toUpperCase()) {
+            case "A" -> 0;
+            case "B" -> 1;
+            case "C" -> 2;
+            case "D" -> 3;
+            default -> throw new IllegalStateException("correctAnswer must be A, B, C, or D");
+        };
     }
 
     private String blankToNull(String value) {
@@ -144,8 +168,9 @@ public class JsonCourseQuestionBankSeeder implements CommandLineRunner {
     private record QuestionSeed(
             String question,
             QuestionDifficulty difficulty,
-            String answerGuide,
-            List<String> keyPoints,
+            List<String> options,
+            String correctAnswer,
+            String explanation,
             List<String> tags,
             String codeSnippet
     ) {

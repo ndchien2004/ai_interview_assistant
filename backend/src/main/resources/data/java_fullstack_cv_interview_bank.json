@@ -1,884 +1,359 @@
 {
   "slug": "java-fullstack-cv-interview-bank",
-  "title": "Java + Full-stack CV Interview Bank",
-  "description": "A 100-question Java and full-stack interview bank tailored for CV-based practice with React, Next.js, Spring Boot, PostgreSQL, Docker, JWT, REST APIs, testing, deployment, and AI workflow signals.",
+  "title": "Java Full-stack",
+  "description": "Bộ câu hỏi trắc nghiệm tiếng Việt giúp ôn Java, Spring Boot, REST API, cơ sở dữ liệu, React, Next.js, Docker và kiểm thử theo nhịp học lặp lại miễn phí.",
   "sections": [
     {
-      "slug": "java-core-foundations",
-      "title": "Java Core Foundations",
-      "description": "Language fundamentals that interviewers expect Java candidates to explain clearly.",
+      "slug": "java-core",
+      "title": "Java Core",
+      "description": "Nền tảng ngôn ngữ Java thường gặp khi học và đi làm.",
       "sortOrder": 1,
       "questions": [
         {
-          "question": "Explain why Java is platform independent, and how JVM, JRE, JDK, bytecode, and class loading fit together.",
+          "question": "Vì sao Java được gọi là ngôn ngữ độc lập nền tảng?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Java compiles source code into bytecode that runs on a JVM implementation for each platform. A strong answer separates developer tooling in the JDK, runtime libraries in the JRE, bytecode verification, and class loading at runtime.",
-          "keyPoints": ["JDK vs JRE vs JVM", "bytecode", "class loading", "runtime portability"],
-          "tags": ["java", "jvm", "basics", "cv-bank"],
+          "options": [
+            "Vì mã Java được biên dịch thành bytecode chạy trên JVM của từng hệ điều hành",
+            "Vì Java chỉ chạy trên Windows",
+            "Vì Java không cần biên dịch",
+            "Vì trình duyệt tự chạy mọi chương trình Java"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Java source code được biên dịch thành bytecode. Bytecode này chạy trên JVM phù hợp với từng nền tảng, nên cùng một chương trình có thể chạy ở nhiều môi trường.",
+          "tags": ["java", "jvm", "co-ban"],
           "codeSnippet": ""
         },
         {
-          "question": "What is the difference between primitive types and reference types in Java, and how does that affect memory and null handling?",
+          "question": "Trong Java, so sánh `==` và `equals()` với object khác nhau thế nào?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Primitive values store simple data directly while reference variables point to objects. Mention default values, wrapper classes, nullability, equality checks, and why this matters in DTOs and persistence models.",
-          "keyPoints": ["primitive values", "object references", "null safety", "wrappers"],
-          "tags": ["java", "memory", "basics", "cv-bank"],
+          "options": [
+            "`==` so sánh tham chiếu, còn `equals()` thường dùng để so sánh giá trị logic",
+            "`==` luôn giống hệt `equals()`",
+            "`equals()` chỉ dùng được với primitive",
+            "`==` tự động gọi `hashCode()`"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Với object, `==` kiểm tra hai biến có trỏ tới cùng một object không. `equals()` có thể được override để so sánh nội dung theo logic nghiệp vụ.",
+          "tags": ["java", "equals", "object"],
           "codeSnippet": ""
-        },
-        {
-          "question": "Does Java pass method arguments by value or by reference? Explain using a mutable object example.",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Java always passes by value. For objects, the copied value is the reference, so a method can mutate the object but cannot reassign the caller's variable to a different object.",
-          "keyPoints": ["pass by value", "reference copy", "mutation vs reassignment", "method calls"],
-          "tags": ["java", "methods", "basics", "cv-bank"],
-          "codeSnippet": "void update(User user) { user.setName(\"Alex\"); user = new User(); }"
-        },
-        {
-          "question": "Compare ==, equals, and hashCode, and explain how a mistake here can break HashMap or HashSet behavior.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "== checks reference identity for objects, equals checks logical equality, and hashCode determines hash bucket placement. Equal objects must have equal hash codes, or collections can fail to find stored values.",
-          "keyPoints": ["reference identity", "logical equality", "hash contract", "collection correctness"],
-          "tags": ["java", "equals", "hashcode", "collections", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain final for variables, methods, classes, and captured variables in lambdas.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "final prevents reassignment for variables, overriding for methods, and inheritance for classes. Lambdas can capture only final or effectively final local variables to avoid confusing mutation across scopes.",
-          "keyPoints": ["final variable", "final method", "final class", "effectively final"],
-          "tags": ["java", "final", "lambda", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is the difference between static fields, static methods, static blocks, and instance members?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Static members belong to the class, not an instance. Static initialization runs when the class is initialized, while instance members belong to each object and are initialized per constructor call.",
-          "keyPoints": ["class-level state", "instance state", "initialization order", "shared mutable state"],
-          "tags": ["java", "static", "oop", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain Java records and when they are a better fit than regular classes.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Records are concise immutable data carriers that generate constructor, accessors, equals, hashCode, and toString. They are useful for DTOs, projections, and value-like objects but not for entities requiring rich lifecycle behavior.",
-          "keyPoints": ["immutable data carrier", "generated methods", "DTO fit", "entity tradeoff"],
-          "tags": ["java", "records", "dto", "cv-bank"],
-          "codeSnippet": "public record UserResponse(UUID id, String email) {}"
-        },
-        {
-          "question": "What are sealed classes, and how can they improve domain modeling?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Sealed classes restrict which types may extend or implement a parent type. They make closed domain hierarchies clearer, support safer switch logic, and prevent unexpected subclasses.",
-          "keyPoints": ["closed hierarchy", "permits", "domain modeling", "exhaustive handling"],
-          "tags": ["java", "sealed-classes", "oop", "cv-bank"],
-          "codeSnippet": "sealed interface PaymentResult permits Approved, Declined, Pending {}"
-        },
-        {
-          "question": "Explain immutability in Java and how you would design an immutable class safely.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "An immutable class prevents observable state changes after construction. Use final fields, no setters, defensive copies for mutable inputs, and avoid leaking mutable internal references.",
-          "keyPoints": ["final fields", "defensive copy", "thread safety", "no setters"],
-          "tags": ["java", "immutability", "design", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How do enums differ from constants, and when would you add fields or methods to an enum?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Enums are type-safe singleton instances with identity, behavior, and fields. They are stronger than string constants for finite states such as roles, statuses, difficulty levels, and command types.",
-          "keyPoints": ["type safety", "finite states", "singleton instances", "behavior on enum"],
-          "tags": ["java", "enum", "domain-modeling", "cv-bank"],
-          "codeSnippet": "enum ResumeStatus { PROCESSING, READY, FAILED }"
         }
       ]
     },
     {
-      "slug": "oop-design",
-      "title": "OOP and Design",
-      "description": "Object-oriented design questions for Java services and full-stack projects.",
+      "slug": "oop-collections",
+      "title": "OOP và Collections",
+      "description": "Các khái niệm hướng đối tượng và cấu trúc dữ liệu trong Java.",
       "sortOrder": 2,
       "questions": [
         {
-          "question": "Explain encapsulation using a service or entity from a Spring Boot project.",
+          "question": "Tính đóng gói (encapsulation) trong OOP chủ yếu giúp điều gì?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Encapsulation hides internal state and exposes controlled behavior. In Spring Boot, entities and services should protect invariants through methods, validation, and clear boundaries instead of exposing mutable state everywhere.",
-          "keyPoints": ["invariants", "state protection", "service boundaries", "maintainability"],
-          "tags": ["java", "oop", "spring-boot", "cv-bank"],
+          "options": [
+            "Che giấu trạng thái bên trong và kiểm soát cách dữ liệu được truy cập/thay đổi",
+            "Bắt buộc mọi class phải kế thừa nhau",
+            "Làm chương trình chạy không cần JVM",
+            "Tự động tối ưu mọi câu SQL"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Encapsulation giúp bảo vệ dữ liệu nội bộ của object, thường thông qua private fields và public methods có kiểm soát.",
+          "tags": ["oop", "encapsulation", "java"],
           "codeSnippet": ""
         },
         {
-          "question": "Compare inheritance and composition. Which would you prefer for reusable interview question generation logic?",
+          "question": "Điều kiện quan trọng khi override `equals()` trong class dùng với `HashSet` là gì?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "Composition is usually safer for reusable business behavior because it avoids fragile base classes and deep hierarchies. Use inheritance for true is-a relationships, and composition for strategies, generators, validators, and collaborators.",
-          "keyPoints": ["composition over inheritance", "is-a relationship", "strategy", "testability"],
-          "tags": ["java", "oop", "design", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is polymorphism, and how does dynamic dispatch work in Java?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Polymorphism lets code interact with a supertype while runtime dispatch chooses the overriding implementation. This helps plug different implementations behind interfaces such as repositories, services, and question generators.",
-          "keyPoints": ["interface", "override", "runtime dispatch", "extensibility"],
-          "tags": ["java", "oop", "polymorphism", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Compare abstract classes and interfaces in modern Java.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Interfaces define capabilities and can include default or static methods. Abstract classes can share state and constructor logic. Prefer interfaces for service contracts and abstract classes only when shared implementation is genuinely needed.",
-          "keyPoints": ["contract", "default method", "shared state", "multiple capabilities"],
-          "tags": ["java", "interfaces", "abstract-class", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain SOLID briefly and pick one principle that matters most in a growing backend codebase.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "SOLID guides maintainable object design. A strong answer can focus on single responsibility for services, dependency inversion for testability, or open-closed through strategy-style components.",
-          "keyPoints": ["single responsibility", "dependency inversion", "open-closed", "maintainability"],
-          "tags": ["java", "solid", "architecture", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you model an interview session aggregate with questions, answers, and evaluation results?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Identify the lifecycle and consistency boundaries. Session owns metadata and status, questions are immutable snapshots, answers can be replaced as drafts, and evaluation is created when answers are submitted.",
-          "keyPoints": ["aggregate boundary", "lifecycle", "snapshot data", "consistency"],
-          "tags": ["java", "domain-modeling", "jpa", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is the difference between overloading and overriding, and what pitfalls exist with each?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Overloading chooses a method by compile-time signature, while overriding chooses implementation at runtime through polymorphism. Pitfalls include ambiguous overloads, accidental non-overrides, and violating behavioral expectations.",
-          "keyPoints": ["compile-time selection", "runtime dispatch", "signature", "behavior contract"],
-          "tags": ["java", "oop", "methods", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you design a clean boundary between controller, service, repository, and DTO layers?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Controllers handle HTTP concerns, services own business rules and transactions, repositories persist domain objects, and DTOs shape external contracts. Avoid leaking entities as public API responses.",
-          "keyPoints": ["controller", "service", "repository", "DTO", "transaction boundary"],
-          "tags": ["java", "spring-boot", "architecture", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain dependency injection and why constructor injection is usually preferred in Spring.",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Dependency injection supplies collaborators from the container instead of creating them manually. Constructor injection makes dependencies explicit, supports immutability, and improves testability.",
-          "keyPoints": ["IoC", "constructor injection", "testability", "explicit dependencies"],
-          "tags": ["java", "spring", "dependency-injection", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What makes a class hard to unit test, and how would you refactor it?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Hard-to-test classes often mix responsibilities, instantiate dependencies directly, use static state, or hide side effects. Refactor by extracting collaborators, injecting dependencies, and separating pure logic from I/O.",
-          "keyPoints": ["testability", "side effects", "dependency injection", "separation of concerns"],
-          "tags": ["java", "testing", "design", "cv-bank"],
+          "options": [
+            "Nếu hai object bằng nhau theo `equals()` thì phải có cùng `hashCode()`",
+            "`hashCode()` phải luôn trả về số ngẫu nhiên",
+            "Không được override `hashCode()`",
+            "`equals()` phải luôn trả về false"
+          ],
+          "correctAnswer": "A",
+          "explanation": "HashSet/HashMap dựa vào hashCode để tìm bucket. Nếu equals đúng nhưng hashCode khác, collection có thể không tìm lại được phần tử.",
+          "tags": ["java", "hashcode", "collections"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "collections-generics",
-      "title": "Collections and Generics",
-      "description": "Collection choice, complexity, type safety, and generic API design.",
+      "slug": "spring-boot",
+      "title": "Spring Boot",
+      "description": "Kiến thức nền tảng khi xây dựng backend với Spring Boot.",
       "sortOrder": 3,
       "questions": [
         {
-          "question": "Compare ArrayList, LinkedList, HashSet, TreeSet, HashMap, and TreeMap for interview-level tradeoffs.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Choose collections by access pattern, ordering, uniqueness, lookup needs, and complexity. Mention ArrayList random access, HashMap average lookup, TreeMap ordering, and LinkedList rarely being best for general use.",
-          "keyPoints": ["complexity", "ordering", "uniqueness", "lookup"],
-          "tags": ["java", "collections", "data-structures", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How does HashMap work internally, and what changed with tree bins?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "HashMap hashes keys into buckets, resolves collisions with nodes, and may treeify heavily-collided buckets. Explain load factor, resizing, equals/hashCode, and why poor hash distribution hurts performance.",
-          "keyPoints": ["hashing", "collision", "resize", "tree bin", "load factor"],
-          "tags": ["java", "hashmap", "collections", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "When would you use ConcurrentHashMap instead of HashMap plus synchronized blocks?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "ConcurrentHashMap provides better concurrent access and atomic operations for shared maps. It avoids locking the whole map for common operations and offers APIs such as compute and merge.",
-          "keyPoints": ["thread safety", "atomic map operations", "lock granularity", "concurrency"],
-          "tags": ["java", "collections", "concurrency", "cv-bank"],
-          "codeSnippet": "counts.merge(key, 1, Integer::sum);"
-        },
-        {
-          "question": "Explain fail-fast iterators and why ConcurrentModificationException happens.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Fail-fast iterators detect structural modification outside the iterator and throw ConcurrentModificationException. Use iterator.remove, collect changes separately, or use concurrent collections when appropriate.",
-          "keyPoints": ["iterator", "structural modification", "fail-fast", "safe removal"],
-          "tags": ["java", "collections", "iterator", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is the difference between Comparable and Comparator, and where would each be used?",
+          "question": "Annotation `@RestController` trong Spring Boot thường dùng để làm gì?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Comparable defines natural ordering inside the type, while Comparator defines external ordering strategies. Use Comparator when different sort orders are needed without changing the domain class.",
-          "keyPoints": ["natural order", "external strategy", "sorting", "domain design"],
-          "tags": ["java", "collections", "sorting", "cv-bank"],
-          "codeSnippet": "users.sort(Comparator.comparing(User::getEmail));"
-        },
-        {
-          "question": "Explain generics, type erasure, and why runtime generic type checks are limited.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Generics provide compile-time type safety, but type parameters are erased at runtime. This prevents direct generic array creation and makes some instanceof checks impossible.",
-          "keyPoints": ["type safety", "type erasure", "runtime limitation", "raw types"],
-          "tags": ["java", "generics", "type-erasure", "cv-bank"],
+          "options": [
+            "Khai báo controller trả dữ liệu trực tiếp dạng response body, thường là JSON",
+            "Tạo bảng trong database",
+            "Mã hóa password tự động",
+            "Chạy migration SQL"
+          ],
+          "correctAnswer": "A",
+          "explanation": "`@RestController` kết hợp `@Controller` và `@ResponseBody`, phù hợp cho REST API trả JSON/XML.",
+          "tags": ["spring", "rest", "controller"],
           "codeSnippet": ""
         },
         {
-          "question": "Explain PECS with List<? extends Number> and List<? super Integer>.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Producer extends is good for reading values as a supertype, while consumer super is good for writing subtype values. This helps design flexible APIs without unsafe casts.",
-          "keyPoints": ["producer extends", "consumer super", "variance", "API design"],
-          "tags": ["java", "generics", "wildcards", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you remove duplicates from a list while preserving insertion order?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Use LinkedHashSet to preserve insertion order while enforcing uniqueness, then convert back to a list if list semantics are needed.",
-          "keyPoints": ["LinkedHashSet", "deduplication", "insertion order", "equals/hashCode"],
-          "tags": ["java", "collections", "dedupe", "cv-bank"],
-          "codeSnippet": "List<T> unique = new ArrayList<>(new LinkedHashSet<>(items));"
-        },
-        {
-          "question": "When should you return List.copyOf or Collections.unmodifiableList from a service?",
+          "question": "Dependency Injection trong Spring giúp ích chính ở điểm nào?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "Return immutable or unmodifiable collections when callers should not mutate internal state. Prefer defensive copies when exposing data from entities, caches, or shared service state.",
-          "keyPoints": ["defensive copy", "immutability", "API contract", "shared state"],
-          "tags": ["java", "collections", "immutability", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you choose a collection for storing interview questions by category and preserving display order?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Use a list for display order and a Map<QuestionCategory, List<Question>> for grouped access. Preserve explicit sortOrder rather than relying on database or hash iteration order.",
-          "keyPoints": ["display order", "grouping", "sortOrder", "Map of lists"],
-          "tags": ["java", "collections", "interview-app", "cv-bank"],
+          "options": [
+            "Giảm phụ thuộc cứng giữa class và giúp test/thay thế implementation dễ hơn",
+            "Bắt buộc mọi service phải là static",
+            "Làm database không cần transaction",
+            "Tự động sửa lỗi logic trong code"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Spring container quản lý object và inject dependency cần thiết, giúp code ít coupling và dễ mock khi kiểm thử.",
+          "tags": ["spring", "di", "service"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "streams-functional-java",
-      "title": "Streams and Functional Java",
-      "description": "Lambdas, streams, Optionals, and Java 8+ idioms.",
+      "slug": "rest-security",
+      "title": "REST API và Bảo mật",
+      "description": "Thiết kế API, JWT và phân quyền.",
       "sortOrder": 4,
       "questions": [
         {
-          "question": "Explain intermediate and terminal stream operations with an example from filtering resumes or questions.",
+          "question": "HTTP status nào phù hợp nhất khi tạo resource thành công qua POST?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Intermediate operations return a stream and are lazy; terminal operations trigger execution and produce a result. Use examples like filter, map, sorted, collect, and count.",
-          "keyPoints": ["intermediate operation", "terminal operation", "lazy execution", "pipeline"],
-          "tags": ["java", "streams", "functional", "cv-bank"],
-          "codeSnippet": "questions.stream().filter(Question::isActive).map(Question::getTopic).toList();"
-        },
-        {
-          "question": "What are common side effects to avoid inside stream pipelines?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Avoid mutating external collections, changing shared state, or performing hidden I/O inside stream operations. Side effects make pipelines harder to reason about and unsafe for parallel execution.",
-          "keyPoints": ["side effects", "shared state", "parallel safety", "readability"],
-          "tags": ["java", "streams", "side-effects", "cv-bank"],
+          "options": ["201 Created", "400 Bad Request", "401 Unauthorized", "500 Internal Server Error"],
+          "correctAnswer": "A",
+          "explanation": "`201 Created` thể hiện server đã tạo resource mới thành công. Có thể kèm header Location hoặc body resource.",
+          "tags": ["rest", "http", "api"],
           "codeSnippet": ""
         },
         {
-          "question": "Compare map, flatMap, reduce, collect, groupingBy, and partitioningBy.",
+          "question": "JWT thường gồm những phần chính nào?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "map transforms one item to one item, flatMap flattens nested streams, reduce combines values, collect builds containers, groupingBy creates grouped maps, and partitioningBy splits into true/false buckets.",
-          "keyPoints": ["map", "flatMap", "reduce", "collect", "grouping"],
-          "tags": ["java", "streams", "collectors", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "When can parallelStream hurt performance or correctness?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Parallel streams can hurt when work is small, blocking, order-sensitive, uses shared mutable state, or runs in an environment where the common pool is already busy.",
-          "keyPoints": ["common pool", "overhead", "ordering", "shared mutable state"],
-          "tags": ["java", "streams", "parallelism", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How should Optional be used in service and repository code?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Optional is useful as a return type to represent absence, especially for find operations. Avoid using it as an entity field, DTO field, or method parameter unless there is a strong reason.",
-          "keyPoints": ["absence", "return type", "repository", "anti-patterns"],
-          "tags": ["java", "optional", "service-layer", "cv-bank"],
-          "codeSnippet": "userRepository.findByEmail(email).orElseThrow();"
-        },
-        {
-          "question": "What is a functional interface, and why are Predicate, Function, Consumer, and Supplier useful?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "A functional interface has one abstract method and can be implemented with a lambda. Predicate tests, Function transforms, Consumer consumes, and Supplier creates values lazily.",
-          "keyPoints": ["single abstract method", "lambda", "Predicate", "Function", "Supplier"],
-          "tags": ["java", "lambda", "functional-interface", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain method references and when they improve readability.",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Method references are shorthand for lambdas that call an existing method. They improve readability when the method name clearly communicates the operation.",
-          "keyPoints": ["method reference", "lambda shorthand", "readability", "existing method"],
-          "tags": ["java", "lambda", "method-reference", "cv-bank"],
-          "codeSnippet": "users.stream().map(User::getEmail).toList();"
-        },
-        {
-          "question": "How would you turn a list of answers into a score summary using streams?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Map answers to metrics such as length or completeness, filter empty responses, then use count, average, or collectors to build a summary. Keep scoring logic readable and testable.",
-          "keyPoints": ["map to metrics", "filter empty", "average", "collector"],
-          "tags": ["java", "streams", "interview-app", "cv-bank"],
-          "codeSnippet": "double avg = answers.stream().mapToInt(a -> a.response().length()).average().orElse(0);"
-        },
-        {
-          "question": "What does effectively final mean for variables captured by lambdas?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "A captured local variable must not be reassigned after initialization, even if it is not explicitly final. This avoids confusing mutable local state captured by lambda execution.",
-          "keyPoints": ["effectively final", "captured local variable", "lambda scope", "reassignment"],
-          "tags": ["java", "lambda", "scope", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you debug a complex stream pipeline without making it unreadable?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Break complex pipelines into named steps, extract predicates/functions, add targeted tests, and use peek sparingly for temporary diagnostics rather than permanent business logic.",
-          "keyPoints": ["extract functions", "named steps", "tests", "peek caution"],
-          "tags": ["java", "streams", "debugging", "cv-bank"],
+          "options": [
+            "Header, payload và signature",
+            "Username, password và database URL",
+            "HTML, CSS và JavaScript",
+            "Request, response và cookie"
+          ],
+          "correctAnswer": "A",
+          "explanation": "JWT có 3 phần: header mô tả thuật toán, payload chứa claims, signature dùng để kiểm tra token có bị sửa hay không.",
+          "tags": ["jwt", "security", "auth"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "spring-boot-rest-security",
-      "title": "Spring Boot, REST, and Security",
-      "description": "Backend API design, authentication, validation, and security workflows.",
+      "slug": "database",
+      "title": "Database và JPA",
+      "description": "SQL, transaction và mapping dữ liệu.",
       "sortOrder": 5,
       "questions": [
         {
-          "question": "Walk through a secure Spring Boot login flow using JWT.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Validate credentials through AuthenticationManager, load the user, generate a signed JWT with expiry, return it to the client, and validate the Authorization header on protected endpoints.",
-          "keyPoints": ["AuthenticationManager", "JWT signing", "expiration", "filter chain"],
-          "tags": ["spring-boot", "security", "jwt", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you design register with OTP verification so a user is created only after OTP succeeds?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Store pending registration separately with hashed OTP and hashed password, send a short-lived code, rate-limit resend and attempts, then create the real user only after successful verification.",
-          "keyPoints": ["pending registration", "hashed OTP", "rate limit", "create after verify"],
-          "tags": ["spring-boot", "auth", "otp", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain how Spring Security filter chain processes a JWT request.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "A JWT filter extracts the bearer token, validates signature and claims, loads user details, creates Authentication, and stores it in SecurityContext before controllers execute.",
-          "keyPoints": ["filter chain", "Bearer token", "SecurityContext", "UserDetails"],
-          "tags": ["spring-security", "jwt", "filters", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What validations belong in controllers, DTOs, services, and database constraints?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "DTO annotations catch request shape errors, services enforce business rules, and database constraints protect persistence invariants. Controllers should stay thin and delegate business decisions.",
-          "keyPoints": ["DTO validation", "business rules", "database constraints", "thin controller"],
-          "tags": ["spring-boot", "validation", "architecture", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How should REST APIs communicate validation errors and domain errors to the frontend?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Use consistent status codes and JSON error responses with message and validation details. Keep messages useful for users but avoid leaking sensitive implementation details.",
-          "keyPoints": ["status codes", "error response", "validation details", "security"],
-          "tags": ["spring-boot", "rest", "errors", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you implement CORS safely for a Next.js frontend and Spring Boot backend?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Allow explicit frontend origins, required methods and headers, and credentials only if necessary. Avoid wildcard origins when credentials or Authorization headers are involved.",
-          "keyPoints": ["allowed origins", "Authorization header", "credentials", "preflight"],
-          "tags": ["spring-boot", "cors", "security", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain @Transactional and where transaction boundaries should live.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Transactions should usually wrap service-layer use cases, not controller methods. Keep database changes consistent, avoid long-running external calls inside transactions, and understand rollback behavior.",
-          "keyPoints": ["service boundary", "rollback", "consistency", "external calls"],
-          "tags": ["spring", "transaction", "jpa", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you secure file upload for PDF resumes?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Validate file size, content type and extension, parse safely, reject scanned or unreadable PDFs, avoid storing untrusted file names blindly, and return safe parse errors.",
-          "keyPoints": ["file size", "content type", "safe parsing", "untrusted filename"],
-          "tags": ["spring-boot", "file-upload", "security", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you design idempotent endpoints for resend OTP or repeated form submissions?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Use stable pending registration records, cooldown checks, unique email constraints, and safe updates. Repeated valid requests should not create duplicate users or duplicate pending rows.",
-          "keyPoints": ["idempotency", "unique constraint", "cooldown", "duplicate prevention"],
-          "tags": ["spring-boot", "api-design", "otp", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What belongs in application.properties versus environment variables?",
+          "question": "Primary key trong bảng database dùng để làm gì?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Stable defaults can live in application.properties, while secrets, environment-specific URLs, credentials, and API keys should come from environment variables or secret management.",
-          "keyPoints": ["configuration", "secrets", "defaults", "environment parity"],
-          "tags": ["spring-boot", "configuration", "security", "cv-bank"],
+          "options": [
+            "Định danh duy nhất mỗi dòng trong bảng",
+            "Lưu mật khẩu dạng plain text",
+            "Tự động tạo giao diện người dùng",
+            "Thay thế toàn bộ index"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Primary key đảm bảo mỗi record có định danh duy nhất, thường được dùng để join và truy vấn chính xác.",
+          "tags": ["sql", "database", "primary-key"],
+          "codeSnippet": ""
+        },
+        {
+          "question": "Trong JPA, vấn đề N+1 query thường xảy ra khi nào?",
+          "difficulty": "ADVANCED",
+          "options": [
+            "Khi tải một danh sách entity rồi lazy-load quan hệ cho từng entity",
+            "Khi chỉ chạy đúng một câu SQL",
+            "Khi entity không có id",
+            "Khi dùng biến final trong Java"
+          ],
+          "correctAnswer": "A",
+          "explanation": "N+1 xảy ra khi query đầu lấy N entity, sau đó mỗi entity lại phát sinh thêm query để lấy quan hệ. Có thể xử lý bằng fetch join, entity graph hoặc DTO projection.",
+          "tags": ["jpa", "performance", "database"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "jpa-postgresql-data-modeling",
-      "title": "JPA, PostgreSQL, and Data Modeling",
-      "description": "Persistence design for interview sessions, resumes, users, and courses.",
+      "slug": "react-next",
+      "title": "React và Next.js",
+      "description": "Kiến thức frontend hiện đại với React/Next.",
       "sortOrder": 6,
       "questions": [
         {
-          "question": "How would you model users, resumes, interview sessions, questions, answers, and evaluations in JPA?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Use User as owner, Resume as uploaded context, InterviewSession as lifecycle root, InterviewQuestion as prompt snapshot, InterviewAnswer as draft/submission data, and InterviewEvaluation as final result.",
-          "keyPoints": ["entity relationship", "ownership", "snapshot questions", "session lifecycle"],
-          "tags": ["jpa", "postgresql", "data-modeling", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain lazy loading and the N+1 query problem.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Lazy loading delays fetching related data until accessed, which can accidentally trigger many queries in loops. Fix with fetch joins, DTO queries, entity graphs, or careful service-level loading.",
-          "keyPoints": ["lazy loading", "N+1", "fetch join", "DTO projection"],
-          "tags": ["jpa", "performance", "queries", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "When should you use @ElementCollection versus a full entity?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Element collections work for simple dependent values without identity, such as tags or key points. Use full entities when items need identity, lifecycle, relationships, auditing, or independent queries.",
-          "keyPoints": ["value object", "identity", "lifecycle", "query needs"],
-          "tags": ["jpa", "elementcollection", "data-modeling", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How do unique constraints protect business rules such as email uniqueness?",
+          "question": "Trong React, state dùng để làm gì?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Application checks improve user messages, but database unique constraints are the final protection against races. Handle conflicts cleanly and normalize emails before saving.",
-          "keyPoints": ["unique constraint", "race condition", "normalization", "conflict handling"],
-          "tags": ["jpa", "postgresql", "constraints", "cv-bank"],
+          "options": [
+            "Lưu dữ liệu thay đổi theo thời gian và làm component render lại khi cập nhật",
+            "Khai báo route backend",
+            "Tạo bảng database",
+            "Mã hóa JWT"
+          ],
+          "correctAnswer": "A",
+          "explanation": "State là dữ liệu nội bộ của component. Khi state thay đổi, React render lại UI liên quan.",
+          "tags": ["react", "state", "frontend"],
           "codeSnippet": ""
         },
         {
-          "question": "How would you store ordered questions in an interview session?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Store an explicit sortOrder on questions and query by it. Do not depend on insertion order, UUID order, or database default ordering for user-visible sequences.",
-          "keyPoints": ["sortOrder", "stable ordering", "query order", "snapshot"],
-          "tags": ["jpa", "ordering", "interview-app", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is optimistic locking, and where might it matter in this app?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Optimistic locking detects concurrent updates through a version field. It can matter for editing resumes, saving drafts, or admin editing question banks while users are practicing.",
-          "keyPoints": ["@Version", "concurrent update", "draft saving", "conflict handling"],
-          "tags": ["jpa", "locking", "concurrency", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you design database cleanup for expired pending registrations or stale drafts?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Store timestamps and expiry fields, then run scheduled cleanup or opportunistic cleanup during relevant requests. Keep deletion criteria conservative and observable.",
-          "keyPoints": ["expiry timestamp", "scheduled cleanup", "stale data", "observability"],
-          "tags": ["postgresql", "cleanup", "otp", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What are the tradeoffs of using UUID primary keys?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "UUIDs are hard to guess and safe across distributed creation, but can be larger and less index-friendly than sequential IDs. Consider UUID version and indexing implications.",
-          "keyPoints": ["global uniqueness", "security", "index size", "ordering"],
-          "tags": ["postgresql", "uuid", "data-modeling", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you migrate from localStorage mock sessions to database-backed sessions?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Define backend DTOs matching frontend types, add authenticated APIs, preserve local fallback during transition, and keep response shapes stable to avoid breaking pages.",
-          "keyPoints": ["DTO contract", "fallback", "migration", "compatibility"],
-          "tags": ["fullstack", "migration", "api-contract", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How should you handle deleting a resume that already has interview sessions?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Decide whether sessions keep a snapshot or block deletion. For auditability, keep session data and questions as snapshots; deleting the resume should not erase completed evaluations unexpectedly.",
-          "keyPoints": ["referential integrity", "snapshot", "soft delete", "auditability"],
-          "tags": ["jpa", "data-modeling", "deletion", "cv-bank"],
+          "question": "Trong Next.js App Router, file `page.tsx` thường đại diện cho điều gì?",
+          "difficulty": "BEGINNER",
+          "options": [
+            "UI của một route",
+            "Cấu hình database",
+            "Service gửi email",
+            "File migration SQL"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Trong App Router, mỗi thư mục route có thể chứa `page.tsx` để định nghĩa nội dung trang cho route đó.",
+          "tags": ["nextjs", "app-router", "frontend"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "concurrency-performance-jvm",
-      "title": "Concurrency, Performance, and JVM",
-      "description": "Threads, async workflows, performance investigation, and JVM memory.",
+      "slug": "typescript",
+      "title": "TypeScript",
+      "description": "Type safety trong frontend.",
       "sortOrder": 7,
       "questions": [
         {
-          "question": "Explain thread lifecycle and how ExecutorService improves over manually creating threads.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Threads move through new, runnable, blocked/waiting, timed waiting, and terminated states. ExecutorService manages pooling, scheduling, lifecycle, and task submission more safely than manual thread creation.",
-          "keyPoints": ["thread lifecycle", "thread pool", "task submission", "resource management"],
-          "tags": ["java", "concurrency", "executorservice", "cv-bank"],
-          "codeSnippet": "ExecutorService pool = Executors.newFixedThreadPool(4);"
-        },
-        {
-          "question": "Compare synchronized, ReentrantLock, volatile, and AtomicInteger.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "synchronized protects critical sections with monitor locks, ReentrantLock offers explicit lock control, volatile provides visibility not atomic compound actions, and atomic classes use CAS for lock-free updates.",
-          "keyPoints": ["mutual exclusion", "visibility", "CAS", "atomicity"],
-          "tags": ["java", "concurrency", "locks", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is a race condition, and how would you demonstrate and fix one?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "A race condition happens when correctness depends on timing between threads. Demonstrate with a shared counter increment, then fix with synchronization, atomic types, confinement, or immutable state.",
-          "keyPoints": ["shared mutable state", "timing", "atomic update", "thread confinement"],
-          "tags": ["java", "concurrency", "race-condition", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain CompletableFuture and when it is useful in backend workflows.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "CompletableFuture composes asynchronous computations with transformations, combinations, and error handling. It is useful for independent I/O calls, but requires careful executor choice and exception handling.",
-          "keyPoints": ["async composition", "executor", "exception handling", "I/O parallelism"],
-          "tags": ["java", "completablefuture", "async", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you investigate a slow API endpoint in a Spring Boot app?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Measure first: logs, metrics, tracing, database query timing, payload size, external calls, and CPU/memory. Form a hypothesis and isolate bottlenecks before changing code.",
-          "keyPoints": ["metrics", "query timing", "tracing", "hypothesis"],
-          "tags": ["spring-boot", "performance", "debugging", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Explain heap, stack, metaspace, and garbage collection at interview depth.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Stack stores frames and local variables, heap stores objects, metaspace stores class metadata, and garbage collection reclaims unreachable heap objects from GC roots.",
-          "keyPoints": ["heap", "stack", "metaspace", "GC roots"],
-          "tags": ["java", "jvm", "memory", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What can cause a memory leak in Java even with garbage collection?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Leaks occur when objects remain reachable unintentionally, such as static collections, listener references, unbounded caches, ThreadLocals, or retained large object graphs.",
-          "keyPoints": ["reachability", "static collection", "cache", "ThreadLocal"],
-          "tags": ["java", "memory-leak", "jvm", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you tune or reduce memory usage when parsing uploaded resumes?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Limit file size, stream where possible, reject unsupported files early, avoid retaining raw bytes longer than needed, and monitor parser memory behavior under load.",
-          "keyPoints": ["file limits", "streaming", "early rejection", "memory profiling"],
-          "tags": ["java", "pdf", "performance", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Compare concurrency and parallelism with examples from interview question generation.",
+          "question": "TypeScript giúp ích gì so với JavaScript thuần?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Concurrency manages multiple tasks in overlapping time, while parallelism executes tasks simultaneously. Question generation may be concurrent for I/O calls and parallel for CPU-bound processing only when safe.",
-          "keyPoints": ["concurrency", "parallelism", "I/O", "CPU-bound"],
-          "tags": ["java", "concurrency", "performance", "cv-bank"],
+          "options": [
+            "Phát hiện nhiều lỗi kiểu dữ liệu trước khi chạy chương trình",
+            "Thay thế hoàn toàn trình duyệt",
+            "Làm CSS không cần viết nữa",
+            "Tự động deploy ứng dụng"
+          ],
+          "correctAnswer": "A",
+          "explanation": "TypeScript thêm hệ thống kiểu tĩnh, giúp IDE và compiler phát hiện lỗi sớm hơn.",
+          "tags": ["typescript", "frontend", "types"],
           "codeSnippet": ""
         },
         {
-          "question": "What should you consider before caching generated interview questions?",
+          "question": "Union type trong TypeScript phù hợp nhất khi nào?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "Consider cache key design, user-specific resume data, invalidation after resume edits, memory limits, stale content, and privacy of personalized questions.",
-          "keyPoints": ["cache key", "invalidation", "privacy", "memory bound"],
-          "tags": ["java", "caching", "interview-app", "cv-bank"],
-          "codeSnippet": ""
+          "options": [
+            "Khi một giá trị chỉ có thể thuộc một vài kiểu hoặc literal cụ thể",
+            "Khi muốn tắt type checking",
+            "Khi muốn biến mọi giá trị thành string",
+            "Khi viết SQL query"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Union type như `'loading' | 'success' | 'error'` giúp biểu diễn tập trạng thái hợp lệ và hạn chế giá trị sai.",
+          "tags": ["typescript", "union", "types"],
+          "codeSnippet": "type Status = 'loading' | 'success' | 'error'"
         }
       ]
     },
     {
-      "slug": "testing-quality",
-      "title": "Testing and Quality",
-      "description": "JUnit, integration tests, API testing, and quality strategy.",
+      "slug": "testing",
+      "title": "Testing",
+      "description": "Kiểm thử backend và frontend.",
       "sortOrder": 8,
       "questions": [
         {
-          "question": "Explain the difference between unit, integration, contract, and end-to-end tests.",
+          "question": "Unit test thường tập trung kiểm tra điều gì?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Unit tests isolate small logic, integration tests verify components working together, contract tests protect API agreements, and end-to-end tests simulate full user flows.",
-          "keyPoints": ["unit test", "integration test", "contract", "e2e"],
-          "tags": ["testing", "junit", "quality", "cv-bank"],
+          "options": [
+            "Một đơn vị nhỏ của code như function hoặc service trong điều kiện kiểm soát",
+            "Toàn bộ hệ thống production",
+            "Tốc độ mạng của người dùng",
+            "Giao diện Photoshop"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Unit test kiểm tra logic nhỏ, nhanh, ít phụ thuộc hệ thống ngoài để phát hiện lỗi sớm.",
+          "tags": ["testing", "unit-test"],
           "codeSnippet": ""
         },
         {
-          "question": "How would you test an OTP registration flow?",
+          "question": "Mock trong test thường dùng để làm gì?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "Test pending registration creation, no user before verification, invalid OTP attempts, expiration, resend cooldown, successful verification, and duplicate email handling.",
-          "keyPoints": ["pending state", "invalid OTP", "expiration", "cooldown", "success path"],
-          "tags": ["testing", "auth", "otp", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you test interview generation from a resume?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Create a controlled resume fixture with skills and project highlights, call the API, assert question count, categories, ownership, and presence of resume-based signals.",
-          "keyPoints": ["fixture", "question count", "categories", "resume signal"],
-          "tags": ["testing", "interview-app", "spring-boot", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What makes a test brittle, and how do you reduce brittleness?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Brittle tests overfit implementation details, exact ordering where irrelevant, timing, or copy text. Prefer behavior assertions, stable fixtures, and explicit contracts.",
-          "keyPoints": ["behavior assertion", "stable fixture", "avoid timing", "contract"],
-          "tags": ["testing", "quality", "maintainability", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How do MockMvc tests work in Spring Boot integration testing?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "MockMvc sends mock HTTP requests through Spring MVC without starting a real server. It can verify status, JSON body, security behavior, and controller-service integration.",
-          "keyPoints": ["MockMvc", "HTTP simulation", "JSON assertions", "security"],
-          "tags": ["spring-boot", "mockmvc", "testing", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "When would you use Testcontainers instead of H2?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Use Testcontainers when database-specific behavior matters, such as PostgreSQL JSON, indexes, constraints, migrations, or query plans. H2 is faster but can hide production differences.",
-          "keyPoints": ["production parity", "PostgreSQL behavior", "speed tradeoff", "migrations"],
-          "tags": ["testing", "postgresql", "testcontainers", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How should frontend form validation and backend validation work together?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Frontend validation improves UX and fast feedback, but backend validation is authoritative. Keep rules aligned and show backend error messages safely when requests fail.",
-          "keyPoints": ["UX", "authoritative backend", "rule alignment", "error display"],
-          "tags": ["fullstack", "validation", "testing", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you test local fallback behavior when the backend API is unavailable?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Mock failed fetch calls and assert the service falls back to localStorage data without crashing. Also test that non-network API errors are not silently swallowed when they should surface.",
-          "keyPoints": ["fetch failure", "localStorage", "fallback", "error boundaries"],
-          "tags": ["frontend", "testing", "fallback", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What is the value of seed data in a portfolio application?",
-          "difficulty": "BEGINNER",
-          "answerGuide": "Seed data makes demos reproducible, supports manual QA, helps integration tests, and gives reviewers realistic workflows without needing to create everything from scratch.",
-          "keyPoints": ["reproducibility", "manual QA", "demo", "test fixture"],
-          "tags": ["testing", "seed-data", "portfolio", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you test that generated questions remain stable after a user starts an interview?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Assert questions are stored as session snapshots. Editing the question bank or resume later should not mutate prompts already attached to existing sessions.",
-          "keyPoints": ["snapshot", "immutability", "regression test", "session integrity"],
-          "tags": ["testing", "interview-app", "data-modeling", "cv-bank"],
+          "options": [
+            "Thay thế dependency thật bằng đối tượng giả có hành vi kiểm soát được",
+            "Tạo database production",
+            "Tăng kích thước bundle frontend",
+            "Tự động sửa bug"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Mock giúp cô lập phần code đang test khỏi dependency như API, database, email service.",
+          "tags": ["testing", "mock", "backend"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "frontend-next-react",
-      "title": "Frontend, Next.js, and React",
-      "description": "Frontend workflow questions matching the full-stack CV.",
+      "slug": "docker-deploy",
+      "title": "Docker và Deploy",
+      "description": "Đóng gói và triển khai ứng dụng.",
       "sortOrder": 9,
       "questions": [
         {
-          "question": "Explain the difference between server components and client components in Next.js.",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Server components render on the server and can access server-only resources, while client components run in the browser and handle state, effects, and event handlers. Use client components only where interactivity is needed.",
-          "keyPoints": ["server component", "client component", "interactivity", "bundle size"],
-          "tags": ["nextjs", "react", "frontend", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you design a multi-step interview setup UI?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Break the flow into resume context, target configuration, preview, and submission. Keep validation close to each step, show disabled states clearly, and preserve user choices while data loads.",
-          "keyPoints": ["workflow", "validation", "disabled state", "data loading"],
-          "tags": ["react", "ux", "interview-app", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How should frontend services handle API-first behavior with local fallback?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Try authenticated API calls when a real JWT exists, fallback to local mock storage for network failures or demo mode, and keep return shapes consistent across both paths.",
-          "keyPoints": ["API-first", "JWT", "fallback", "consistent types"],
-          "tags": ["frontend", "api", "fallback", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you model loading, empty, error, and success states on the New Interview page?",
+          "question": "Docker image là gì?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Show a loading state while resumes load, an empty state when no CV exists, validation errors for unusable resumes, and a ready preview when inputs can generate an interview.",
-          "keyPoints": ["loading", "empty state", "error state", "success state"],
-          "tags": ["react", "ux", "state", "cv-bank"],
+          "options": [
+            "Gói bất biến chứa ứng dụng và môi trường cần thiết để chạy container",
+            "Một loại database quan hệ",
+            "Một ngôn ngữ lập trình mới",
+            "Một file ảnh dùng trong UI"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Image là blueprint để tạo container, thường chứa runtime, dependency và ứng dụng.",
+          "tags": ["docker", "deploy"],
           "codeSnippet": ""
         },
         {
-          "question": "What are common causes of hydration issues in Next.js?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Hydration issues happen when server-rendered markup differs from client-rendered markup. Causes include browser-only APIs during render, time/random values, mismatched env data, and conditional markup that changes immediately.",
-          "keyPoints": ["hydration", "server client mismatch", "browser APIs", "stable render"],
-          "tags": ["nextjs", "react", "hydration", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you make an OTP input accessible and pleasant to use?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Use separate digit inputs with numeric input mode, paste support, keyboard navigation, clear labels, error messages, and backend validation. Avoid trapping users or hiding meaningful feedback.",
-          "keyPoints": ["accessibility", "paste support", "keyboard navigation", "validation"],
-          "tags": ["frontend", "accessibility", "otp", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How do you prevent forms from submitting invalid data while still keeping UX responsive?",
+          "question": "Biến môi trường thường dùng để làm gì khi deploy?",
           "difficulty": "BEGINNER",
-          "answerGuide": "Use client validation for immediate feedback, disable submit during invalid or loading states, and handle backend validation errors as authoritative responses.",
-          "keyPoints": ["client validation", "disabled submit", "loading", "backend errors"],
-          "tags": ["react", "forms", "validation", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "When would you use local component state versus a global store?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Use local state for isolated form or view state. Use shared state only when multiple distant components need the same data or when caching and synchronization become complex.",
-          "keyPoints": ["local state", "global state", "scope", "complexity"],
-          "tags": ["react", "state-management", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How should UI components preserve consistent sizing across responsive layouts?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Use stable dimensions, responsive constraints, grid tracks, min/max widths, and avoid text or icon states that change layout unexpectedly. Validate mobile and desktop sizes.",
-          "keyPoints": ["responsive constraints", "stable dimensions", "grid", "layout shift"],
-          "tags": ["frontend", "css", "responsive", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you connect a React interview room to saved backend answers?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Load the session by ID, initialize answer state from the response, update draft answers locally, save through an API endpoint, and keep question IDs stable for mapping.",
-          "keyPoints": ["route params", "answer state", "stable IDs", "save draft"],
-          "tags": ["react", "api", "interview-app", "cv-bank"],
+          "options": [
+            "Cấu hình khác nhau giữa local, staging và production mà không hard-code vào source",
+            "Thay thế toàn bộ source code",
+            "Lưu ảnh đại diện người dùng",
+            "Tự động viết test"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Environment variables giúp cấu hình database URL, API key, mode chạy... theo từng môi trường.",
+          "tags": ["deploy", "env", "config"],
           "codeSnippet": ""
         }
       ]
     },
     {
-      "slug": "system-design-devops-ai",
-      "title": "System Design, DevOps, and AI Workflow",
-      "description": "Production-oriented questions for full-stack portfolio and AI interview assistant context.",
+      "slug": "architecture",
+      "title": "Kiến trúc ứng dụng",
+      "description": "Tư duy thiết kế app full-stack dễ bảo trì.",
       "sortOrder": 10,
       "questions": [
         {
-          "question": "Design a resume-based interview question generation system end to end.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Cover upload, parsing, resume analysis, question generation, session persistence, answer capture, evaluation, error handling, and user-facing states.",
-          "keyPoints": ["upload", "analysis", "generation", "persistence", "evaluation"],
-          "tags": ["system-design", "ai", "fullstack", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you make AI question generation reliable when the AI provider fails?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Use deterministic question banks as fallback, validate AI output, add retries with limits, store generated snapshots, and surface graceful errors or degraded mode to users.",
-          "keyPoints": ["fallback", "validation", "retry", "snapshot", "degraded mode"],
-          "tags": ["ai", "reliability", "system-design", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What should be logged or monitored in an interview assistant app?",
+          "question": "Vì sao nên tách controller, service và repository trong backend?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "Track API latency, error rates, upload failures, AI failures, auth failures, generation counts, and evaluation completion. Avoid logging sensitive resume text or secrets.",
-          "keyPoints": ["latency", "error rate", "privacy", "AI failures"],
-          "tags": ["monitoring", "security", "devops", "cv-bank"],
+          "options": [
+            "Để tách trách nhiệm: nhận request, xử lý nghiệp vụ và truy cập dữ liệu",
+            "Để mọi class dài hơn",
+            "Để tránh phải viết test",
+            "Để frontend gọi thẳng database"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Tách layer giúp code rõ trách nhiệm, dễ test, dễ thay đổi và tránh logic nghiệp vụ nằm lẫn trong controller.",
+          "tags": ["architecture", "backend", "service"],
           "codeSnippet": ""
         },
         {
-          "question": "How would you deploy a Next.js frontend, Spring Boot backend, and PostgreSQL database?",
+          "question": "DTO trong API thường dùng để làm gì?",
           "difficulty": "INTERMEDIATE",
-          "answerGuide": "Separate frontend and backend deploys, configure env variables, use managed PostgreSQL or Docker for development, set CORS, health checks, migrations, and secure secrets.",
-          "keyPoints": ["frontend deploy", "backend deploy", "database", "env", "health checks"],
-          "tags": ["devops", "deployment", "fullstack", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you handle secrets for OpenAI, Gemini, Google OAuth, SMTP, JWT, and Cloudinary?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Keep secrets out of frontend and git, use environment variables or secret managers, rotate exposed keys, and expose only public client IDs or public image URLs where needed.",
-          "keyPoints": ["secret management", "rotation", "frontend exposure", "env variables"],
-          "tags": ["security", "devops", "configuration", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "Design rate limiting for registration OTP and interview generation.",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Limit by email, user, IP, and endpoint. Store attempt counters and timestamps, provide clear cooldown messages, and protect expensive AI generation endpoints from abuse.",
-          "keyPoints": ["rate limiting", "cooldown", "abuse prevention", "expensive endpoints"],
-          "tags": ["security", "rate-limit", "system-design", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you design evaluation scoring so users trust the feedback?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Use transparent categories, explain rationales, cite answer evidence, separate completeness from quality, and keep scores consistent across repeated evaluations.",
-          "keyPoints": ["transparency", "rationale", "evidence", "consistency"],
-          "tags": ["ai", "evaluation", "ux", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you support multiple courses and custom question banks over time?",
-          "difficulty": "INTERMEDIATE",
-          "answerGuide": "Store courses, sections, and questions as editable data, seed from JSON or admin APIs, keep slugs stable, and avoid hard-coding banks into source logic.",
-          "keyPoints": ["course data", "sections", "editable seed", "stable slug"],
-          "tags": ["system-design", "course", "question-bank", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "How would you protect user resume privacy in an AI-assisted workflow?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Minimize stored sensitive data, avoid logging resume text, redact when possible, control provider calls, document data usage, and enforce ownership checks on every resume and interview endpoint.",
-          "keyPoints": ["privacy", "redaction", "ownership checks", "provider calls"],
-          "tags": ["security", "privacy", "ai", "cv-bank"],
-          "codeSnippet": ""
-        },
-        {
-          "question": "What would you improve before calling this portfolio app production-ready?",
-          "difficulty": "ADVANCED",
-          "answerGuide": "Mention migrations, backend tests, frontend error boundaries, observability, rate limits, secret management, accessibility, CI checks, backup strategy, and realistic evaluation quality controls.",
-          "keyPoints": ["production readiness", "CI", "observability", "security", "quality"],
-          "tags": ["architecture", "production", "portfolio", "cv-bank"],
+          "options": [
+            "Định nghĩa dữ liệu request/response rõ ràng, không lộ trực tiếp entity nội bộ",
+            "Thay thế mọi validation",
+            "Chạy background job",
+            "Tạo index database"
+          ],
+          "correctAnswer": "A",
+          "explanation": "DTO giúp kiểm soát contract API, tránh lộ field nhạy cảm và tách model persistence khỏi model giao tiếp.",
+          "tags": ["architecture", "dto", "api"],
           "codeSnippet": ""
         }
       ]

@@ -2,5 +2,9 @@ package com.ndchien12.aiinterview.entity;
 
 public enum PracticeSessionMode {
     INTERVIEW,
-    FLASHCARD
+    FLASHCARD,
+    LEARN,
+    TEST,
+    REVIEW_DUE,
+    MATCH
 }

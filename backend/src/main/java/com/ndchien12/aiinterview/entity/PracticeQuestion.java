@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
@@ -44,6 +45,18 @@ public class PracticeQuestion {
 
     @Column(name = "code_snippet", columnDefinition = "TEXT")
     private String codeSnippet;
+
+    @ElementCollection
+    @CollectionTable(name = "practice_question_options", joinColumns = @JoinColumn(name = "question_id"))
+    @OrderColumn(name = "option_order")
+    @Column(name = "option_text", nullable = false, columnDefinition = "TEXT")
+    private List<String> options = new ArrayList<>();
+
+    @Column(name = "correct_option_index", nullable = false)
+    private int correctOptionIndex;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String explanation = "";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
@@ -129,6 +142,30 @@ public class PracticeQuestion {
         this.codeSnippet = codeSnippet;
     }
 
+    public List<String> getOptions() {
+        return options;
+    }
+
+    public void setOptions(List<String> options) {
+        this.options = options == null ? new ArrayList<>() : new ArrayList<>(options);
+    }
+
+    public int getCorrectOptionIndex() {
+        return correctOptionIndex;
+    }
+
+    public void setCorrectOptionIndex(int correctOptionIndex) {
+        this.correctOptionIndex = correctOptionIndex;
+    }
+
+    public String getExplanation() {
+        return explanation;
+    }
+
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
+    }
+
     public QuestionDifficulty getDifficulty() {
         return difficulty;
     }
@@ -166,7 +203,7 @@ public class PracticeQuestion {
     }
 
     public void setKeyPoints(List<String> keyPoints) {
-        this.keyPoints = keyPoints;
+        this.keyPoints = keyPoints == null ? new ArrayList<>() : new ArrayList<>(keyPoints);
     }
 
     public List<String> getCommonMistakes() {
@@ -174,7 +211,7 @@ public class PracticeQuestion {
     }
 
     public void setCommonMistakes(List<String> commonMistakes) {
-        this.commonMistakes = commonMistakes;
+        this.commonMistakes = commonMistakes == null ? new ArrayList<>() : new ArrayList<>(commonMistakes);
     }
 
     public List<String> getTags() {
@@ -182,6 +219,6 @@ public class PracticeQuestion {
     }
 
     public void setTags(List<String> tags) {
-        this.tags = tags;
+        this.tags = tags == null ? new ArrayList<>() : new ArrayList<>(tags);
     }
 }

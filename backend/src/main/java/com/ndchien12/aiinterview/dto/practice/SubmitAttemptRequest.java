@@ -8,6 +8,8 @@ import java.util.UUID;
 public record SubmitAttemptRequest(
         @NotNull UUID questionId,
         String answerText,
-        @NotNull PracticeConfidence confidence
+        PracticeConfidence confidence,
+        Integer selectedOptionIndex,
+        Integer timeSpentSeconds
 ) {
 }

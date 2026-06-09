@@ -135,14 +135,19 @@ export type ImportDelimiterMode = "AUTO" | "TAB" | "COMMA" | "PIPE"
 
 export type PracticeConfidence = "AGAIN" | "HARD" | "GOOD" | "MASTERED"
 
-export type PracticeSessionMode = "INTERVIEW" | "FLASHCARD"
+export type PracticeSessionMode = "INTERVIEW" | "FLASHCARD" | "LEARN" | "TEST" | "REVIEW_DUE" | "MATCH"
+
+export type StudyMode = "FLASHCARD" | "LEARN" | "TEST" | "REVIEW_DUE" | "MATCH"
 
 export type FlashcardStatusFilter = "ALL" | "UNSEEN" | "LEARNING" | "MASTERED"
 
 export type FlashcardStudyFilters = {
+  deckSlug?: string
   topic?: string
   difficulty?: QuestionDifficulty
   status?: FlashcardStatusFilter
+  due?: boolean
+  q?: string
 }
 
 export type PracticeQuestion = {
@@ -152,6 +157,9 @@ export type PracticeQuestion = {
   detailedAnswer: string
   keyPoints: string[]
   commonMistakes: string[]
+  options: string[]
+  correctOptionIndex: number
+  explanation: string
   difficulty: QuestionDifficulty
   topic: string
   tags: string[]
@@ -216,6 +224,11 @@ export type TopicProgress = {
   total: number
   attempted: number
   mastered: number
+  correct: number
+  incorrect: number
+  due: number
+  learning: number
+  masteryPercentage: number
 }
 
 export type CourseProgress = {
@@ -223,15 +236,39 @@ export type CourseProgress = {
   totalQuestions: number
   attemptedQuestions: number
   masteredQuestions: number
+  correctAnswers: number
+  incorrectAnswers: number
+  dueQuestions: number
+  learningQuestions: number
+  streakDays: number
+  lastStudyAt?: string | null
+  accuracyPercentage: number
   masteryPercentage: number
   averageConfidence: number
   topics: TopicProgress[]
+}
+
+export type QuestionProgress = {
+  questionId: string
+  confidence: PracticeConfidence
+  attemptCount: number
+  correctCount: number
+  incorrectCount: number
+  correctStreak: number
+  mastered: boolean
+  lastAttemptAt: string
+  nextReviewAt: string
+  due: boolean
+  answerText?: string
 }
 
 export type PracticeAttempt = {
   id: string
   questionId: string
   answerText?: string | null
+  selectedOptionIndex?: number | null
+  correct?: boolean | null
+  timeSpentSeconds?: number | null
   confidence: PracticeConfidence
   createdAt: string
 }
@@ -241,9 +278,14 @@ export type PracticeSession = {
   courseSlug: string
   mode?: PracticeSessionMode
   filters?: FlashcardStudyFilters
+  deckSlug?: string | null
+  topic?: string | null
+  difficulty?: QuestionDifficulty | null
+  statusFilter?: FlashcardStatusFilter | null
   status: "IN_PROGRESS" | "COMPLETED"
   createdAt: string
   completedAt?: string | null
   nextQuestion?: PracticeQuestion | null
   attempts: PracticeAttempt[]
+  lastProgress?: QuestionProgress | null
 }

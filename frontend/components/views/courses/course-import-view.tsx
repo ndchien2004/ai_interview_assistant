@@ -1,39 +1,61 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, FileUp, Upload } from "lucide-react"
+import { ArrowLeft, FileJson, Upload } from "lucide-react"
 import { ChangeEvent, useMemo, useState } from "react"
 
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { importCourseQuestions, parseImportRows } from "@/services/course-service"
-import type { ImportDelimiterMode, QuestionDifficulty } from "@/types"
+import { createDeck, importDeckJson, type DeckJsonImportPayload } from "@/services/course-service"
 
-const examples = [
-  "What is JVM?\tJava Virtual Machine",
-  "What is polymorphism? | Same interface, different runtime behavior",
-  "What is HashMap?,A key-value data structure backed by hashing",
-]
+const sampleJson = `{
+  "title": "Java cơ bản",
+  "description": "Bộ câu hỏi tự tạo",
+  "sections": [
+    {
+      "title": "Java Core",
+      "questions": [
+        {
+          "question": "JVM dùng để làm gì?",
+          "options": ["Chạy bytecode Java", "Tạo CSS", "Quản lý DNS", "Thiết kế database"],
+          "correctAnswer": "A",
+          "explanation": "JVM thực thi bytecode đã được biên dịch từ mã nguồn Java.",
+          "difficulty": "BEGINNER",
+          "tags": ["java", "jvm"]
+        }
+      ]
+    }
+  ]
+}`
 
 export function CourseImportView() {
-  const [topic, setTopic] = useState("Imported Java Full-stack")
-  const [difficulty, setDifficulty] = useState<QuestionDifficulty>("BEGINNER")
-  const [delimiterMode, setDelimiterMode] = useState<ImportDelimiterMode>("AUTO")
-  const [content, setContent] = useState("")
+  const [title, setTitle] = useState("Bộ thẻ của tôi")
+  const [slug, setSlug] = useState("bo-the-cua-toi")
+  const [description, setDescription] = useState("Bộ câu hỏi trắc nghiệm tự import vào FreeCard.")
+  const [content, setContent] = useState(sampleJson)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const [importing, setImporting] = useState(false)
 
-  const preview = useMemo(() => parseImportRows(content, delimiterMode), [content, delimiterMode])
+  const parsed = useMemo(() => {
+    try {
+      return JSON.parse(content) as DeckJsonImportPayload
+    } catch {
+      return null
+    }
+  }, [content])
+
+  const questionCount =
+    parsed?.sections.reduce((total, section) => total + (section.questions?.length ?? 0), 0) ?? 0
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (!file.name.endsWith(".txt") && !file.name.endsWith(".csv")) {
-      setError("Only .txt and .csv files are supported in this import flow.")
+    if (!file.name.endsWith(".json")) {
+      setError("Vui lòng chọn file .json theo mẫu FreeCard.")
       return
     }
 
@@ -44,19 +66,23 @@ export function CourseImportView() {
   const handleImport = async () => {
     setError("")
     setMessage("")
-    setImporting(true)
+    if (!parsed) {
+      setError("JSON chưa hợp lệ. Hãy kiểm tra dấu ngoặc, dấu phẩy và tên trường.")
+      return
+    }
 
+    setImporting(true)
     try {
-      const result = await importCourseQuestions("java-fullstack-cv-interview-bank", {
-        topic,
-        difficulty,
-        delimiterMode,
-        content,
+      const deck = await createDeck({
+        title: title.trim(),
+        slug: slug.trim().toLowerCase(),
+        description: description.trim(),
+        active: true,
       })
-      setMessage(`Imported ${result.importedCount} flashcards. ${result.skippedCount} rows skipped.`)
-      setContent("")
+      const result = await importDeckJson(deck.slug, parsed)
+      setMessage(`Đã import ${result.importedCount} câu hỏi vào bộ thẻ "${deck.title}".`)
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : "Unable to import flashcards.")
+      setError(importError instanceof Error ? importError.message : "Không thể import bộ câu hỏi.")
     } finally {
       setImporting(false)
     }
@@ -67,90 +93,70 @@ export function CourseImportView() {
       <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2">
-            <Link href="/courses/java-core">
+            <Link href="/courses">
               <ArrowLeft className="size-4" />
-              Java + Full-stack
+              Bộ thẻ
             </Link>
           </Button>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight">Import Flashcards</h1>
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight">Tạo / Import bộ thẻ</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Paste Quizlet-style rows or upload a .txt/.csv file.
+            Import JSON gồm câu hỏi, 4 đáp án, đáp án đúng và giải thích.
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/courses/java-core/flashcards">Study Flashcards</Link>
+          <Link href="/courses/java-core/learn">Học ngay</Link>
         </Button>
       </div>
 
-      <section className="grid gap-7 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="space-y-6">
-          <div className="border-y border-border py-5">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <FileUp className="size-4" />
-              Supported rows
-            </div>
-            <div className="mt-4 divide-y divide-border text-sm text-muted-foreground">
-              {examples.map((example) => (
-                <code key={example} className="block py-2 font-mono text-xs text-foreground">
-                  {example}
-                </code>
-              ))}
-            </div>
-          </div>
-
+      <section className="grid gap-7 lg:grid-cols-[360px_1fr]">
+        <div className="space-y-5">
           <div className="grid gap-4 border-y border-border py-5">
-            <label className="text-sm font-medium" htmlFor="topic">
-              Topic
+            <label className="text-sm font-medium" htmlFor="title">
+              Tên bộ thẻ
             </label>
-            <Input id="topic" value={topic} onChange={(event) => setTopic(event.target.value)} />
+            <Input id="title" value={title} onChange={(event) => setTitle(event.target.value)} />
 
-            <label className="text-sm font-medium" htmlFor="difficulty">
-              Difficulty
+            <label className="text-sm font-medium" htmlFor="slug">
+              Slug
             </label>
-            <select
-              id="difficulty"
-              value={difficulty}
-              onChange={(event) => setDifficulty(event.target.value as QuestionDifficulty)}
-              className="h-9 border border-border bg-background px-2 text-sm"
-            >
-              <option value="BEGINNER">Beginner</option>
-              <option value="INTERMEDIATE">Intermediate</option>
-              <option value="ADVANCED">Advanced</option>
-            </select>
+            <Input id="slug" value={slug} onChange={(event) => setSlug(event.target.value)} />
 
-            <label className="text-sm font-medium" htmlFor="delimiter">
-              Delimiter
+            <label className="text-sm font-medium" htmlFor="description">
+              Mô tả
             </label>
-            <select
-              id="delimiter"
-              value={delimiterMode}
-              onChange={(event) => setDelimiterMode(event.target.value as ImportDelimiterMode)}
-              className="h-9 border border-border bg-background px-2 text-sm"
-            >
-              <option value="AUTO">Auto</option>
-              <option value="TAB">Tab</option>
-              <option value="PIPE">Pipe</option>
-              <option value="COMMA">Comma</option>
-            </select>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              className="min-h-24 resize-none"
+            />
 
             <label className="text-sm font-medium" htmlFor="file">
-              File
+              File JSON
             </label>
-            <Input id="file" type="file" accept=".txt,.csv,text/plain,text/csv" onChange={handleFile} />
+            <Input id="file" type="file" accept=".json,application/json" onChange={handleFile} />
+          </div>
+
+          <div className="border-y border-border py-5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 font-semibold text-foreground">
+              <FileJson className="size-4" />
+              Kiểm tra nhanh
+            </div>
+            <p className="mt-3">{parsed ? `${parsed.sections.length} chủ đề / ${questionCount} câu hỏi` : "JSON chưa hợp lệ"}</p>
+            <p className="mt-2">Mỗi câu bắt buộc có đúng 4 đáp án và `correctAnswer` là A, B, C hoặc D.</p>
           </div>
         </div>
 
         <div className="space-y-5">
           <div className="space-y-3">
             <label className="text-sm font-medium" htmlFor="content">
-              Import content
+              Nội dung JSON
             </label>
             <Textarea
               id="content"
               value={content}
               onChange={(event) => setContent(event.target.value)}
-              placeholder="Paste question and answer rows here..."
-              className="min-h-56 resize-y border border-border bg-transparent px-3 py-3"
+              className="min-h-[420px] resize-y border border-border bg-transparent px-3 py-3 font-mono text-xs"
             />
           </div>
 
@@ -158,43 +164,16 @@ export function CourseImportView() {
           {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-4">
-            <p className="text-sm text-muted-foreground">
-              {preview.validRows.length} valid / {preview.invalidRows.length} invalid
-            </p>
-            <Button disabled={!preview.validRows.length || importing || !topic.trim()} onClick={handleImport}>
+            <p className="text-sm text-muted-foreground">{questionCount} câu sẵn sàng import</p>
+            <Button disabled={!parsed || !questionCount || importing || !title.trim() || !slug.trim()} onClick={handleImport}>
               <Upload className="size-4" />
-              Import Flashcards
+              Import JSON
             </Button>
           </div>
-
-          <PreviewTable preview={preview} />
         </div>
       </section>
-    </div>
-  )
-}
 
-function PreviewTable({ preview }: { preview: ReturnType<typeof parseImportRows> }) {
-  if (!preview.validRows.length && !preview.invalidRows.length) {
-    return <StateBlock title="No rows yet" description="Paste rows or upload a file to preview import results." />
-  }
-
-  return (
-    <div className="divide-y divide-border border-y border-border">
-      {preview.validRows.slice(0, 12).map((row) => (
-        <div key={`valid-${row.rowNumber}`} className="grid gap-2 py-3 text-sm sm:grid-cols-[70px_1fr_1fr]">
-          <span className="text-muted-foreground">#{row.rowNumber}</span>
-          <span>{row.question}</span>
-          <span className="text-muted-foreground">{row.answer}</span>
-        </div>
-      ))}
-      {preview.invalidRows.slice(0, 8).map((row) => (
-        <div key={`invalid-${row.rowNumber}`} className="grid gap-2 py-3 text-sm sm:grid-cols-[70px_1fr_180px]">
-          <span className="text-destructive">#{row.rowNumber}</span>
-          <span className="text-muted-foreground">{row.raw}</span>
-          <span className="text-destructive">{row.reason}</span>
-        </div>
-      ))}
+      {!parsed ? <StateBlock title="JSON chưa hợp lệ" description="Bạn có thể quay về mẫu mặc định hoặc xem tài liệu hướng dẫn trong thư mục docs." /> : null}
     </div>
   )
 }

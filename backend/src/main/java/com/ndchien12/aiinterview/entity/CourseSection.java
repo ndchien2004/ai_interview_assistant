@@ -35,6 +35,9 @@ public class CourseSection {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     public UUID getId() {
         return id;
     }
@@ -81,5 +84,13 @@ public class CourseSection {
 
     public void setSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

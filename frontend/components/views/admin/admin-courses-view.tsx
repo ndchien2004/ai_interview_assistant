@@ -18,6 +18,11 @@ type Draft = {
   question: string
   shortAnswer: string
   detailedAnswer: string
+  optionA: string
+  optionB: string
+  optionC: string
+  optionD: string
+  correctOptionIndex: number
   difficulty: QuestionDifficulty
   topic: string
   tags: string
@@ -28,6 +33,11 @@ const emptyDraft: Draft = {
   question: "",
   shortAnswer: "",
   detailedAnswer: "",
+  optionA: "",
+  optionB: "",
+  optionC: "",
+  optionD: "",
+  correctOptionIndex: 0,
   difficulty: "INTERMEDIATE",
   topic: "Java Core Foundations",
   tags: "java, cv-bank",
@@ -74,6 +84,9 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
       question: draft.question.trim(),
       shortAnswer: draft.shortAnswer.trim(),
       detailedAnswer: draft.detailedAnswer.trim(),
+      options: [draft.optionA, draft.optionB, draft.optionC, draft.optionD].map((option) => option.trim()),
+      correctOptionIndex: draft.correctOptionIndex,
+      explanation: draft.detailedAnswer.trim() || draft.shortAnswer.trim(),
       keyPoints: draft.tags.split(",").map((item) => item.trim()).filter(Boolean),
       commonMistakes: ["Missing tradeoffs.", "Answering without a concrete Java example."],
       difficulty: draft.difficulty,
@@ -83,8 +96,8 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
       sortOrder: questions.length + 1,
     }
 
-    if (!payload.question || !payload.shortAnswer || !payload.sectionId) {
-      setError("Question, short answer, and section are required.")
+    if (!payload.question || !payload.shortAnswer || !payload.sectionId || payload.options.some((option) => !option)) {
+      setError("Question, short answer, section, and 4 options are required.")
       return
     }
 
@@ -147,6 +160,11 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
       question: question.question,
       shortAnswer: question.shortAnswer,
       detailedAnswer: question.detailedAnswer,
+      optionA: question.options[0] ?? question.shortAnswer,
+      optionB: question.options[1] ?? "",
+      optionC: question.options[2] ?? "",
+      optionD: question.options[3] ?? "",
+      correctOptionIndex: question.correctOptionIndex ?? 0,
       difficulty: question.difficulty,
       topic: question.topic,
       tags: question.tags.join(", "),
@@ -242,6 +260,31 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
             onChange={(event) => setDraft((current) => ({ ...current, shortAnswer: event.target.value }))}
             placeholder="Short answer"
           />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[draft.optionA, draft.optionB, draft.optionC, draft.optionD].map((value, index) => (
+              <Input
+                key={index}
+                value={value}
+                onChange={(event) => {
+                  const keys = ["optionA", "optionB", "optionC", "optionD"] as const
+                  setDraft((current) => ({ ...current, [keys[index]]: event.target.value }))
+                }}
+                placeholder={`Option ${String.fromCharCode(65 + index)}`}
+              />
+            ))}
+          </div>
+          <select
+            value={draft.correctOptionIndex}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, correctOptionIndex: Number(event.target.value) }))
+            }
+            className="h-9 w-full border border-border bg-background px-2 text-sm"
+          >
+            <option value={0}>Correct answer: A</option>
+            <option value={1}>Correct answer: B</option>
+            <option value={2}>Correct answer: C</option>
+            <option value={3}>Correct answer: D</option>
+          </select>
           <Textarea
             value={draft.detailedAnswer}
             onChange={(event) => setDraft((current) => ({ ...current, detailedAnswer: event.target.value }))}
