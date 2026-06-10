@@ -79,14 +79,16 @@ export async function importCourseQuestions(slug = COURSE_SLUG, payload: CourseI
 }
 
 export async function getCourseProgress(slug = COURSE_SLUG) {
+  const localProgress = readMockProgress(slug, mockJavaCourse())
   if (canUseApi()) {
     try {
-      return await apiGet<CourseProgress>(`/api/courses/${slug}/progress`)
+      const apiProgress = await apiGet<CourseProgress>(`/api/courses/${slug}/progress`)
+      return localProgress.attemptedQuestions > apiProgress.attemptedQuestions ? localProgress : apiProgress
     } catch {
-      return readMockProgress(slug, mockJavaCourse())
+      return localProgress
     }
   }
-  return readMockProgress(slug, mockJavaCourse())
+  return localProgress
 }
 
 export async function listCourseQuestions(slug = COURSE_SLUG, filters: FlashcardStudyFilters = {}) {
@@ -552,16 +554,19 @@ export function readLocalProgress() {
 
 export function writeLocalProgress(questionId: string, confidence: string, answerText?: string) {
   const progress = readLocalProgress()
+  const previous = progress[questionId]
   const now = new Date()
   const nextReviewAt = nextLocalReviewAt(now, confidence)
+  const remembered = confidence === "GOOD" || confidence === "MASTERED"
+  const correctStreak = remembered ? (previous?.correctStreak ?? 0) + 1 : 0
   progress[questionId] = {
     confidence: confidence as QuestionProgress["confidence"],
     answerText,
-    attemptCount: (progress[questionId]?.attemptCount ?? 0) + 1,
-    correctCount: progress[questionId]?.correctCount ?? 0,
-    incorrectCount: progress[questionId]?.incorrectCount ?? 0,
-    correctStreak: progress[questionId]?.correctStreak ?? 0,
-    mastered: confidence === "MASTERED",
+    attemptCount: (previous?.attemptCount ?? 0) + 1,
+    correctCount: (previous?.correctCount ?? 0) + (remembered ? 1 : 0),
+    incorrectCount: (previous?.incorrectCount ?? 0) + (remembered ? 0 : 1),
+    correctStreak,
+    mastered: confidence === "MASTERED" || correctStreak >= 3,
     lastAttemptAt: now.toISOString(),
     nextReviewAt,
     due: new Date(nextReviewAt) <= new Date(),
@@ -708,8 +713,8 @@ function calculateLocalStreak(progress: Record<string, Omit<QuestionProgress, "q
 function mockJavaCourse(): Course {
   const bank = javaFullstackQuestionBank as QuestionBankSeed
   const sections: CourseSection[] = bank.sections.map((section, sectionIndex) => ({
-    id: makeId(`section-${section.slug}`),
-    slug: section.slug,
+    id: makeId(`section-${section.slug ?? slugify(section.title)}`),
+    slug: section.slug ?? slugify(section.title),
     title: section.title,
     description: section.description,
     sortOrder: section.sortOrder || sectionIndex + 1,
@@ -736,7 +741,7 @@ function mockJavaCourse(): Course {
 
   return {
     id: "course-java-fullstack-flashcard",
-    slug: bank.slug,
+    slug: bank.slug ?? COURSE_SLUG,
     title: bank.title,
     description: bank.description,
     active: true,
@@ -901,8 +906,9 @@ function slugify(value: string) {
 }
 
 function buildSeedQuestion(section: QuestionBankSectionSeed, seed: QuestionBankQuestionSeed, index: number): PracticeQuestion {
+  const sectionSlug = section.slug ?? slugify(section.title)
   return {
-    id: `${section.slug}-${index + 1}`,
+    id: `${sectionSlug}-${index + 1}`,
     question: seed.question,
     shortAnswer: seed.options[answerLetterToIndex(seed.correctAnswer)],
     detailedAnswer: seed.explanation,
@@ -920,14 +926,14 @@ function buildSeedQuestion(section: QuestionBankSectionSeed, seed: QuestionBankQ
 }
 
 type QuestionBankSeed = {
-  slug: string
+  slug?: string
   title: string
   description: string
   sections: QuestionBankSectionSeed[]
 }
 
 type QuestionBankSectionSeed = {
-  slug: string
+  slug?: string
   title: string
   description: string
   sortOrder: number

@@ -108,6 +108,7 @@ export function SessionSetupView({
   const maxQuestions = preview.length
   const effectiveLimit = maxQuestions ? Math.max(1, Math.min(questionLimit || 1, maxQuestions)) : 0
   const modeCopy = modeContent(mode)
+  const itemLabel = mode === "LEARN" ? "thẻ" : mode === "MATCH" ? "cặp" : "câu"
 
   const handleStart = async () => {
     if (!preview.length || starting) return
@@ -211,7 +212,7 @@ export function SessionSetupView({
           <Panel title="Cấu hình phiên">
             <div className="space-y-5">
               <div className="grid gap-2 text-sm">
-                <span className="font-medium">Số câu</span>
+                <span className="font-medium">Số {itemLabel}</span>
                 <div className="grid grid-cols-[40px_1fr_40px] gap-2">
                   <Button
                     type="button"
@@ -219,7 +220,7 @@ export function SessionSetupView({
                     size="icon"
                     disabled={!maxQuestions || effectiveLimit <= 1}
                     onClick={() => setQuestionLimit((current) => Math.max(1, current - 1))}
-                    aria-label="Giảm số câu"
+                    aria-label={`Giảm số ${itemLabel}`}
                   >
                     <Minus className="size-4" />
                   </Button>
@@ -240,7 +241,7 @@ export function SessionSetupView({
                     size="icon"
                     disabled={!maxQuestions || effectiveLimit >= maxQuestions}
                     onClick={() => setQuestionLimit((current) => Math.min(maxQuestions, current + 1))}
-                    aria-label="Tăng số câu"
+                    aria-label={`Tăng số ${itemLabel}`}
                   >
                     <Plus className="size-4" />
                   </Button>
@@ -260,7 +261,7 @@ export function SessionSetupView({
                   />
                 </label>
               ) : null}
-              <ToggleRow selected={shuffle} onClick={() => setShuffle((current) => !current)} icon={Shuffle} label="Trộn thứ tự câu" />
+              <ToggleRow selected={shuffle} onClick={() => setShuffle((current) => !current)} icon={Shuffle} label={mode === "LEARN" ? "Xáo trộn thẻ" : "Trộn thứ tự câu"} />
             </div>
           </Panel>
 
@@ -361,5 +362,5 @@ function modeContent(mode: SetupMode) {
   if (mode === "MATCH") {
     return { title: "Cấu hình ghép thẻ", eyebrow: "Ghép thẻ", icon: Gamepad2 }
   }
-  return { title: "Cấu hình phiên học", eyebrow: "Học", icon: Brain }
+  return { title: "Cấu hình flashcard", eyebrow: "Học", icon: Brain }
 }

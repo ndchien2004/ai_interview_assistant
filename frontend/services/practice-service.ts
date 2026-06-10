@@ -21,6 +21,7 @@ import type {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 const COURSE_SLUG = "java-fullstack-flashcard-bank"
 const LOCAL_SESSIONS_KEY = "java-fullstack-sessions"
+const ACTIVE_SESSIONS_KEY = "java-fullstack-active-sessions"
 
 const headers = () => {
   const token = getAuthToken()
@@ -81,7 +82,9 @@ async function createSession(courseSlug: string, mode: PracticeSessionMode, filt
         body: JSON.stringify({ courseSlug, mode, ...requestFilters }),
       })
       if (!response.ok) throw new Error("Unable to start practice session.")
-      return response.json() as Promise<PracticeSession>
+      const session = await response.json() as PracticeSession
+      writeLocalSession(session)
+      return session
     } catch {
       return createLocalPracticeSession(courseSlug, mode, normalizedFilters)
     }
@@ -93,7 +96,8 @@ async function createSession(courseSlug: string, mode: PracticeSessionMode, filt
 async function createLocalPracticeSession(courseSlug: string, mode: PracticeSessionMode, filters: FlashcardStudyFilters = {}) {
   const course = await getCourse(courseSlug)
   const questionLimit = clampQuestionLimit(filters.questionLimit, mode === "MATCH" ? 12 : 20)
-  const questions = selectLocalSessionQuestions(mode, collectCourseQuestions(course, filters), questionLimit, filters.shuffle ?? mode !== "LEARN")
+  const shuffleQuestions = filters.shuffle ?? mode !== "LEARN"
+  const questions = selectLocalSessionQuestions(mode, collectCourseQuestions(course, filters), questionLimit, shuffleQuestions)
   const nextQuestion = questions[0] ?? null
   const timeLimitSeconds = filters.timeLimitMinutes && filters.timeLimitMinutes > 0 ? Math.min(filters.timeLimitMinutes, 24 * 60) * 60 : null
   const session = {
@@ -109,7 +113,7 @@ async function createLocalPracticeSession(courseSlug: string, mode: PracticeSess
     questionLimit,
     timeLimitSeconds,
     expiresAt: timeLimitSeconds ? new Date(Date.now() + timeLimitSeconds * 1000).toISOString() : null,
-    shuffle: filters.shuffle ?? true,
+    shuffle: shuffleQuestions,
     feedbackMode: filters.feedbackMode ?? (mode === "TEST" ? "END_ONLY" : "IMMEDIATE"),
     questionCount: questions.length,
     answeredCount: 0,
@@ -139,6 +143,50 @@ export async function getPracticeSession(sessionId: string) {
   return session
 }
 
+export async function getActivePracticeSession(
+  courseSlug: string,
+  mode: PracticeSessionMode,
+  deckSlug?: string
+) {
+  const activeSessionId = readActiveSessionIds()[sessionScopeKey(courseSlug, mode, deckSlug)]
+  if (!activeSessionId) return null
+
+  try {
+    const session = await getPracticeSession(activeSessionId)
+    if (session.status === "COMPLETED") {
+      clearActiveSession(courseSlug, mode, deckSlug)
+      return null
+    }
+    return session
+  } catch {
+    clearActiveSession(courseSlug, mode, deckSlug)
+    return null
+  }
+}
+
+export async function listActivePracticeSessions(courseSlug = COURSE_SLUG) {
+  const activeEntries = Object.entries(readActiveSessionIds()).filter(([key]) => key.startsWith(`${courseSlug}:`))
+  const sessions = await Promise.all(
+    activeEntries.map(async ([key, sessionId]) => {
+      try {
+        const session = await getPracticeSession(sessionId)
+        if (session.status === "COMPLETED") {
+          clearActiveSessionKey(key)
+          return null
+        }
+        return session
+      } catch {
+        clearActiveSessionKey(key)
+        return null
+      }
+    })
+  )
+
+  return sessions
+    .filter((session): session is PracticeSession => Boolean(session))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+}
+
 export async function submitPracticeAttempt(
   session: PracticeSession,
   questionId: string,
@@ -154,6 +202,7 @@ export async function submitPracticeAttempt(
       })
       if (!response.ok) throw new Error("Unable to submit practice attempt.")
       const nextSession = await response.json() as PracticeSession
+      writeLocalSession(nextSession)
       notifyCourseProgressChanged(nextSession.courseSlug)
       return nextSession
     } catch {
@@ -179,6 +228,7 @@ export async function submitMultipleChoiceAnswer(
       })
       if (!response.ok) throw new Error("Không thể lưu đáp án.")
       const nextSession = await response.json() as PracticeSession
+      writeLocalSession(nextSession)
       notifyCourseProgressChanged(nextSession.courseSlug)
       return nextSession
     } catch {
@@ -207,6 +257,7 @@ export async function submitMatchResult(session: PracticeSession, questionIds: s
       })
       if (!response.ok) throw new Error("Không thể lưu kết quả ghép thẻ.")
       const nextSession = await response.json() as PracticeSession
+      writeLocalSession(nextSession)
       notifyCourseProgressChanged(nextSession.courseSlug)
       return nextSession
     } catch {
@@ -231,6 +282,7 @@ export async function submitTestSession(
       })
       if (!response.ok) throw new Error("Không thể nộp bài kiểm tra.")
       const nextSession = await response.json() as PracticeSession
+      writeLocalSession(nextSession)
       notifyCourseProgressChanged(nextSession.courseSlug)
       return nextSession
     } catch {
@@ -410,7 +462,7 @@ function selectLocalSessionQuestions(mode: PracticeSessionMode, questions: Pract
     if (mode !== "LEARN" && mode !== "FLASHCARD" && mode !== "REVIEW_DUE") return a.sortOrder - b.sortOrder
     return priority(a) - priority(b) || a.sortOrder - b.sortOrder
   })
-  const selected = shuffleQuestions && mode !== "LEARN" && mode !== "FLASHCARD" ? shuffle(sorted) : sorted
+  const selected = shuffleQuestions ? shuffle(sorted) : sorted
   return selected.slice(0, limit)
 
   function priority(question: PracticeQuestion) {
@@ -457,4 +509,45 @@ function writeLocalSession(session: PracticeSession) {
   const sessions = readLocalSessions()
   const nextSessions = [session, ...sessions.filter((item) => item.id !== session.id)].slice(0, 20)
   window.localStorage.setItem(LOCAL_SESSIONS_KEY, JSON.stringify(nextSessions))
+  writeActiveSession(session)
+}
+
+function readActiveSessionIds() {
+  if (typeof window === "undefined") return {}
+  try {
+    return JSON.parse(window.localStorage.getItem(ACTIVE_SESSIONS_KEY) ?? "{}") as Record<string, string>
+  } catch {
+    return {}
+  }
+}
+
+function writeActiveSession(session: PracticeSession) {
+  const mode = session.mode
+  if (!mode) return
+  const key = sessionScopeKey(session.courseSlug, mode, session.deckSlug ?? session.filters?.deckSlug)
+  const active = readActiveSessionIds()
+  if (session.status === "COMPLETED") {
+    delete active[key]
+  } else {
+    active[key] = session.id
+  }
+  window.localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify(active))
+}
+
+function clearActiveSession(courseSlug: string, mode: PracticeSessionMode, deckSlug?: string) {
+  if (typeof window === "undefined") return
+  const active = readActiveSessionIds()
+  delete active[sessionScopeKey(courseSlug, mode, deckSlug)]
+  window.localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify(active))
+}
+
+function clearActiveSessionKey(key: string) {
+  if (typeof window === "undefined") return
+  const active = readActiveSessionIds()
+  delete active[key]
+  window.localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify(active))
+}
+
+function sessionScopeKey(courseSlug: string, mode: PracticeSessionMode, deckSlug?: string | null) {
+  return [courseSlug, mode, deckSlug || "course"].join(":")
 }

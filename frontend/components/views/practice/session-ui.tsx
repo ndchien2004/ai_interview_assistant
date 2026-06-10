@@ -33,8 +33,8 @@ export function SessionTopBar({
   action?: React.ReactNode
 }) {
   return (
-    <section className="sticky top-16 z-10 -mx-4 border-b border-border/80 bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 lg:max-w-6xl">
+    <section className="sticky top-16 z-10 -mx-4 border-b border-border/80 bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 lg:max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <Button variant="ghost" size="sm" asChild className="-ml-2">
@@ -43,7 +43,7 @@ export function SessionTopBar({
                 {backLabel}
               </Link>
             </Button>
-            <div className="mt-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <div className="mt-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
               {Icon ? <Icon className="size-4" /> : null}
               {eyebrow}
             </div>

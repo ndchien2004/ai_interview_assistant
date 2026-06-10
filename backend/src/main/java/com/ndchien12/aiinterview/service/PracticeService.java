@@ -304,7 +304,7 @@ public class PracticeService {
         List<PracticeQuestion> ordered = questions.stream()
                 .sorted(comparator)
                 .collect(Collectors.toCollection(ArrayList::new));
-        if (session.isShuffle() && session.getMode() != PracticeSessionMode.LEARN && session.getMode() != PracticeSessionMode.FLASHCARD) {
+        if (session.isShuffle()) {
             Collections.shuffle(ordered);
         }
 
@@ -430,6 +430,12 @@ public class PracticeService {
                 progress.setIncorrectCount(progress.getIncorrectCount() + 1);
                 progress.setCorrectStreak(0);
             }
+        } else if (confidence == PracticeConfidence.GOOD || confidence == PracticeConfidence.MASTERED) {
+            progress.setCorrectCount(progress.getCorrectCount() + 1);
+            progress.setCorrectStreak(progress.getCorrectStreak() + 1);
+        } else {
+            progress.setIncorrectCount(progress.getIncorrectCount() + 1);
+            progress.setCorrectStreak(0);
         }
         progress.setMastered(confidence == PracticeConfidence.MASTERED || progress.getCorrectStreak() >= 3);
         progress.setLastAttemptAt(now);
