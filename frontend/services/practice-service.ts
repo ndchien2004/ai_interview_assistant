@@ -22,6 +22,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 const COURSE_SLUG = "java-fullstack-flashcard-bank"
 const LOCAL_SESSIONS_KEY = "java-fullstack-sessions"
 const ACTIVE_SESSIONS_KEY = "java-fullstack-active-sessions"
+const LOCAL_MATCH_LIMIT = 7
 
 const headers = () => {
   const token = getAuthToken()
@@ -95,7 +96,9 @@ async function createSession(courseSlug: string, mode: PracticeSessionMode, filt
 
 async function createLocalPracticeSession(courseSlug: string, mode: PracticeSessionMode, filters: FlashcardStudyFilters = {}) {
   const course = await getCourse(courseSlug)
-  const questionLimit = clampQuestionLimit(filters.questionLimit, mode === "MATCH" ? 12 : 20)
+  const questionLimit = mode === "MATCH"
+    ? clampQuestionLimit(filters.questionLimit, LOCAL_MATCH_LIMIT, LOCAL_MATCH_LIMIT)
+    : clampQuestionLimit(filters.questionLimit, 20)
   const shuffleQuestions = filters.shuffle ?? mode !== "LEARN"
   const questions = selectLocalSessionQuestions(mode, collectCourseQuestions(course, filters), questionLimit, shuffleQuestions)
   const nextQuestion = questions[0] ?? null
@@ -185,6 +188,25 @@ export async function listActivePracticeSessions(courseSlug = COURSE_SLUG) {
   return sessions
     .filter((session): session is PracticeSession => Boolean(session))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+}
+
+export async function listPracticeSessions({
+  courseSlug = COURSE_SLUG,
+  mode,
+  deckSlug,
+  status,
+}: {
+  courseSlug?: string
+  mode?: PracticeSessionMode
+  deckSlug?: string
+  status?: PracticeSession["status"]
+} = {}) {
+  return readLocalSessions()
+    .filter((session) => session.courseSlug === courseSlug)
+    .filter((session) => !mode || session.mode === mode)
+    .filter((session) => !status || session.status === status)
+    .filter((session) => !deckSlug || (session.deckSlug ?? session.filters?.deckSlug) === deckSlug)
+    .sort((a, b) => new Date(b.completedAt ?? b.createdAt).getTime() - new Date(a.completedAt ?? a.createdAt).getTime())
 }
 
 export async function submitPracticeAttempt(
@@ -368,6 +390,8 @@ async function submitLocalMatchResult(session: PracticeSession, questionIds: str
     completedAt: new Date().toISOString(),
     nextQuestion: null,
     answeredCount: questionIds.length,
+    matchMistakeCount: mistakeCount,
+    matchTimeSpentSeconds: timeSpentSeconds ?? null,
     attempts: [
       ...session.attempts,
       ...questionIds.map((questionId) => ({
@@ -486,9 +510,9 @@ function isLearningProgress(progress?: ReturnType<typeof readLocalProgress>[stri
   return Boolean(progress && hasStartedProgress(progress) && !isMasteredProgress(progress))
 }
 
-function clampQuestionLimit(value: number | undefined, fallback: number) {
+function clampQuestionLimit(value: number | undefined, fallback: number, max = 100) {
   if (!value || Number.isNaN(value)) return fallback
-  return Math.max(1, Math.min(value, 100))
+  return Math.max(1, Math.min(value, max))
 }
 
 function shuffle<T>(items: T[]) {

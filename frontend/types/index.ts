@@ -208,4 +208,6 @@ export type PracticeSession = {
   questions?: PracticeQuestion[]
   attempts: PracticeAttempt[]
   lastProgress?: QuestionProgress | null
+  matchMistakeCount?: number | null
+  matchTimeSpentSeconds?: number | null
 }

@@ -28,6 +28,7 @@ import {
 } from "./session-ui"
 
 type SetupMode = Extract<PracticeSessionMode, "LEARN" | "TEST" | "MATCH">
+const MATCH_MAX_PAIRS = 7
 
 export function SessionSetupView({
   mode,
@@ -48,7 +49,7 @@ export function SessionSetupView({
   const [difficulties, setDifficulties] = useState<QuestionDifficulty[]>([])
   const [status, setStatus] = useState<FlashcardStatusFilter>("ALL")
   const [query, setQuery] = useState("")
-  const [questionLimit, setQuestionLimit] = useState(mode === "MATCH" ? 12 : 20)
+  const [questionLimit, setQuestionLimit] = useState(mode === "MATCH" ? MATCH_MAX_PAIRS : 20)
   const [timeEnabled, setTimeEnabled] = useState(false)
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(mode === "TEST" ? 20 : 10)
   const [shuffle, setShuffle] = useState(mode !== "LEARN")
@@ -105,7 +106,7 @@ export function SessionSetupView({
     }
   }, [course, courseSlug, deckSlug, difficulties, query, status])
 
-  const maxQuestions = preview.length
+  const maxQuestions = mode === "MATCH" ? Math.min(preview.length, MATCH_MAX_PAIRS) : preview.length
   const effectiveLimit = maxQuestions ? Math.max(1, Math.min(questionLimit || 1, maxQuestions)) : 0
   const modeCopy = modeContent(mode)
   const itemLabel = mode === "LEARN" ? "thẻ" : mode === "MATCH" ? "cặp" : "câu"
