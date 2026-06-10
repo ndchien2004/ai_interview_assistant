@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { BookOpenCheck, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,7 @@ export function CourseDecksView() {
   const [title, setTitle] = useState(emptyCourseForm.title)
   const [description, setDescription] = useState(emptyCourseForm.description)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [pendingDeleteCourse, setPendingDeleteCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deletingSlug, setDeletingSlug] = useState("")
@@ -80,14 +82,19 @@ export function CourseDecksView() {
     }
   }
 
-  const handleDelete = async (course: Course) => {
-    if (!window.confirm(`Xóa học phần "${course.title}"?`)) return
+  const handleDelete = (course: Course) => {
+    setPendingDeleteCourse(course)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteCourse) return
     setError("")
-    setDeletingSlug(course.slug)
+    setDeletingSlug(pendingDeleteCourse.slug)
     try {
-      await deleteCourse(course.slug)
-      setCourses((current) => current.filter((item) => item.slug !== course.slug))
-      if (editingCourse?.slug === course.slug) resetForm()
+      await deleteCourse(pendingDeleteCourse.slug)
+      setCourses((current) => current.filter((item) => item.slug !== pendingDeleteCourse.slug))
+      if (editingCourse?.slug === pendingDeleteCourse.slug) resetForm()
+      setPendingDeleteCourse(null)
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Không thể xóa học phần.")
     } finally {
@@ -147,6 +154,23 @@ export function CourseDecksView() {
           </Button>
         </aside>
       </section>
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteCourse)}
+        title="Xóa học phần?"
+        description={
+          <>
+            Học phần <span className="font-medium text-foreground">{pendingDeleteCourse?.title}</span> và các bộ thẻ bên trong sẽ bị xóa.
+          </>
+        }
+        confirmLabel="Xóa học phần"
+        loading={Boolean(deletingSlug)}
+        tone="danger"
+        onClose={() => {
+          if (!deletingSlug) setPendingDeleteCourse(null)
+        }}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }

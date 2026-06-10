@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, FilePenLine, Layers3, Pencil, Plus, Trash2, Upload, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ export function CourseDeckListView({ courseSlug }: { courseSlug: string }) {
   const [course, setCourse] = useState<Course | null>(null)
   const [title, setTitle] = useState("")
   const [editingDeck, setEditingDeck] = useState<CourseSection | null>(null)
+  const [pendingDeleteDeck, setPendingDeleteDeck] = useState<CourseSection | null>(null)
   const [lastCreatedDeck, setLastCreatedDeck] = useState<CourseSection | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -92,14 +94,19 @@ export function CourseDeckListView({ courseSlug }: { courseSlug: string }) {
     }
   }
 
-  const handleDelete = async (deck: CourseSection) => {
-    if (!course || !window.confirm(`Xóa bộ thẻ "${deck.title}"?`)) return
+  const handleDelete = (deck: CourseSection) => {
+    setPendingDeleteDeck(deck)
+  }
+
+  const confirmDelete = async () => {
+    if (!course || !pendingDeleteDeck) return
     setError("")
-    setDeletingSlug(deck.slug)
+    setDeletingSlug(pendingDeleteDeck.slug)
     try {
-      await deleteCourseDeck(course.slug, deck.slug)
-      setCourse({ ...course, sections: (course.sections ?? []).filter((item) => item.slug !== deck.slug) })
-      if (lastCreatedDeck?.slug === deck.slug) setLastCreatedDeck(null)
+      await deleteCourseDeck(course.slug, pendingDeleteDeck.slug)
+      setCourse({ ...course, sections: (course.sections ?? []).filter((item) => item.slug !== pendingDeleteDeck.slug) })
+      if (lastCreatedDeck?.slug === pendingDeleteDeck.slug) setLastCreatedDeck(null)
+      setPendingDeleteDeck(null)
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Không thể xóa bộ thẻ.")
     } finally {
@@ -183,6 +190,23 @@ export function CourseDeckListView({ courseSlug }: { courseSlug: string }) {
           onSave={handleSave}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteDeck)}
+        title="Xóa bộ thẻ?"
+        description={
+          <>
+            Bộ thẻ <span className="font-medium text-foreground">{pendingDeleteDeck?.title}</span> và các câu hỏi bên trong sẽ bị xóa.
+          </>
+        }
+        confirmLabel="Xóa bộ thẻ"
+        loading={Boolean(deletingSlug)}
+        tone="danger"
+        onClose={() => {
+          if (!deletingSlug) setPendingDeleteDeck(null)
+        }}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }

@@ -1,18 +1,12 @@
 package com.ndchien12.aiinterview.service;
 
 import com.ndchien12.aiinterview.dto.user.PasswordUpdateRequest;
-import com.ndchien12.aiinterview.dto.user.PhoneOtpChallengeResponse;
-import com.ndchien12.aiinterview.dto.user.PhoneOtpRequest;
-import com.ndchien12.aiinterview.dto.user.PhoneOtpVerifyRequest;
 import com.ndchien12.aiinterview.dto.user.UserProfileUpdateRequest;
 import com.ndchien12.aiinterview.dto.user.UserResponse;
 import com.ndchien12.aiinterview.entity.AuthProvider;
 import com.ndchien12.aiinterview.entity.User;
 import com.ndchien12.aiinterview.exception.ApiException;
 import com.ndchien12.aiinterview.repository.UserRepository;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,25 +22,19 @@ import java.time.LocalDate;
 public class UserProfileService {
     private static final int MAX_NAME_CHANGES = 3;
     private static final Duration NAME_CHANGE_COOLDOWN = Duration.ofDays(30);
-    private static final Duration PHONE_OTP_RESEND_COOLDOWN = Duration.ofSeconds(60);
-    private static final int PHONE_OTP_MAX_ATTEMPTS = 5;
-    private static final PhoneNumberUtil PHONE_NUMBER_UTIL = PhoneNumberUtil.getInstance();
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final CloudinaryAvatarService cloudinaryAvatarService;
-    private final PhoneVerificationService phoneVerificationService;
 
     public UserProfileService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            CloudinaryAvatarService cloudinaryAvatarService,
-            PhoneVerificationService phoneVerificationService
+            CloudinaryAvatarService cloudinaryAvatarService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.cloudinaryAvatarService = cloudinaryAvatarService;
-        this.phoneVerificationService = phoneVerificationService;
     }
 
     @Transactional
@@ -55,56 +43,6 @@ public class UserProfileService {
         updateName(user, request.name().trim());
         updateDateOfBirth(user, request.dateOfBirth());
         user.setHeadline(safeString(request.headline()));
-        return UserResponse.from(userRepository.save(user));
-    }
-
-    @Transactional
-    public PhoneOtpChallengeResponse issuePhoneOtp(String email, PhoneOtpRequest request) {
-        User user = findUser(email);
-        String phoneNumber = normalizePhone(request);
-
-        if (phoneNumber.equals(user.getPhoneNumber())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "This phone number is already verified");
-        }
-
-        Instant sentAt = user.getPhoneOtpSentAt();
-        if (sentAt != null && Instant.now().isBefore(sentAt.plus(PHONE_OTP_RESEND_COOLDOWN))) {
-            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Please wait before requesting another phone OTP");
-        }
-
-        long expiresInSeconds = phoneVerificationService.issuePhoneOtp(user, phoneNumber);
-        userRepository.save(user);
-        return new PhoneOtpChallengeResponse(
-                phoneNumber,
-                true,
-                expiresInSeconds,
-                "OTP has been issued for this phone number"
-        );
-    }
-
-    @Transactional
-    public UserResponse verifyPhoneOtp(String email, PhoneOtpVerifyRequest request) {
-        User user = findUser(email);
-        String phoneNumber = user.getPendingPhoneNumber();
-
-        if (phoneNumber == null || phoneNumber.isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Phone verification request was not found");
-        }
-        if (user.getPhoneOtpExpiresAt() == null || Instant.now().isAfter(user.getPhoneOtpExpiresAt())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "OTP has expired. Please request a new code");
-        }
-        if (user.getPhoneOtpAttempts() >= PHONE_OTP_MAX_ATTEMPTS) {
-            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many invalid OTP attempts. Please request a new code");
-        }
-        if (!phoneVerificationService.matches(user, request.otp())) {
-            user.setPhoneOtpAttempts(user.getPhoneOtpAttempts() + 1);
-            userRepository.save(user);
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "OTP is invalid");
-        }
-
-        user.setPhoneNumber(phoneNumber);
-        user.setPhoneVerifiedAt(Instant.now());
-        clearPhoneOtp(user);
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -191,28 +129,4 @@ public class UserProfileService {
         }
     }
 
-    private String normalizePhone(PhoneOtpRequest request) {
-        String countryIso = request.countryIso() == null
-                ? ""
-                : request.countryIso().trim().toUpperCase(Locale.ROOT);
-        String nationalNumber = request.nationalNumber() == null ? "" : request.nationalNumber().trim();
-
-        try {
-            Phonenumber.PhoneNumber phoneNumber = PHONE_NUMBER_UTIL.parse(nationalNumber, countryIso);
-            if (!PHONE_NUMBER_UTIL.isValidNumberForRegion(phoneNumber, countryIso)) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Phone number is invalid for the selected country");
-            }
-            return PHONE_NUMBER_UTIL.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.E164);
-        } catch (NumberParseException ex) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Phone number is invalid for the selected country");
-        }
-    }
-
-    private void clearPhoneOtp(User user) {
-        user.setPendingPhoneNumber(null);
-        user.setPhoneOtpCodeHash(null);
-        user.setPhoneOtpExpiresAt(null);
-        user.setPhoneOtpSentAt(null);
-        user.setPhoneOtpAttempts(0);
-    }
 }

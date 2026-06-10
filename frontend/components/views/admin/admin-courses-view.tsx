@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,12 +41,13 @@ const emptyDraft: Draft = {
   correctOptionIndex: 0,
   difficulty: "INTERMEDIATE",
   topic: "Java Core Foundations",
-  tags: "java, cv-bank",
+  tags: "java, flashcard-bank",
 }
 
 export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }) {
   const [course, setCourse] = useState<Course | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
+  const [pendingDeleteQuestion, setPendingDeleteQuestion] = useState<PracticeQuestion | null>(null)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
 
@@ -172,9 +174,14 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const handleDelete = async (questionId: string) => {
+  const handleDelete = (question: PracticeQuestion) => {
+    setPendingDeleteQuestion(question)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteQuestion) return
     try {
-      await deleteAdminQuestion(questionId)
+      await deleteAdminQuestion(pendingDeleteQuestion.id)
       setMessage("Deleted through Spring Boot admin API.")
     } catch {
       setMessage("Local preview deleted. Connect an admin JWT for persistent delete.")
@@ -186,11 +193,12 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
             ...current,
             sections: current.sections.map((section) => ({
               ...section,
-              questions: section.questions.filter((question) => question.id !== questionId),
+              questions: section.questions.filter((question) => question.id !== pendingDeleteQuestion.id),
             })),
           }
         : current
     )
+    setPendingDeleteQuestion(null)
   }
 
   if (error && !course) {
@@ -219,7 +227,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
           </p>
         </div>
         <Button asChild>
-          <Link href="/admin/courses/course-java-fullstack-cv">Open Course Detail</Link>
+          <Link href="/admin/courses/course-java-fullstack-flashcard">Open Course Detail</Link>
         </Button>
       </div>
 
@@ -341,7 +349,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
                         <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(question, section.id)}>
                           <Pencil className="size-4" />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(question.id)}>
+                        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(question)}>
                           <Trash2 className="size-4" />
                         </Button>
                       </div>
@@ -353,6 +361,20 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
           </div>
         </div>
       </section>
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteQuestion)}
+        title="Delete question?"
+        description={
+          <>
+            This will remove <span className="font-medium text-foreground">{pendingDeleteQuestion?.question}</span> from the question bank.
+          </>
+        }
+        confirmLabel="Delete"
+        tone="danger"
+        onClose={() => setPendingDeleteQuestion(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }

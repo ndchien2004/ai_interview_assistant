@@ -16,14 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Interview Assistant",
-  description: "Practice resume-based interviews with AI-generated questions and feedback.",
+  title: "FreeCard",
+  description: "Learn with flashcards, quizzes, spaced review, and card matching.",
 };
 
 const themeScript = `
 (() => {
   try {
-    const key = "ai-interview-theme";
+    const key = "freecard-theme";
     const stored = window.localStorage.getItem(key);
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const shouldUseDark = stored ? stored === "dark" : prefersDark;

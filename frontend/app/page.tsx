@@ -1,5 +1,5 @@
-import { HomeHero } from "@/components/views/marketing/home-hero"
+import { redirect } from "next/navigation"
 
 export default function Home() {
-  return <HomeHero />
+  redirect("/courses/java-core")
 }

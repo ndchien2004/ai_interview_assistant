@@ -64,7 +64,7 @@ export function JavaCoreCardsView() {
       q: filters.q.trim() || undefined,
     }
 
-    Promise.all([listCourseQuestions("java-fullstack-cv-interview-bank", payload), getQuestionProgress()])
+    Promise.all([listCourseQuestions("java-fullstack-flashcard-bank", payload), getQuestionProgress()])
       .then(([cards, progressRows]) => {
         if (!active) return
         setQuestions(cards)

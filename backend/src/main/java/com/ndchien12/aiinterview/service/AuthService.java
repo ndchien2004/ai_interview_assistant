@@ -232,7 +232,7 @@ public class AuthService {
         user.setName(name);
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode("google:" + googleToken.getSubject() + ":" + System.nanoTime()));
-        user.setHeadline("Candidate preparing for AI-assisted interviews");
+        user.setHeadline("FreeCard learner");
         user.setAvatarUrl(googleToken.getClaimAsString("picture"));
         user.setAuthProvider(AuthProvider.GOOGLE);
         user.setPasswordSet(false);
@@ -256,7 +256,7 @@ public class AuthService {
         user.setName(pendingRegistration.getName());
         user.setEmail(pendingRegistration.getEmail());
         user.setPasswordHash(pendingRegistration.getPasswordHash());
-        user.setHeadline("Candidate preparing for AI-assisted interviews");
+        user.setHeadline("FreeCard learner");
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setPasswordSet(true);
         user.setRole(Role.USER);

@@ -1,6 +1,6 @@
 "use client"
 
-import javaFullstackQuestionBank from "@/data/java_fullstack_cv_interview_bank.json"
+import javaFullstackQuestionBank from "@/data/java_fullstack_flashcard_bank.json"
 import { getAuthToken, makeId } from "@/services/auth-service"
 import type {
   Course,
@@ -17,7 +17,7 @@ import type {
 } from "@/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const COURSE_SLUG = "java-fullstack-cv-interview-bank"
+const COURSE_SLUG = "java-fullstack-flashcard-bank"
 const IMPORTED_QUESTIONS_KEY = "java-fullstack-imported-questions"
 const LOCAL_PROGRESS_KEY = "java-fullstack-progress"
 
@@ -700,7 +700,7 @@ function mockJavaCourse(): Course {
   }
 
   return {
-    id: "course-java-fullstack-cv",
+    id: "course-java-fullstack-flashcard",
     slug: bank.slug,
     title: bank.title,
     description: bank.description,

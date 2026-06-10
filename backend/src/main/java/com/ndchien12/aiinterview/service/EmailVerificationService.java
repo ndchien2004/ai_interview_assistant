@@ -30,7 +30,7 @@ public class EmailVerificationService {
             PasswordEncoder passwordEncoder,
             ObjectProvider<JavaMailSender> mailSenderProvider,
             @Value("${app.mail.enabled:false}") boolean mailEnabled,
-            @Value("${app.mail.from:no-reply@ai-interview.local}") String mailFrom,
+            @Value("${app.mail.from:no-reply@freecard.local}") String mailFrom,
             @Value("${app.auth.otp-expiration-minutes:10}") long otpExpirationMinutes
     ) {
         this.passwordEncoder = passwordEncoder;
@@ -63,7 +63,7 @@ public class EmailVerificationService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(mailFrom);
             message.setTo(pendingRegistration.getEmail());
-            message.setSubject("Verify your AI Interview Assistant account");
+            message.setSubject("Verify your FreeCard account");
             message.setText("""
                     Hi %s,
 

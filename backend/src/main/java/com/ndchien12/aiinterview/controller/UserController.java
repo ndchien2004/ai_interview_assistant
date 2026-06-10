@@ -2,9 +2,6 @@ package com.ndchien12.aiinterview.controller;
 
 import com.ndchien12.aiinterview.dto.user.UserResponse;
 import com.ndchien12.aiinterview.dto.user.PasswordUpdateRequest;
-import com.ndchien12.aiinterview.dto.user.PhoneOtpChallengeResponse;
-import com.ndchien12.aiinterview.dto.user.PhoneOtpRequest;
-import com.ndchien12.aiinterview.dto.user.PhoneOtpVerifyRequest;
 import com.ndchien12.aiinterview.dto.user.UserProfileUpdateRequest;
 import com.ndchien12.aiinterview.service.AuthService;
 import com.ndchien12.aiinterview.service.UserProfileService;
@@ -50,22 +47,6 @@ public class UserController {
             @Valid @RequestBody PasswordUpdateRequest request
     ) {
         return userProfileService.updatePassword(authentication.getName(), request);
-    }
-
-    @PostMapping("/me/phone/otp")
-    public PhoneOtpChallengeResponse issuePhoneOtp(
-            Authentication authentication,
-            @Valid @RequestBody PhoneOtpRequest request
-    ) {
-        return userProfileService.issuePhoneOtp(authentication.getName(), request);
-    }
-
-    @PutMapping("/me/phone/verify")
-    public UserResponse verifyPhoneOtp(
-            Authentication authentication,
-            @Valid @RequestBody PhoneOtpVerifyRequest request
-    ) {
-        return userProfileService.verifyPhoneOtp(authentication.getName(), request);
     }
 
     @PostMapping("/me/avatar")

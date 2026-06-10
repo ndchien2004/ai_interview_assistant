@@ -23,7 +23,7 @@ export default function LoginPage() {
       <section className="relative z-10 flex h-screen items-center px-5 py-5 sm:px-8 lg:px-16">
         <div className="w-full max-w-[400px] rounded-2xl border border-border/80 bg-background/88 px-6 py-7 shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-8 sm:py-8">
           <Link href="/" className="mb-9 inline-flex text-sm font-semibold tracking-tight">
-            AI Interview Assistant
+            FreeCard
           </Link>
           <AuthForm mode="login" compact />
         </div>

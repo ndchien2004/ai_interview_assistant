@@ -45,7 +45,7 @@ public class CloudinaryAvatarService {
         ensureConfigured();
         validateImage(file);
 
-        String publicId = "ai-interview/users/%s/avatar/profile-avatar".formatted(userId);
+        String publicId = "freecard/users/%s/avatar/profile-avatar".formatted(userId);
         try {
             Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
                     "public_id", publicId,

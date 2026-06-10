@@ -1,15 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, BookOpenCheck, Brain, CalendarClock, ClipboardCheck, Layers3, Library } from "lucide-react"
+import { ArrowRight, BookOpen, Brain, CalendarClock, ClipboardCheck, Gamepad2, Library } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
+import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { getCourse, getCourseProgress } from "@/services/course-service"
-import type { Course, CourseProgress, TopicProgress } from "@/types"
+import type { Course, CourseProgress, CourseSection, TopicProgress } from "@/types"
 
-const courseSlug = "java-fullstack-cv-interview-bank"
+const courseSlug = "java-fullstack-flashcard-bank"
 
 export function CourseOverview() {
   const [course, setCourse] = useState<Course | null>(null)
@@ -35,210 +36,164 @@ export function CourseOverview() {
     }
   }, [])
 
-  const topicProgress = useMemo(() => {
-    return Object.fromEntries((progress?.topics ?? []).map((topic) => [topic.topic, topic]))
-  }, [progress])
-
   const sections = useMemo(
     () => [...(course?.sections ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
     [course]
   )
 
-  const nextTopics = useMemo(
-    () =>
-      progress?.topics
-        .map((topic) => ({ ...topic, remaining: topic.total - topic.mastered }))
-        .sort((a, b) => b.due - a.due || b.learning - a.learning || b.remaining - a.remaining)
-        .slice(0, 5) ?? [],
-    [progress]
-  )
+  const topicProgress = useMemo(() => {
+    return Object.fromEntries((progress?.topics ?? []).map((topic) => [topic.topic, topic]))
+  }, [progress])
 
-  const lastStudyLabel = progress?.lastStudyAt ? new Date(progress.lastStudyAt).toLocaleDateString("vi-VN") : "Chưa học"
+  const nextDeck = useMemo(() => {
+    return (
+      sections
+        .map((section) => ({
+          section,
+          progress: topicProgress[section.title],
+        }))
+        .sort((a, b) => deckPriority(b) - deckPriority(a))[0]?.section ?? null
+    )
+  }, [sections, topicProgress])
 
   if (error) {
     return <StateBlock tone="error" title="Không mở được trang chủ" description={error} />
   }
 
   if (!course || !progress) {
-    return <StateBlock title="Đang tải trang chủ" description="FreeCard đang chuẩn bị học phần và tiến độ của bạn..." />
+    return <LoadingSpinner />
   }
 
+  const baseDeckHref = nextDeck ? `/courses/${course.slug}/decks/${nextDeck.slug}` : `/courses/${course.slug}`
+
   return (
-    <div className="space-y-8">
-      <section className="border-b border-border pb-7">
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <BookOpenCheck className="size-4" />
-              Trang chủ học tập
-            </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Java Full-stack</h1>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">{course.description}</p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-            <Button asChild>
-              <Link href="/courses/java-core/learn">
-                Học ngay
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/courses/java-core/review-due">
-                <CalendarClock className="size-4" />
-                Ôn đến hạn
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/courses/java-core/test">
-                <ClipboardCheck className="size-4" />
-                Kiểm tra
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Học hôm nay</h2>
-          <p className="text-sm text-muted-foreground">Lần học gần nhất: {lastStudyLabel}</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Metric label="Cần ôn" value={progress.dueQuestions.toString()} />
-          <Metric label="Đang học" value={progress.learningQuestions.toString()} />
-          <Metric label="Đã thuộc" value={progress.masteredQuestions.toString()} />
-          <Metric label="Chuỗi ngày" value={`${progress.streakDays} ngày`} />
-          <Metric label="Tỉ lệ đúng" value={`${progress.accuracyPercentage ?? 0}%`} />
-        </div>
-      </section>
-
-      <section className="grid gap-7 lg:grid-cols-[1fr_320px]">
+    <div className="space-y-6">
+      <section className="grid gap-4 border-b border-border pb-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Layers3 className="size-4" />
-                {sections.length} học phần
-              </div>
-              <h2 className="mt-1 text-lg font-semibold">Học phần Java Full-stack</h2>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/courses/java-core/cards">
-                <Library className="size-4" />
-                Duyệt thẻ
-              </Link>
-            </Button>
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <BookOpen className="size-4" />
+            Trang chủ
           </div>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Java Full-stack</h1>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href={`/courses/${course.slug}`}>
+            <Library className="size-4" />
+            Mở học phần
+          </Link>
+        </Button>
+      </section>
 
-          <div className="divide-y divide-border border-y border-border">
-            {sections.map((section) => {
-              const item = topicProgress[section.title]
-              return <SectionRow key={section.id} title={section.title} description={section.description} questionCount={section.questions.length} progress={item} />
-            })}
+      <section className="grid gap-3 sm:grid-cols-3">
+        <Metric label="Cần ôn" value={progress.dueQuestions.toString()} />
+        <Metric label="Đang học" value={progress.learningQuestions.toString()} />
+        <Metric label="Đã thuộc" value={`${progress.masteredQuestions}/${progress.totalQuestions}`} />
+      </section>
+
+      <section className="rounded-md border border-border bg-card p-4">
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Học tiếp</p>
+            <h2 className="mt-1 text-xl font-semibold">{nextDeck?.title ?? "Chưa có bộ thẻ"}</h2>
+            {nextDeck ? <p className="mt-1 text-sm text-muted-foreground">{nextDeck.questions.length} câu hỏi</p> : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {nextDeck ? (
+              <>
+                <QuickAction href={`${baseDeckHref}/learn`} icon={Brain} label="Học" />
+                <QuickAction href={`${baseDeckHref}/review-due`} icon={CalendarClock} label="Ôn" />
+                <QuickAction href={`${baseDeckHref}/test`} icon={ClipboardCheck} label="Kiểm tra" />
+                <QuickAction href={`${baseDeckHref}/match`} icon={Gamepad2} label="Ghép thẻ" />
+              </>
+            ) : (
+              <Button asChild>
+                <Link href={`/courses/${course.slug}`}>Tạo bộ thẻ</Link>
+              </Button>
+            )}
           </div>
         </div>
+      </section>
 
-        <aside className="space-y-5">
-          <div className="border-y border-border py-4">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Brain className="size-4" />
-              Gợi ý học tiếp
-            </div>
-            <div className="mt-3 divide-y divide-border">
-              {nextTopics.length ? (
-                nextTopics.map((topic) => (
-                  <Link
-                    key={topic.topic}
-                    href={`/courses/java-core/learn?topic=${encodeURIComponent(topic.topic)}`}
-                    className="flex items-center justify-between gap-3 py-3 text-sm transition-colors hover:text-foreground"
-                  >
-                    <span>{topic.topic}</span>
-                    <span className="text-muted-foreground">{topic.due || topic.learning || topic.remaining}</span>
-                  </Link>
-                ))
-              ) : (
-                <p className="py-3 text-sm text-muted-foreground">Chưa có dữ liệu gợi ý.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="border-y border-border py-4 text-sm">
-            <p className="font-semibold">Tổng quan tiến độ</p>
-            <div className="mt-3">
-              <div className="flex justify-between gap-3 text-muted-foreground">
-                <span>Đã thuộc</span>
-                <span>
-                  {progress.masteredQuestions}/{progress.totalQuestions}
-                </span>
-              </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-foreground" style={{ width: `${progress.masteryPercentage}%` }} />
-              </div>
-            </div>
-            <dl className="mt-4 grid gap-2 text-muted-foreground">
-              <div className="flex justify-between gap-3">
-                <dt>Tổng câu</dt>
-                <dd>{progress.totalQuestions}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt>Đã làm</dt>
-                <dd>{progress.attemptedQuestions}</dd>
-              </div>
-            </dl>
-          </div>
-        </aside>
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Bộ thẻ</h2>
+          <p className="text-sm text-muted-foreground">{sections.length} bộ</p>
+        </div>
+        <div className="grid gap-3">
+          {sections.slice(0, 6).map((section) => (
+            <DeckRow key={section.id} courseSlug={course.slug} section={section} progress={topicProgress[section.title]} />
+          ))}
+        </div>
       </section>
     </div>
   )
 }
 
-function SectionRow({
-  title,
-  description,
-  questionCount,
+function DeckRow({
+  courseSlug,
+  section,
   progress,
 }: {
-  title: string
-  description: string
-  questionCount: number
+  courseSlug: string
+  section: CourseSection
   progress?: TopicProgress
 }) {
   const mastered = progress?.mastered ?? 0
-  const total = progress?.total ?? questionCount
+  const total = progress?.total ?? section.questions.length
   const percentage = progress?.masteryPercentage ?? 0
 
   return (
-    <div className="grid gap-4 py-5 lg:grid-cols-[1fr_220px_120px] lg:items-center">
-      <div>
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
-        <p className="mt-2 text-xs text-muted-foreground">{questionCount} câu hỏi</p>
+    <Link
+      href={`/courses/${courseSlug}/decks/${section.slug}`}
+      className="grid gap-3 rounded-md border border-border bg-card px-4 py-3 transition-colors hover:border-foreground/35 hover:bg-muted/30 sm:grid-cols-[1fr_180px_auto] sm:items-center"
+    >
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold">{section.title}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{section.questions.length} câu hỏi</p>
       </div>
       <div>
         <div className="flex justify-between gap-3 text-xs text-muted-foreground">
-          <span>
-            {mastered}/{total} đã thuộc
-          </span>
-          <span>
-            {progress?.due ?? 0} cần ôn / {progress?.learning ?? 0} đang học
-          </span>
+          <span>{mastered}/{total}</span>
+          <span>{percentage}%</span>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-foreground" style={{ width: `${percentage}%` }} />
         </div>
       </div>
-      <Button variant="outline" size="sm" asChild>
-        <Link href={`/courses/java-core/learn?topic=${encodeURIComponent(title)}`}>Học học phần</Link>
-      </Button>
-    </div>
+      <ArrowRight className="size-4 text-muted-foreground" />
+    </Link>
+  )
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+}) {
+  return (
+    <Button variant="outline" size="sm" asChild>
+      <Link href={href}>
+        <Icon className="size-4" />
+        {label}
+      </Link>
+    </Button>
   )
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-t border-border pt-4">
+    <div className="rounded-md border border-border bg-card p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
     </div>
   )
+}
+
+function deckPriority(item: { section: CourseSection; progress?: TopicProgress }) {
+  const remaining = item.section.questions.length - (item.progress?.mastered ?? 0)
+  return (item.progress?.due ?? 0) * 10 + (item.progress?.learning ?? 0) * 5 + remaining
 }

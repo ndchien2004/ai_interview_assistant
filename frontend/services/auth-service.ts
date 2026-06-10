@@ -1,16 +1,12 @@
 "use client"
 
-import { demoEvaluations, demoResumes, demoSessions, demoUser } from "@/services/mock-data"
-import type { Evaluation, InterviewSession, Resume, User } from "@/types"
+import { demoUser } from "@/services/mock-data"
+import type { User } from "@/types"
 
-const TOKEN_KEY = "ai-interview-token"
-const USER_KEY = "ai-interview-user"
-export const USER_CHANGE_EVENT = "ai-interview-user-change"
-const PENDING_REGISTRATION_KEY = "ai-interview-pending-registration"
-const PENDING_PHONE_KEY = "ai-interview-pending-phone"
-const RESUMES_KEY = "ai-interview-resumes"
-const SESSIONS_KEY = "ai-interview-sessions"
-const EVALUATIONS_KEY = "ai-interview-evaluations"
+const TOKEN_KEY = "freecard-token"
+const USER_KEY = "freecard-user"
+export const USER_CHANGE_EVENT = "freecard-user-change"
+const PENDING_REGISTRATION_KEY = "freecard-pending-registration"
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 const canUseStorage = () => typeof window !== "undefined"
@@ -37,24 +33,6 @@ export type PasswordUpdateInput = {
   currentPassword?: string
   newPassword: string
 }
-
-type PendingPhoneVerification = {
-  phoneNumber: string
-  otp: string
-  expiresAt: string
-}
-
-const PHONE_COUNTRIES = [
-  { iso: "VN", dialCode: "+84" },
-  { iso: "US", dialCode: "+1" },
-  { iso: "JP", dialCode: "+81" },
-  { iso: "KR", dialCode: "+82" },
-  { iso: "SG", dialCode: "+65" },
-  { iso: "TH", dialCode: "+66" },
-  { iso: "AU", dialCode: "+61" },
-  { iso: "GB", dialCode: "+44" },
-  { iso: "CA", dialCode: "+1" },
-] as const
 
 type OtpChallengeResponse = {
   email: string
@@ -91,44 +69,6 @@ const writeJson = <T>(key: string, value: T) => {
 export const makeId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 
-export const seedMockData = () => {
-  if (!canUseStorage()) return
-
-  if (!window.localStorage.getItem(RESUMES_KEY)) {
-    writeJson<Resume[]>(RESUMES_KEY, demoResumes)
-  }
-
-  if (!window.localStorage.getItem(SESSIONS_KEY)) {
-    writeJson<InterviewSession[]>(SESSIONS_KEY, demoSessions)
-  }
-
-  if (!window.localStorage.getItem(EVALUATIONS_KEY)) {
-    writeJson<Evaluation[]>(EVALUATIONS_KEY, demoEvaluations)
-  }
-}
-
-export const getStoredResumes = () => {
-  seedMockData()
-  return readJson<Resume[]>(RESUMES_KEY, [])
-}
-
-export const setStoredResumes = (resumes: Resume[]) => writeJson(RESUMES_KEY, resumes)
-
-export const getStoredSessions = () => {
-  seedMockData()
-  return readJson<InterviewSession[]>(SESSIONS_KEY, [])
-}
-
-export const setStoredSessions = (sessions: InterviewSession[]) => writeJson(SESSIONS_KEY, sessions)
-
-export const getStoredEvaluations = () => {
-  seedMockData()
-  return readJson<Evaluation[]>(EVALUATIONS_KEY, [])
-}
-
-export const setStoredEvaluations = (evaluations: Evaluation[]) =>
-  writeJson(EVALUATIONS_KEY, evaluations)
-
 export async function login(email: string, password: string) {
   if (canUseApi()) {
     try {
@@ -143,14 +83,12 @@ export async function login(email: string, password: string) {
     }
   }
 
-  seedMockData()
-
   const user: User =
     email.trim().toLowerCase() === demoUser.email ? demoUser : {
       ...demoUser,
       id: makeId("user"),
       email: email.trim().toLowerCase(),
-      name: email.split("@")[0] || "Portfolio User",
+      name: email.split("@")[0] || "FreeCard User",
       avatarUrl: null,
       authProvider: "LOCAL",
       passwordSet: true,
@@ -182,8 +120,6 @@ export async function register(name: string, email: string, password: string) {
       }
     }
   }
-
-  seedMockData()
 
   writeJson<PendingRegistration>(PENDING_REGISTRATION_KEY, {
     name: trimmedName,
@@ -228,7 +164,7 @@ export async function verifyRegistrationOtp(email: string, otp: string) {
     id: makeId("user"),
     name: pending.name,
     email: normalizedEmail,
-    headline: "Candidate preparing for AI-assisted interviews",
+    headline: "FreeCard learner",
     avatarUrl: null,
     authProvider: "LOCAL",
     passwordSet: true,
@@ -313,81 +249,6 @@ export async function updateCurrentUser(input: UserProfileUpdateInput) {
   const updated = applyLocalProfileUpdate(user, input)
   return storeCurrentUser({
     ...updated,
-  })
-}
-
-export async function requestPhoneOtp(countryIso: string, nationalNumber: string) {
-  const normalizedCountryIso = countryIso.trim().toUpperCase()
-  const normalizedNationalNumber = normalizeNationalPhone(nationalNumber)
-  const validationError = validatePhoneNumber(normalizedCountryIso, normalizedNationalNumber)
-  if (validationError) throw new Error(validationError)
-
-  if (canUseAuthenticatedApi()) {
-    const response = await fetch(`${API_BASE_URL}/api/users/me/phone/otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders(),
-      },
-      body: JSON.stringify({
-        countryIso: normalizedCountryIso,
-        nationalNumber: normalizedNationalNumber,
-      }),
-    })
-    if (!response.ok) throw new Error(await errorMessage(response, "Unable to send phone OTP."))
-    return (await response.json()) as {
-      phoneNumber: string
-      otpRequired: boolean
-      expiresInSeconds: number
-      message: string
-    }
-  }
-
-  const user = getCurrentUser()
-  if (!user) throw new Error("You must be signed in to verify a phone number.")
-  const normalizedPhone = toE164DemoPhone(normalizedCountryIso, normalizedNationalNumber)
-  if (user.phoneNumber === normalizedPhone) throw new Error("This phone number is already verified.")
-
-  writeJson<PendingPhoneVerification>(PENDING_PHONE_KEY, {
-    phoneNumber: normalizedPhone,
-    otp: "123456",
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-  })
-
-  return {
-    phoneNumber: normalizedPhone,
-    otpRequired: true,
-    expiresInSeconds: 600,
-    message: "Demo mode: use OTP 123456 to verify this phone number.",
-  }
-}
-
-export async function verifyPhoneOtp(otp: string) {
-  if (canUseAuthenticatedApi()) {
-    const response = await fetch(`${API_BASE_URL}/api/users/me/phone/verify`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders(),
-      },
-      body: JSON.stringify({ otp }),
-    })
-    if (!response.ok) throw new Error(await errorMessage(response, "Unable to verify phone number."))
-    return storeCurrentUser((await response.json()) as User)
-  }
-
-  const pending = readJson<PendingPhoneVerification | null>(PENDING_PHONE_KEY, null)
-  if (!pending) throw new Error("Phone verification request was not found.")
-  if (new Date(pending.expiresAt).getTime() < Date.now()) throw new Error("OTP has expired. Please request a new code.")
-  if (pending.otp !== otp.trim()) throw new Error("OTP is invalid.")
-
-  const user = getCurrentUser()
-  if (!user) throw new Error("You must be signed in to verify a phone number.")
-  window.localStorage.removeItem(PENDING_PHONE_KEY)
-  return storeCurrentUser({
-    ...user,
-    phoneNumber: pending.phoneNumber,
-    phoneVerifiedAt: new Date().toISOString(),
   })
 }
 
@@ -490,8 +351,6 @@ function normalizeUser(user: User): User {
     dateOfBirthSetAt: user.dateOfBirthSetAt ?? null,
     nameChangeCount: user.nameChangeCount ?? 0,
     nameLastChangedAt: user.nameLastChangedAt ?? null,
-    phoneNumber: user.phoneNumber ?? null,
-    phoneVerifiedAt: user.phoneVerifiedAt ?? null,
     avatarUrl: user.avatarUrl ?? null,
     authProvider: user.authProvider ?? "LOCAL",
     passwordSet: user.passwordSet ?? true,
@@ -565,26 +424,6 @@ function validatePassword(value: string) {
     return "Password must include uppercase, lowercase, number, and special character."
   }
   return ""
-}
-
-function normalizeNationalPhone(phoneNumber: string) {
-  return phoneNumber.trim().replace(/[^\d]/g, "")
-}
-
-function validatePhoneNumber(countryIso: string, nationalNumber: string) {
-  if (!PHONE_COUNTRIES.some((country) => country.iso === countryIso)) {
-    return "Please choose a supported country code."
-  }
-  if (!/^\d{6,15}$/.test(nationalNumber)) {
-    return "Phone number must contain 6 to 15 digits."
-  }
-  return ""
-}
-
-function toE164DemoPhone(countryIso: string, nationalNumber: string) {
-  const country = PHONE_COUNTRIES.find((item) => item.iso === countryIso)
-  const localNumber = nationalNumber.replace(/^0+/, "")
-  return `${country?.dialCode ?? "+84"}${localNumber}`
 }
 
 function fileToDataUrl(file: File) {

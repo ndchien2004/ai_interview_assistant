@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class CoursePracticeIntegrationTests {
 
-    private static final String QUESTION_BANK_SLUG = "java-fullstack-cv-interview-bank";
+    private static final String QUESTION_BANK_SLUG = "java-fullstack-flashcard-bank";
 
     @Autowired
     private MockMvc mockMvc;

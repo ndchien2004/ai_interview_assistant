@@ -21,7 +21,7 @@ type FeedbackState = TestResult & {
 }
 
 export function JavaCoreTestView({
-  courseSlug = "java-fullstack-cv-interview-bank",
+  courseSlug = "java-fullstack-flashcard-bank",
   deckSlug,
   backHref = "/courses/java-core",
   backLabel = "Java Full-stack",

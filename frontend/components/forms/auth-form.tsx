@@ -154,8 +154,8 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
   const description = isVerifyingRegistration
     ? `We sent a 6-digit OTP to ${verificationEmail}.`
     : isRegister
-      ? "Use a verified email to start practicing interviews."
-      : "Sign in to continue your interview practice."
+      ? "Use a verified email to start learning with FreeCard."
+      : "Sign in to continue your flashcard practice."
 
   const passedPasswordChecks = useMemo(
     () => passwordChecks.map((check) => ({ ...check, passed: check.test(password) })),
@@ -183,7 +183,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
 
           try {
             await loginWithGoogle(response.credential)
-            window.location.assign("/dashboard")
+            window.location.assign("/courses/java-core")
           } catch (caught) {
             setError(caught instanceof Error ? caught.message : "Google sign-in failed.")
           } finally {
@@ -263,7 +263,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
       if (isRegister) {
         if (isVerifyingRegistration) {
           await verifyRegistrationOtp(verificationEmail, otp)
-          window.location.assign("/dashboard")
+            window.location.assign("/courses/java-core")
           return
         }
 
@@ -274,7 +274,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         setFieldErrors({})
       } else {
         await login(email, password)
-        window.location.assign("/dashboard")
+        window.location.assign("/courses/java-core")
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Something went wrong.")

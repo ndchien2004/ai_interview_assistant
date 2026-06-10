@@ -176,10 +176,10 @@ public class PracticeService {
             return selectNextTestQuestion(user, session, sessionAttempts);
         }
 
-        return selectNextInterviewQuestion(user, session.getCourse(), sessionAttempts);
+        return selectNextPracticeQuestion(user, session.getCourse(), sessionAttempts);
     }
 
-    private PracticeQuestion selectNextInterviewQuestion(User user, Course course, List<PracticeAttempt> sessionAttempts) {
+    private PracticeQuestion selectNextPracticeQuestion(User user, Course course, List<PracticeAttempt> sessionAttempts) {
         List<PracticeQuestion> questions = questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(course);
         Set<UUID> attemptedInSession = sessionAttempts.stream()
                 .map(attempt -> attempt.getQuestion().getId())
@@ -437,7 +437,7 @@ public class PracticeService {
     }
 
     private PracticeSessionMode resolveMode(PracticeSessionMode mode) {
-        return mode == null ? PracticeSessionMode.INTERVIEW : mode;
+        return mode == null ? PracticeSessionMode.FLASHCARD : mode;
     }
 
     private String normalizeTopic(String topic) {

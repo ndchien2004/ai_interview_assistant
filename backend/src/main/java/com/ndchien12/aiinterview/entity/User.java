@@ -47,27 +47,6 @@ public class User {
     @Column(name = "name_last_changed_at")
     private Instant nameLastChangedAt;
 
-    @Column(name = "phone_number", length = 32)
-    private String phoneNumber;
-
-    @Column(name = "phone_verified_at")
-    private Instant phoneVerifiedAt;
-
-    @Column(name = "pending_phone_number", length = 32)
-    private String pendingPhoneNumber;
-
-    @Column(name = "phone_otp_code_hash")
-    private String phoneOtpCodeHash;
-
-    @Column(name = "phone_otp_expires_at")
-    private Instant phoneOtpExpiresAt;
-
-    @Column(name = "phone_otp_sent_at")
-    private Instant phoneOtpSentAt;
-
-    @Column(name = "phone_otp_attempts", nullable = false, columnDefinition = "integer default 0")
-    private int phoneOtpAttempts = 0;
-
     @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
 
@@ -190,62 +169,6 @@ public class User {
 
     public void setNameLastChangedAt(Instant nameLastChangedAt) {
         this.nameLastChangedAt = nameLastChangedAt;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public Instant getPhoneVerifiedAt() {
-        return phoneVerifiedAt;
-    }
-
-    public void setPhoneVerifiedAt(Instant phoneVerifiedAt) {
-        this.phoneVerifiedAt = phoneVerifiedAt;
-    }
-
-    public String getPendingPhoneNumber() {
-        return pendingPhoneNumber;
-    }
-
-    public void setPendingPhoneNumber(String pendingPhoneNumber) {
-        this.pendingPhoneNumber = pendingPhoneNumber;
-    }
-
-    public String getPhoneOtpCodeHash() {
-        return phoneOtpCodeHash;
-    }
-
-    public void setPhoneOtpCodeHash(String phoneOtpCodeHash) {
-        this.phoneOtpCodeHash = phoneOtpCodeHash;
-    }
-
-    public Instant getPhoneOtpExpiresAt() {
-        return phoneOtpExpiresAt;
-    }
-
-    public void setPhoneOtpExpiresAt(Instant phoneOtpExpiresAt) {
-        this.phoneOtpExpiresAt = phoneOtpExpiresAt;
-    }
-
-    public Instant getPhoneOtpSentAt() {
-        return phoneOtpSentAt;
-    }
-
-    public void setPhoneOtpSentAt(Instant phoneOtpSentAt) {
-        this.phoneOtpSentAt = phoneOtpSentAt;
-    }
-
-    public int getPhoneOtpAttempts() {
-        return phoneOtpAttempts;
-    }
-
-    public void setPhoneOtpAttempts(int phoneOtpAttempts) {
-        this.phoneOtpAttempts = phoneOtpAttempts;
     }
 
     public String getAvatarUrl() {

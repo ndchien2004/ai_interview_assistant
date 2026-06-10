@@ -47,7 +47,7 @@ const BLOCK_TYPES = [
   { label: "H3", value: "heading-3" },
 ]
 
-const THEME_CHANGE_EVENT = "ai-interview-theme-change"
+const THEME_CHANGE_EVENT = "freecard-theme-change"
 type Theme = "light" | "dark"
 
 export function RichTextEditor({

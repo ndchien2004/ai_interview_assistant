@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class JsonCourseQuestionBankSeeder implements CommandLineRunner {
-    private static final String BANK_PATH = "data/java_fullstack_cv_interview_bank.json";
+    private static final String BANK_PATH = "data/java_fullstack_flashcard_bank.json";
 
     private final CourseRepository courseRepository;
     private final CourseSectionRepository sectionRepository;

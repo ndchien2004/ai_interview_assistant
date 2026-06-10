@@ -37,7 +37,7 @@ public class PracticeSession {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
-    private PracticeSessionMode mode = PracticeSessionMode.INTERVIEW;
+    private PracticeSessionMode mode = PracticeSessionMode.FLASHCARD;
 
     @Column(name = "topic_filter", length = 120)
     private String topicFilter;
@@ -63,7 +63,7 @@ public class PracticeSession {
     void onCreate() {
         createdAt = Instant.now();
         if (mode == null) {
-            mode = PracticeSessionMode.INTERVIEW;
+            mode = PracticeSessionMode.FLASHCARD;
         }
         if (statusFilter == null) {
             statusFilter = FlashcardStatusFilter.ALL;

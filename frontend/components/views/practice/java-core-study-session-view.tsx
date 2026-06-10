@@ -20,7 +20,7 @@ type FeedbackState = {
 
 export function JavaCoreStudySessionView({
   mode,
-  courseSlug = "java-fullstack-cv-interview-bank",
+  courseSlug = "java-fullstack-flashcard-bank",
   deckSlug,
   backHref = "/courses/java-core",
   backLabel = "Java Full-stack",

@@ -45,7 +45,7 @@ export function JavaCoreFlashcardsView() {
       status: statusFilter,
     }
 
-    Promise.all([getCourse(), getCourseProgress(), createFlashcardSession("java-fullstack-cv-interview-bank", filters)])
+    Promise.all([getCourse(), getCourseProgress(), createFlashcardSession("java-fullstack-flashcard-bank", filters)])
       .then(([courseData, progressData, sessionData]) => {
         if (!active) return
         setCourse(courseData)
@@ -374,7 +374,7 @@ function BackHeader() {
         </p>
       </div>
       <Button variant="outline" asChild>
-        <Link href="/courses/java-core/practice">Practice Interview</Link>
+        <Link href="/courses/java-core/learn">Học ngay</Link>
       </Button>
     </div>
   )

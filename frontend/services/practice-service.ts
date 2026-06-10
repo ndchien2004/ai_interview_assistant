@@ -3,6 +3,7 @@
 import { getAuthToken, makeId } from "@/services/auth-service"
 import { getCourse, readLocalProgress, writeLocalChoiceProgress, writeLocalMatchProgress, writeLocalProgress } from "@/services/course-service"
 import type {
+  Course,
   FlashcardStudyFilters,
   PracticeConfidence,
   PracticeQuestion,
@@ -11,7 +12,7 @@ import type {
 } from "@/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const COURSE_SLUG = "java-fullstack-cv-interview-bank"
+const COURSE_SLUG = "java-fullstack-flashcard-bank"
 const LOCAL_SESSIONS_KEY = "java-fullstack-sessions"
 
 const headers = () => {
@@ -25,7 +26,7 @@ const headers = () => {
 const canUseApi = () => Boolean(API_BASE_URL && getAuthToken()?.startsWith("ey"))
 
 export async function createPracticeSession(courseSlug = COURSE_SLUG) {
-  return createSession(courseSlug, "INTERVIEW")
+  return createSession(courseSlug, "FLASHCARD")
 }
 
 export async function createFlashcardSession(courseSlug = COURSE_SLUG, filters: FlashcardStudyFilters = {}) {
@@ -76,7 +77,7 @@ async function createSession(courseSlug: string, mode: PracticeSessionMode, filt
 
 async function createLocalPracticeSession(courseSlug: string, mode: PracticeSessionMode, filters: FlashcardStudyFilters = {}) {
   const course = await getCourse(courseSlug)
-  const questions = filterQuestions(course.sections?.flatMap((section) => section.questions) ?? [], filters)
+  const questions = collectCourseQuestions(course, filters)
   const nextQuestion = selectNextLocalSessionQuestion(mode, questions)
   const session = {
     id: makeId("practice"),
@@ -117,7 +118,7 @@ export async function submitPracticeAttempt(
 ) {
   if (canUseApi()) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/practice-sessions/${session.id}/attempts`, {
+      const response = await fetch(`${API_BASE_URL}/api/study-sessions/${session.id}/answers`, {
         method: "POST",
         headers: headers(),
         body: JSON.stringify({ questionId, answerText, confidence }),
@@ -191,10 +192,10 @@ async function submitLocalPracticeAttempt(
   const lastProgress = readLocalProgress()[questionId]
   const course = await getCourse(session.courseSlug)
   const attemptedIds = new Set([...session.attempts.map((attempt) => attempt.questionId), questionId])
-  const questions = filterQuestions(course.sections?.flatMap((section) => section.questions) ?? [], session.filters ?? {}).filter(
+  const questions = collectCourseQuestions(course, session.filters ?? {}).filter(
     (question) => session.mode !== "TEST" || !attemptedIds.has(question.id)
   )
-  const nextQuestion = selectNextLocalSessionQuestion(session.mode ?? "INTERVIEW", questions, questionId)
+  const nextQuestion = selectNextLocalSessionQuestion(session.mode ?? "FLASHCARD", questions, questionId)
   const nextSession = {
     ...session,
     status: nextQuestion ? "IN_PROGRESS" : "COMPLETED",
@@ -225,7 +226,7 @@ async function submitLocalChoiceAttempt(
   const result = writeLocalChoiceProgress(question, selectedOptionIndex)
   const course = await getCourse(session.courseSlug)
   const attemptedIds = new Set([...session.attempts.map((attempt) => attempt.questionId), question.id])
-  const questions = filterQuestions(course.sections?.flatMap((section) => section.questions) ?? [], session.filters ?? {}).filter(
+  const questions = collectCourseQuestions(course, session.filters ?? {}).filter(
     (item) => session.mode !== "TEST" || !attemptedIds.has(item.id)
   )
   const nextQuestion = selectNextLocalSessionQuestion(session.mode ?? "LEARN", questions, question.id)
@@ -274,6 +275,13 @@ async function submitLocalMatchResult(session: PracticeSession, questionIds: str
 
   writeLocalSession(nextSession)
   return nextSession
+}
+
+function collectCourseQuestions(course: Course, filters: FlashcardStudyFilters) {
+  const sections = filters.deckSlug
+    ? course.sections?.filter((section) => section.slug === filters.deckSlug)
+    : course.sections
+  return filterQuestions(sections?.flatMap((section) => section.questions) ?? [], filters)
 }
 
 function filterQuestions(questions: PracticeQuestion[], filters: FlashcardStudyFilters) {
