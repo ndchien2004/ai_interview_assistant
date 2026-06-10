@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import { StateBlock } from "@/components/common/state-block"
@@ -16,23 +17,47 @@ type MatchCard = {
   text: string
 }
 
-export function CourseDeckMatchView({ courseSlug, deckSlug }: { courseSlug: string; deckSlug: string }) {
+export function CourseDeckMatchView({
+  courseSlug,
+  deckSlug,
+  initialSession,
+  backHref,
+}: {
+  courseSlug: string
+  deckSlug?: string
+  initialSession?: PracticeSession
+  backHref?: string
+}) {
   const [deck, setDeck] = useState<CourseSection | null>(null)
-  const [session, setSession] = useState<PracticeSession | null>(null)
+  const [session, setSession] = useState<PracticeSession | null>(initialSession ?? null)
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set())
   const [mistakes, setMistakes] = useState(0)
   const [saved, setSaved] = useState(false)
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(secondsUntil(initialSession?.expiresAt))
   const [error, setError] = useState("")
 
   useEffect(() => {
     let active = true
-    Promise.all([getCourseDeck(courseSlug, deckSlug), createMatchSession(courseSlug, { deckSlug })])
+    const deckPromise = deckSlug
+      ? getCourseDeck(courseSlug, deckSlug)
+      : Promise.resolve({
+          id: "course",
+          slug: "course",
+          title: "Học phần",
+          description: "",
+          sortOrder: 0,
+          questions: initialSession?.questions ?? [],
+        } satisfies CourseSection)
+    const sessionPromise = initialSession ? Promise.resolve(initialSession) : createMatchSession(courseSlug, deckSlug ? { deckSlug } : {})
+
+    Promise.all([deckPromise, sessionPromise])
       .then(([deckData, sessionData]) => {
         if (!active) return
         setDeck(deckData)
         setSession(sessionData)
+        setRemainingSeconds(secondsUntil(sessionData.expiresAt))
       })
       .catch(() => {
         if (active) setError("Không thể mở ghép thẻ.")
@@ -40,9 +65,22 @@ export function CourseDeckMatchView({ courseSlug, deckSlug }: { courseSlug: stri
     return () => {
       active = false
     }
-  }, [courseSlug, deckSlug])
+  }, [courseSlug, deckSlug, initialSession])
 
-  const questions = useMemo(() => (deck?.questions ?? []).slice(0, 12), [deck])
+  useEffect(() => {
+    if (!session?.expiresAt || saved) return
+    const interval = window.setInterval(() => {
+      const next = secondsUntil(session.expiresAt)
+      setRemainingSeconds(next)
+      if (next === 0) window.clearInterval(interval)
+    }, 1000)
+    return () => window.clearInterval(interval)
+  }, [saved, session?.expiresAt])
+
+  const questions = useMemo(
+    () => (session?.questions?.length ? session.questions : deck?.questions ?? []).slice(0, session?.questionLimit ?? 12),
+    [deck, session]
+  )
   const prompts = useMemo(
     () => shuffle(questions.map((question) => ({ id: `q-${question.id}`, questionId: question.id, text: question.question }))),
     [questions]
@@ -67,12 +105,13 @@ export function CourseDeckMatchView({ courseSlug, deckSlug }: { courseSlug: stri
   }, [selectedAnswer, selectedPrompt])
 
   const complete = questions.length > 0 && matchedIds.size === questions.length
+  const resolvedBackHref = backHref ?? (deckSlug ? `/courses/${courseSlug}/decks/${deckSlug}` : `/courses/${courseSlug}`)
 
   const handleSave = async () => {
     if (!session) return
     setError("")
     try {
-      await submitMatchResult(session, Array.from(matchedIds), mistakes)
+      await submitMatchResult(session, Array.from(matchedIds), mistakes, elapsedSeconds(session))
       setSaved(true)
     } catch {
       setError("Không thể lưu kết quả ghép thẻ.")
@@ -80,17 +119,18 @@ export function CourseDeckMatchView({ courseSlug, deckSlug }: { courseSlug: stri
   }
 
   if (error && !deck) return <StateBlock tone="error" title="Không mở được ghép thẻ" description={error} />
-  if (!deck || !session) return <StateBlock title="Đang chuẩn bị ghép thẻ" description="FreeCard đang xáo câu hỏi và đáp án..." />
+  if (!deck || !session) return <StateBlock title="Đang chuẩn bị ghép thẻ" description="Đang xáo câu hỏi và đáp án..." />
 
   return (
     <div className="space-y-7">
-      <Header href={`/courses/${courseSlug}/decks/${deckSlug}`} label={deck.title} title="Ghép thẻ" />
-      {!questions.length ? <StateBlock title="Bộ thẻ chưa có câu hỏi" description="Import câu hỏi trước khi chơi ghép thẻ." /> : null}
+      <Header href={resolvedBackHref} label={deck.title} title="Ghép thẻ" />
+      {!questions.length ? <StateBlock title="Không có câu hỏi" description="Không có câu phù hợp với cấu hình ghép thẻ." /> : null}
       {questions.length ? (
         <>
-          <section className="grid gap-4 border-y border-border py-4 sm:grid-cols-3">
+          <section className="grid gap-4 border-y border-border py-4 sm:grid-cols-4">
             <Metric label="Đã ghép" value={`${matchedIds.size}/${questions.length}`} />
             <Metric label="Lỗi" value={mistakes.toString()} />
+            <Metric label="Thời gian" value={remainingSeconds === null ? "Không giới hạn" : formatTime(remainingSeconds)} />
             <Metric label="Trạng thái" value={saved ? "Đã lưu" : complete ? "Hoàn thành" : "Đang chơi"} />
           </section>
           <section className="grid gap-4 lg:grid-cols-2">
@@ -98,7 +138,10 @@ export function CourseDeckMatchView({ courseSlug, deckSlug }: { courseSlug: stri
             <Column cards={answers} selectedId={selectedAnswer} matchedIds={matchedIds} onSelect={setSelectedAnswer} />
           </section>
           {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
-          <div className="flex justify-end border-y border-border py-4">
+          <div className="flex flex-wrap justify-between gap-2 border-y border-border py-4">
+            <Button variant="outline" asChild>
+              <Link href={resolvedBackHref}>Tạo phiên mới</Link>
+            </Button>
             <Button disabled={!complete || saved} onClick={handleSave}>
               Lưu kết quả
             </Button>
@@ -155,4 +198,19 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function shuffle<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5)
+}
+
+function secondsUntil(value?: string | null) {
+  if (!value) return null
+  return Math.max(0, Math.round((new Date(value).getTime() - Date.now()) / 1000))
+}
+
+function elapsedSeconds(session: PracticeSession) {
+  return Math.max(0, Math.round((Date.now() - new Date(session.createdAt).getTime()) / 1000))
+}
+
+function formatTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`
 }

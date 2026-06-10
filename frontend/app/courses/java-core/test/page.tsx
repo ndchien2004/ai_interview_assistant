@@ -1,10 +1,10 @@
 import { AppShell } from "@/components/common/app-shell"
-import { JavaCoreTestView } from "@/components/views/practice/java-core-test-view"
+import { PracticeModeView } from "@/components/views/practice/practice-mode-view"
 
 export default function JavaCoreTestPage() {
   return (
     <AppShell>
-      <JavaCoreTestView />
+      <PracticeModeView mode="TEST" courseSlug="java-fullstack-flashcard-bank" backHref="/courses/java-core" backLabel="Java Full-stack" />
     </AppShell>
   )
 }

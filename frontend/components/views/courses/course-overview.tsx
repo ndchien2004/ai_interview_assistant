@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, BookOpen, Brain, CalendarClock, ClipboardCheck, Gamepad2, Library } from "lucide-react"
+import { ArrowRight, BookOpen, Brain, ClipboardCheck, Gamepad2, Library } from "lucide-react"
+import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 
 import { LoadingSpinner } from "@/components/common/loading-spinner"
@@ -101,7 +102,6 @@ export function CourseOverview() {
             {nextDeck ? (
               <>
                 <QuickAction href={`${baseDeckHref}/learn`} icon={Brain} label="Học" />
-                <QuickAction href={`${baseDeckHref}/review-due`} icon={CalendarClock} label="Ôn" />
                 <QuickAction href={`${baseDeckHref}/test`} icon={ClipboardCheck} label="Kiểm tra" />
                 <QuickAction href={`${baseDeckHref}/match`} icon={Gamepad2} label="Ghép thẻ" />
               </>

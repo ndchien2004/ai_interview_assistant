@@ -1,12 +1,12 @@
 import { AppShell } from "@/components/common/app-shell"
-import { CourseDeckMatchView } from "@/components/views/courses/course-deck-match-view"
+import { PracticeModeView } from "@/components/views/practice/practice-mode-view"
 
 export default async function CourseDeckMatchPage({ params }: { params: Promise<{ courseSlug: string; deckSlug: string }> }) {
   const { courseSlug, deckSlug } = await params
 
   return (
     <AppShell>
-      <CourseDeckMatchView courseSlug={courseSlug} deckSlug={deckSlug} />
+      <PracticeModeView mode="MATCH" courseSlug={courseSlug} deckSlug={deckSlug} backHref={`/courses/${courseSlug}/decks/${deckSlug}`} backLabel="Bộ thẻ" />
     </AppShell>
   )
 }

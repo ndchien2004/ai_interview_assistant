@@ -49,9 +49,31 @@ public class PracticeSession {
     @Column(name = "difficulty_filter", length = 40)
     private QuestionDifficulty difficultyFilter;
 
+    @Column(name = "difficulty_filters", length = 160)
+    private String difficultyFilters;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status_filter", length = 40)
     private FlashcardStatusFilter statusFilter = FlashcardStatusFilter.ALL;
+
+    @Column(name = "question_limit")
+    private Integer questionLimit;
+
+    @Column(name = "time_limit_seconds")
+    private Integer timeLimitSeconds;
+
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    @Column(nullable = false)
+    private boolean shuffle = true;
+
+    @Column(name = "query_filter", columnDefinition = "TEXT")
+    private String queryFilter;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "feedback_mode", nullable = false, length = 40)
+    private PracticeSessionFeedbackMode feedbackMode = PracticeSessionFeedbackMode.IMMEDIATE;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -67,6 +89,9 @@ public class PracticeSession {
         }
         if (statusFilter == null) {
             statusFilter = FlashcardStatusFilter.ALL;
+        }
+        if (feedbackMode == null) {
+            feedbackMode = PracticeSessionFeedbackMode.IMMEDIATE;
         }
     }
 
@@ -134,12 +159,68 @@ public class PracticeSession {
         this.difficultyFilter = difficultyFilter;
     }
 
+    public String getDifficultyFilters() {
+        return difficultyFilters;
+    }
+
+    public void setDifficultyFilters(String difficultyFilters) {
+        this.difficultyFilters = difficultyFilters;
+    }
+
     public FlashcardStatusFilter getStatusFilter() {
         return statusFilter;
     }
 
     public void setStatusFilter(FlashcardStatusFilter statusFilter) {
         this.statusFilter = statusFilter;
+    }
+
+    public Integer getQuestionLimit() {
+        return questionLimit;
+    }
+
+    public void setQuestionLimit(Integer questionLimit) {
+        this.questionLimit = questionLimit;
+    }
+
+    public Integer getTimeLimitSeconds() {
+        return timeLimitSeconds;
+    }
+
+    public void setTimeLimitSeconds(Integer timeLimitSeconds) {
+        this.timeLimitSeconds = timeLimitSeconds;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public boolean isShuffle() {
+        return shuffle;
+    }
+
+    public void setShuffle(boolean shuffle) {
+        this.shuffle = shuffle;
+    }
+
+    public String getQueryFilter() {
+        return queryFilter;
+    }
+
+    public void setQueryFilter(String queryFilter) {
+        this.queryFilter = queryFilter;
+    }
+
+    public PracticeSessionFeedbackMode getFeedbackMode() {
+        return feedbackMode;
+    }
+
+    public void setFeedbackMode(PracticeSessionFeedbackMode feedbackMode) {
+        this.feedbackMode = feedbackMode;
     }
 
     public Instant getCreatedAt() {

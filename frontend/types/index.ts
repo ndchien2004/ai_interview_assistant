@@ -24,15 +24,38 @@ export type PracticeSessionMode = "FLASHCARD" | "LEARN" | "TEST" | "REVIEW_DUE" 
 
 export type StudyMode = "FLASHCARD" | "LEARN" | "TEST" | "REVIEW_DUE" | "MATCH"
 
+export type PracticeSessionFeedbackMode = "IMMEDIATE" | "END_ONLY"
+
 export type FlashcardStatusFilter = "ALL" | "UNSEEN" | "LEARNING" | "MASTERED"
 
 export type FlashcardStudyFilters = {
   deckSlug?: string
+  deckSlugs?: string[]
   topic?: string
+  topics?: string[]
   difficulty?: QuestionDifficulty
+  difficulties?: QuestionDifficulty[]
   status?: FlashcardStatusFilter
   due?: boolean
   q?: string
+  query?: string
+  questionLimit?: number
+  timeLimitMinutes?: number
+  shuffle?: boolean
+  feedbackMode?: PracticeSessionFeedbackMode
+}
+
+export type SessionSetupFilters = {
+  scope: "COURSE" | "DECKS"
+  deckSlugs: string[]
+  topics: string[]
+  difficulties: QuestionDifficulty[]
+  status: FlashcardStatusFilter
+  query: string
+  questionLimit: number
+  timeLimitMinutes?: number
+  shuffle: boolean
+  feedbackMode: PracticeSessionFeedbackMode
 }
 
 export type PracticeQuestion = {
@@ -164,13 +187,25 @@ export type PracticeSession = {
   mode?: PracticeSessionMode
   filters?: FlashcardStudyFilters
   deckSlug?: string | null
+  deckSlugs?: string[]
   topic?: string | null
+  topics?: string[]
   difficulty?: QuestionDifficulty | null
+  difficulties?: QuestionDifficulty[]
   statusFilter?: FlashcardStatusFilter | null
+  query?: string | null
+  questionLimit?: number | null
+  timeLimitSeconds?: number | null
+  expiresAt?: string | null
+  shuffle?: boolean
+  feedbackMode?: PracticeSessionFeedbackMode
+  questionCount?: number
+  answeredCount?: number
   status: "IN_PROGRESS" | "COMPLETED"
   createdAt: string
   completedAt?: string | null
   nextQuestion?: PracticeQuestion | null
+  questions?: PracticeQuestion[]
   attempts: PracticeAttempt[]
   lastProgress?: QuestionProgress | null
 }

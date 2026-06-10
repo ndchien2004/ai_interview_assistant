@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/common/app-shell"
-import { JavaCoreStudySessionView } from "@/components/views/practice/java-core-study-session-view"
+import { redirect } from "next/navigation"
 
 export default function JavaCoreReviewDuePage() {
-  return (
-    <AppShell>
-      <JavaCoreStudySessionView mode="REVIEW_DUE" />
-    </AppShell>
-  )
+  redirect("/courses/java-core/learn")
 }

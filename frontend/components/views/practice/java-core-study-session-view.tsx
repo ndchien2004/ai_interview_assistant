@@ -17,6 +17,11 @@ type FeedbackState = {
   correct: boolean
   nextSession: PracticeSession
 }
+type StudyResult = {
+  question: PracticeQuestion
+  selectedOptionIndex: number
+  correct: boolean
+}
 
 export function JavaCoreStudySessionView({
   mode,
@@ -24,26 +29,31 @@ export function JavaCoreStudySessionView({
   deckSlug,
   backHref = "/courses/java-core",
   backLabel = "Java Full-stack",
+  initialSession,
 }: {
   mode: StudySessionMode
   courseSlug?: string
   deckSlug?: string
   backHref?: string
   backLabel?: string
+  initialSession?: PracticeSession
 }) {
-  const [session, setSession] = useState<PracticeSession | null>(null)
+  const [session, setSession] = useState<PracticeSession | null>(initialSession ?? null)
   const [feedback, setFeedback] = useState<FeedbackState | null>(null)
+  const [results, setResults] = useState<StudyResult[]>([])
+  const [finished, setFinished] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const title = mode === "REVIEW_DUE" ? "Ôn tập đến hạn" : "Học trắc nghiệm"
-  const emptyTitle = mode === "REVIEW_DUE" ? "Chưa có câu cần ôn" : "Hoàn thành lượt học"
-  const emptyDescription =
-    mode === "REVIEW_DUE"
-      ? "Hiện tại chưa có câu nào đến lịch ôn. Bạn có thể học câu mới hoặc quay lại sau."
-      : "Bạn đã học hết các câu phù hợp với bộ lọc hiện tại."
-
   useEffect(() => {
+    if (initialSession) {
+      setSession(initialSession)
+      setFeedback(null)
+      setResults([])
+      setFinished(false)
+      return
+    }
+
     let active = true
     const filters: FlashcardStudyFilters = {}
     const topic = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("topic")
@@ -64,9 +74,12 @@ export function JavaCoreStudySessionView({
     return () => {
       active = false
     }
-  }, [backHref, backLabel, courseSlug, deckSlug, mode])
+  }, [courseSlug, deckSlug, initialSession, mode])
 
+  const title = mode === "REVIEW_DUE" ? "Ôn đến hạn" : "Học trắc nghiệm"
   const question = feedback?.question ?? session?.nextQuestion ?? null
+  const totalQuestions = session?.questionCount ?? session?.questions?.length ?? 0
+  const answeredCount = session?.attempts.length ?? 0
 
   const handleChoose = async (selectedOptionIndex: number) => {
     if (!session || !session.nextQuestion || submitting || feedback) return
@@ -89,10 +102,27 @@ export function JavaCoreStudySessionView({
     }
   }
 
-  const handleContinue = () => {
+  const rememberFeedback = () => {
     if (!feedback) return
+    setResults((current) => [
+      ...current,
+      {
+        question: feedback.question,
+        selectedOptionIndex: feedback.selectedOptionIndex,
+        correct: feedback.correct,
+      },
+    ])
     setSession(feedback.nextSession)
     setFeedback(null)
+  }
+
+  const handleContinue = () => {
+    rememberFeedback()
+  }
+
+  const handleFinish = () => {
+    rememberFeedback()
+    setFinished(true)
   }
 
   if (error && !session) {
@@ -100,14 +130,28 @@ export function JavaCoreStudySessionView({
   }
 
   if (!session) {
-    return <StateBlock title="Đang chuẩn bị" description="FreeCard đang chọn câu hỏi phù hợp..." />
+    return <StateBlock title="Đang chuẩn bị" description="Đang chọn câu hỏi phù hợp..." />
   }
 
-  if (!question) {
+  if (finished || !question) {
+    const total = results.length || session.attempts.length
+    const correct = results.filter((result) => result.correct).length || session.attempts.filter((attempt) => attempt.correct).length
+    const weak = results.filter((result) => !result.correct)
+    const percentage = total ? Math.round((correct / total) * 100) : 0
+
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <BackHeader title={title} backHref={backHref} backLabel={backLabel} />
-        <StateBlock title={emptyTitle} description={emptyDescription} />
+        {total ? (
+          <section className="grid gap-4 border-b border-border pb-6 sm:grid-cols-3">
+            <Metric label="Đúng" value={`${correct}/${total}`} />
+            <Metric label="Tỉ lệ đúng" value={`${percentage}%`} />
+            <Metric label="Cần ôn" value={weak.length.toString()} />
+          </section>
+        ) : (
+          <StateBlock title="Chưa có câu nào" description="Không có câu phù hợp với bộ lọc hiện tại." />
+        )}
+        {weak.length ? <WeakQuestions results={weak} /> : null}
         <div className="flex flex-wrap gap-2">
           <Button asChild>
             <Link href={backHref}>Về bộ thẻ</Link>
@@ -123,7 +167,13 @@ export function JavaCoreStudySessionView({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <BackHeader title={title} meta={`${session.attempts.length} câu đã làm`} backHref={backHref} backLabel={backLabel} />
+      <BackHeader title={title} meta={`${answeredCount}/${totalQuestions || "?"} câu đã làm`} backHref={backHref} backLabel={backLabel} />
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-foreground"
+          style={{ width: `${Math.min(100, ((answeredCount + (feedback ? 1 : 0)) / Math.max(1, totalQuestions)) * 100)}%` }}
+        />
+      </div>
       <QuestionPanel question={question} />
       <AnswerOptions
         question={question}
@@ -138,12 +188,21 @@ export function JavaCoreStudySessionView({
             {feedback.correct ? "Chính xác" : "Chưa đúng"}
           </div>
           <div className="text-sm leading-6">
-            <p className="font-medium">Đáp án đúng: {optionLabel(question.correctOptionIndex)}. {question.options[question.correctOptionIndex]}</p>
+            <p className="font-medium">
+              Đáp án đúng: {optionLabel(question.correctOptionIndex)}. {question.options[question.correctOptionIndex]}
+            </p>
             <p className="mt-2 text-muted-foreground">{question.explanation}</p>
           </div>
-          <Button onClick={handleContinue}>Câu tiếp theo</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleContinue}>Câu tiếp theo</Button>
+            <Button variant="outline" onClick={handleFinish}>Kết thúc phiên</Button>
+          </div>
         </section>
-      ) : null}
+      ) : (
+        <div className="flex justify-end border-y border-border py-4">
+          <Button variant="outline" onClick={handleFinish}>Kết thúc phiên</Button>
+        </div>
+      )}
       {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
     </div>
   )
@@ -219,6 +278,34 @@ function AnswerOptions({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+function WeakQuestions({ results }: { results: StudyResult[] }) {
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Câu cần học lại</h2>
+      <div className="mt-3 divide-y divide-border border-y border-border">
+        {results.map((result) => (
+          <details key={result.question.id} className="py-4">
+            <summary className="cursor-pointer list-none text-sm font-medium">{result.question.question}</summary>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Đáp án đúng: {optionLabel(result.question.correctOptionIndex)}. {result.question.options[result.question.correctOptionIndex]}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">{result.question.explanation}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-t border-border pt-4">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
     </div>
   )
 }

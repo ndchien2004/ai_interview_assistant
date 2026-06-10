@@ -53,9 +53,17 @@ async function createSession(courseSlug: string, mode: PracticeSessionMode, filt
   const normalizedFilters = mode === "REVIEW_DUE" ? { ...filters, due: true } : filters
   const requestFilters = {
     topic: normalizedFilters.topic,
+    topics: normalizedFilters.topics,
     deckSlug: normalizedFilters.deckSlug,
+    deckSlugs: normalizedFilters.deckSlugs,
     difficulty: normalizedFilters.difficulty,
+    difficulties: normalizedFilters.difficulties,
     status: normalizedFilters.status,
+    query: normalizedFilters.query ?? normalizedFilters.q,
+    questionLimit: normalizedFilters.questionLimit,
+    timeLimitMinutes: normalizedFilters.timeLimitMinutes,
+    shuffle: normalizedFilters.shuffle,
+    feedbackMode: normalizedFilters.feedbackMode,
   }
 
   if (canUseApi()) {
@@ -77,17 +85,31 @@ async function createSession(courseSlug: string, mode: PracticeSessionMode, filt
 
 async function createLocalPracticeSession(courseSlug: string, mode: PracticeSessionMode, filters: FlashcardStudyFilters = {}) {
   const course = await getCourse(courseSlug)
-  const questions = collectCourseQuestions(course, filters)
-  const nextQuestion = selectNextLocalSessionQuestion(mode, questions)
+  const questionLimit = clampQuestionLimit(filters.questionLimit, mode === "MATCH" ? 12 : 20)
+  const questions = selectLocalSessionQuestions(mode, collectCourseQuestions(course, filters), questionLimit, filters.shuffle ?? mode !== "LEARN")
+  const nextQuestion = questions[0] ?? null
+  const timeLimitSeconds = filters.timeLimitMinutes && filters.timeLimitMinutes > 0 ? Math.min(filters.timeLimitMinutes, 24 * 60) * 60 : null
   const session = {
     id: makeId("practice"),
     courseSlug,
     mode,
     filters,
     deckSlug: filters.deckSlug,
+    deckSlugs: filters.deckSlugs,
+    topics: filters.topics,
+    difficulties: filters.difficulties,
+    query: filters.query ?? filters.q,
+    questionLimit,
+    timeLimitSeconds,
+    expiresAt: timeLimitSeconds ? new Date(Date.now() + timeLimitSeconds * 1000).toISOString() : null,
+    shuffle: filters.shuffle ?? true,
+    feedbackMode: filters.feedbackMode ?? (mode === "TEST" ? "END_ONLY" : "IMMEDIATE"),
+    questionCount: questions.length,
+    answeredCount: 0,
     status: nextQuestion ? "IN_PROGRESS" : "COMPLETED",
     createdAt: new Date().toISOString(),
     nextQuestion,
+    questions,
     attempts: [],
   } satisfies PracticeSession
 
@@ -182,6 +204,28 @@ export async function submitMatchResult(session: PracticeSession, questionIds: s
   return submitLocalMatchResult(session, questionIds, mistakeCount, timeSpentSeconds)
 }
 
+export async function submitTestSession(
+  session: PracticeSession,
+  answers: Array<{ questionId: string; selectedOptionIndex?: number | null; timeSpentSeconds?: number }>,
+  timeSpentSeconds?: number
+) {
+  if (canUseApi()) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/study-sessions/${session.id}/submit`, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ answers, timeSpentSeconds }),
+      })
+      if (!response.ok) throw new Error("Không thể nộp bài kiểm tra.")
+      return response.json() as Promise<PracticeSession>
+    } catch {
+      return submitLocalTestSession(session, answers, timeSpentSeconds)
+    }
+  }
+
+  return submitLocalTestSession(session, answers, timeSpentSeconds)
+}
+
 async function submitLocalPracticeAttempt(
   session: PracticeSession,
   questionId: string,
@@ -190,17 +234,15 @@ async function submitLocalPracticeAttempt(
 ) {
   writeLocalProgress(questionId, confidence, answerText)
   const lastProgress = readLocalProgress()[questionId]
-  const course = await getCourse(session.courseSlug)
   const attemptedIds = new Set([...session.attempts.map((attempt) => attempt.questionId), questionId])
-  const questions = collectCourseQuestions(course, session.filters ?? {}).filter(
-    (question) => session.mode !== "TEST" || !attemptedIds.has(question.id)
-  )
-  const nextQuestion = selectNextLocalSessionQuestion(session.mode ?? "FLASHCARD", questions, questionId)
+  const questions = session.questions ?? []
+  const nextQuestion = questions.find((question) => !attemptedIds.has(question.id)) ?? null
   const nextSession = {
     ...session,
     status: nextQuestion ? "IN_PROGRESS" : "COMPLETED",
     completedAt: nextQuestion ? null : new Date().toISOString(),
     nextQuestion,
+    answeredCount: attemptedIds.size,
     lastProgress: lastProgress ? { questionId, ...lastProgress } : null,
     attempts: [
       ...session.attempts,
@@ -224,17 +266,15 @@ async function submitLocalChoiceAttempt(
   selectedOptionIndex: number
 ) {
   const result = writeLocalChoiceProgress(question, selectedOptionIndex)
-  const course = await getCourse(session.courseSlug)
   const attemptedIds = new Set([...session.attempts.map((attempt) => attempt.questionId), question.id])
-  const questions = collectCourseQuestions(course, session.filters ?? {}).filter(
-    (item) => session.mode !== "TEST" || !attemptedIds.has(item.id)
-  )
-  const nextQuestion = selectNextLocalSessionQuestion(session.mode ?? "LEARN", questions, question.id)
+  const questions = session.questions ?? []
+  const nextQuestion = questions.find((item) => !attemptedIds.has(item.id)) ?? null
   const nextSession = {
     ...session,
     status: nextQuestion ? "IN_PROGRESS" : "COMPLETED",
     completedAt: nextQuestion ? null : new Date().toISOString(),
     nextQuestion,
+    answeredCount: attemptedIds.size,
     lastProgress: result,
     attempts: [
       ...session.attempts,
@@ -260,6 +300,7 @@ async function submitLocalMatchResult(session: PracticeSession, questionIds: str
     status: "COMPLETED",
     completedAt: new Date().toISOString(),
     nextQuestion: null,
+    answeredCount: questionIds.length,
     attempts: [
       ...session.attempts,
       ...questionIds.map((questionId) => ({
@@ -277,9 +318,46 @@ async function submitLocalMatchResult(session: PracticeSession, questionIds: str
   return nextSession
 }
 
+async function submitLocalTestSession(
+  session: PracticeSession,
+  answers: Array<{ questionId: string; selectedOptionIndex?: number | null; timeSpentSeconds?: number }>,
+  timeSpentSeconds?: number
+) {
+  const questionsById = new Map((session.questions ?? []).map((question) => [question.id, question]))
+  const attempts = answers.flatMap((answer) => {
+    const question = questionsById.get(answer.questionId)
+    if (!question || answer.selectedOptionIndex == null) return []
+    const correct = answer.selectedOptionIndex === question.correctOptionIndex
+    const result = writeLocalChoiceProgress(question, answer.selectedOptionIndex)
+    return [
+      {
+        id: makeId("attempt"),
+        questionId: question.id,
+        selectedOptionIndex: answer.selectedOptionIndex,
+        correct,
+        confidence: result.confidence,
+        timeSpentSeconds: answer.timeSpentSeconds ?? timeSpentSeconds,
+        createdAt: new Date().toISOString(),
+      },
+    ]
+  })
+  const nextSession = {
+    ...session,
+    status: "COMPLETED",
+    completedAt: new Date().toISOString(),
+    nextQuestion: null,
+    answeredCount: attempts.length,
+    attempts: [...session.attempts, ...attempts],
+  } satisfies PracticeSession
+
+  writeLocalSession(nextSession)
+  return nextSession
+}
+
 function collectCourseQuestions(course: Course, filters: FlashcardStudyFilters) {
-  const sections = filters.deckSlug
-    ? course.sections?.filter((section) => section.slug === filters.deckSlug)
+  const deckSlugs = new Set([...(filters.deckSlugs ?? []), filters.deckSlug].filter(Boolean) as string[])
+  const sections = deckSlugs.size
+    ? course.sections?.filter((section) => deckSlugs.has(section.slug))
     : course.sections
   return filterQuestions(sections?.flatMap((section) => section.questions) ?? [], filters)
 }
@@ -287,8 +365,10 @@ function collectCourseQuestions(course: Course, filters: FlashcardStudyFilters) 
 function filterQuestions(questions: PracticeQuestion[], filters: FlashcardStudyFilters) {
   const progress = readLocalProgress()
   return questions.filter((question) => {
-    if (filters.topic && question.topic !== filters.topic) return false
-    if (filters.difficulty && question.difficulty !== filters.difficulty) return false
+    const topics = new Set([...(filters.topics ?? []), filters.topic].filter(Boolean) as string[])
+    const difficulties = new Set([...(filters.difficulties ?? []), filters.difficulty].filter(Boolean) as string[])
+    if (topics.size && !topics.has(question.topic)) return false
+    if (difficulties.size && !difficulties.has(question.difficulty)) return false
 
     const confidence = progress[question.id]?.confidence
     if (filters.status === "UNSEEN" && confidence) return false
@@ -298,64 +378,43 @@ function filterQuestions(questions: PracticeQuestion[], filters: FlashcardStudyF
       const due = progress[question.id] ? new Date(progress[question.id].nextReviewAt) <= new Date() : false
       if (filters.due !== due) return false
     }
+    const query = (filters.query ?? filters.q)?.trim().toLowerCase()
+    if (query) {
+      const haystack = [question.question, question.shortAnswer, question.topic, question.tags.join(" ")]
+        .join(" ")
+        .toLowerCase()
+      if (!haystack.includes(query)) return false
+    }
     return true
   })
 }
 
-function selectNextLocalSessionQuestion(
-  mode: PracticeSessionMode,
-  questions: PracticeQuestion[],
-  excludeQuestionId?: string
-) {
-  if (mode === "FLASHCARD" || mode === "LEARN") {
-    return selectNextLocalFlashcardQuestion(questions, excludeQuestionId)
+function selectLocalSessionQuestions(mode: PracticeSessionMode, questions: PracticeQuestion[], limit: number, shuffleQuestions: boolean) {
+  const progress = readLocalProgress()
+  const now = new Date()
+  const sorted = [...questions].sort((a, b) => {
+    if (mode !== "LEARN" && mode !== "FLASHCARD" && mode !== "REVIEW_DUE") return a.sortOrder - b.sortOrder
+    return priority(a) - priority(b) || a.sortOrder - b.sortOrder
+  })
+  const selected = shuffleQuestions && mode !== "LEARN" && mode !== "FLASHCARD" ? shuffle(sorted) : sorted
+  return selected.slice(0, limit)
+
+  function priority(question: PracticeQuestion) {
+    const item = progress[question.id]
+    if (item && new Date(item.nextReviewAt) <= now) return 0
+    if (!item) return 1
+    if (!item.mastered) return 2
+    return 3
   }
-  if (mode === "TEST") {
-    return questions.find((question) => question.id !== excludeQuestionId) ?? null
-  }
-  if (mode === "REVIEW_DUE") {
-    const progress = readLocalProgress()
-    const now = new Date()
-    return (
-      questions.find((question) => {
-        const item = progress[question.id]
-        return question.id !== excludeQuestionId && item && new Date(item.nextReviewAt) <= now
-      }) ?? null
-    )
-  }
-  return selectNextLocalQuestion(questions, excludeQuestionId)
 }
 
-function selectNextLocalQuestion(questions: PracticeQuestion[], excludeQuestionId?: string) {
-  const progress = readLocalProgress()
-  return (
-    questions.find((question) => question.id !== excludeQuestionId && !progress[question.id]) ??
-    questions.find((question) => question.id !== excludeQuestionId && !progress[question.id]?.mastered) ??
-    null
-  )
+function clampQuestionLimit(value: number | undefined, fallback: number) {
+  if (!value || Number.isNaN(value)) return fallback
+  return Math.max(1, Math.min(value, 100))
 }
 
-function selectNextLocalFlashcardQuestion(questions: PracticeQuestion[], excludeQuestionId?: string) {
-  const progress = readLocalProgress()
-  const hasMasteredOnlyDeck = questions.length > 0 && questions.every((question) => progress[question.id]?.mastered)
-
-  if (hasMasteredOnlyDeck) {
-    return (
-      questions.find((question) => question.id !== excludeQuestionId) ??
-      questions[0] ??
-      null
-    )
-  }
-
-  return (
-    questions.find((question) => question.id !== excludeQuestionId && !progress[question.id]) ??
-    questions.find(
-      (question) =>
-        question.id !== excludeQuestionId && !progress[question.id]?.mastered
-    ) ??
-    questions.find((question) => !progress[question.id]?.mastered) ??
-    null
-  )
+function shuffle<T>(items: T[]) {
+  return [...items].sort(() => Math.random() - 0.5)
 }
 
 function readLocalSessions() {

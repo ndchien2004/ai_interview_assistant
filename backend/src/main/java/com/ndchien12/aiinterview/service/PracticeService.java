@@ -1,26 +1,32 @@
 package com.ndchien12.aiinterview.service;
 
-import com.ndchien12.aiinterview.dto.course.QuestionResponse;
 import com.ndchien12.aiinterview.dto.course.QuestionProgressResponse;
+import com.ndchien12.aiinterview.dto.course.QuestionResponse;
 import com.ndchien12.aiinterview.dto.practice.CreatePracticeSessionRequest;
 import com.ndchien12.aiinterview.dto.practice.PracticeAttemptResponse;
 import com.ndchien12.aiinterview.dto.practice.PracticeSessionResponse;
 import com.ndchien12.aiinterview.dto.practice.SubmitAttemptRequest;
 import com.ndchien12.aiinterview.dto.practice.SubmitMatchRequest;
+import com.ndchien12.aiinterview.dto.practice.SubmitTestAnswerRequest;
+import com.ndchien12.aiinterview.dto.practice.SubmitTestRequest;
 import com.ndchien12.aiinterview.entity.Course;
 import com.ndchien12.aiinterview.entity.FlashcardStatusFilter;
 import com.ndchien12.aiinterview.entity.PracticeAttempt;
 import com.ndchien12.aiinterview.entity.PracticeConfidence;
 import com.ndchien12.aiinterview.entity.PracticeQuestion;
 import com.ndchien12.aiinterview.entity.PracticeSession;
+import com.ndchien12.aiinterview.entity.PracticeSessionFeedbackMode;
 import com.ndchien12.aiinterview.entity.PracticeSessionMode;
+import com.ndchien12.aiinterview.entity.PracticeSessionQuestion;
 import com.ndchien12.aiinterview.entity.PracticeSessionStatus;
+import com.ndchien12.aiinterview.entity.QuestionDifficulty;
 import com.ndchien12.aiinterview.entity.User;
 import com.ndchien12.aiinterview.entity.UserQuestionProgress;
 import com.ndchien12.aiinterview.exception.ApiException;
 import com.ndchien12.aiinterview.repository.CourseRepository;
 import com.ndchien12.aiinterview.repository.PracticeAttemptRepository;
 import com.ndchien12.aiinterview.repository.PracticeQuestionRepository;
+import com.ndchien12.aiinterview.repository.PracticeSessionQuestionRepository;
 import com.ndchien12.aiinterview.repository.PracticeSessionRepository;
 import com.ndchien12.aiinterview.repository.UserQuestionProgressRepository;
 import com.ndchien12.aiinterview.repository.UserRepository;
@@ -30,18 +36,29 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class PracticeService {
+    private static final int DEFAULT_LEARN_LIMIT = 20;
+    private static final int DEFAULT_MATCH_LIMIT = 12;
+    private static final int MAX_SESSION_QUESTIONS = 100;
+
     private final CourseRepository courseRepository;
     private final PracticeQuestionRepository questionRepository;
     private final PracticeSessionRepository sessionRepository;
+    private final PracticeSessionQuestionRepository sessionQuestionRepository;
     private final PracticeAttemptRepository attemptRepository;
     private final UserQuestionProgressRepository progressRepository;
     private final UserRepository userRepository;
@@ -50,6 +67,7 @@ public class PracticeService {
             CourseRepository courseRepository,
             PracticeQuestionRepository questionRepository,
             PracticeSessionRepository sessionRepository,
+            PracticeSessionQuestionRepository sessionQuestionRepository,
             PracticeAttemptRepository attemptRepository,
             UserQuestionProgressRepository progressRepository,
             UserRepository userRepository
@@ -57,6 +75,7 @@ public class PracticeService {
         this.courseRepository = courseRepository;
         this.questionRepository = questionRepository;
         this.sessionRepository = sessionRepository;
+        this.sessionQuestionRepository = sessionQuestionRepository;
         this.attemptRepository = attemptRepository;
         this.progressRepository = progressRepository;
         this.userRepository = userRepository;
@@ -66,17 +85,36 @@ public class PracticeService {
     public PracticeSessionResponse createSession(CreatePracticeSessionRequest request, String email) {
         User user = findUser(email);
         Course course = findActiveCourse(request.courseSlug());
+        PracticeSessionMode mode = resolveMode(request.mode());
+        List<String> deckSlugs = normalizeSlugs(request.deckSlugs(), request.deckSlug());
+        List<String> topics = normalizeTopics(request.topics(), request.topic());
+        List<QuestionDifficulty> difficulties = normalizeDifficulties(request.difficulties(), request.difficulty());
+        int questionLimit = resolveQuestionLimit(mode, request.questionLimit());
 
         PracticeSession session = new PracticeSession();
         session.setUser(user);
         session.setCourse(course);
-        session.setMode(resolveMode(request.mode()));
-        session.setDeckFilter(normalizeSlug(request.deckSlug()));
-        session.setTopicFilter(normalizeTopic(request.topic()));
-        session.setDifficultyFilter(request.difficulty());
+        session.setMode(mode);
+        session.setDeckFilter(toCsv(deckSlugs));
+        session.setTopicFilter(toCsv(topics));
+        session.setDifficultyFilter(difficulties.size() == 1 ? difficulties.getFirst() : null);
+        session.setDifficultyFilters(toCsv(difficulties.stream().map(Enum::name).toList()));
         session.setStatusFilter(request.status() == null ? FlashcardStatusFilter.ALL : request.status());
+        session.setQueryFilter(normalizeQuery(request.query()));
+        session.setQuestionLimit(questionLimit);
+        session.setTimeLimitSeconds(resolveTimeLimitSeconds(request.timeLimitMinutes()));
+        session.setShuffle(request.shuffle() == null || request.shuffle());
+        session.setFeedbackMode(request.feedbackMode() == null
+                ? defaultFeedbackMode(mode)
+                : request.feedbackMode());
+        if (session.getTimeLimitSeconds() != null) {
+            session.setExpiresAt(Instant.now().plus(session.getTimeLimitSeconds(), ChronoUnit.SECONDS));
+        }
+
         PracticeSession saved = sessionRepository.save(session);
-        PracticeQuestion next = selectNextQuestion(user, saved, List.of());
+        List<PracticeQuestion> questions = selectSessionQuestions(user, saved, questionLimit);
+        saveSessionQuestions(saved, questions);
+        PracticeQuestion next = selectNextQuestion(saved, List.of());
         completeSessionIfNeeded(saved, next);
 
         return toResponse(saved, next);
@@ -89,7 +127,7 @@ public class PracticeService {
         List<PracticeAttempt> attempts = attemptRepository.findBySessionOrderByCreatedAtAsc(session);
         PracticeQuestion next = session.getStatus() == PracticeSessionStatus.COMPLETED
                 ? null
-                : selectNextQuestion(user, session, attempts);
+                : selectNextQuestion(session, attempts);
 
         return toResponse(session, next);
     }
@@ -98,19 +136,17 @@ public class PracticeService {
     public PracticeSessionResponse submitAttempt(UUID sessionId, SubmitAttemptRequest request, String email) {
         User user = findUser(email);
         PracticeSession session = findOwnedSession(sessionId, user);
-        PracticeQuestion question = questionRepository.findById(request.questionId())
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Question not found"));
-
-        if (!question.getCourse().getId().equals(session.getCourse().getId())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this session course");
+        if (session.getMode() == PracticeSessionMode.TEST && session.getFeedbackMode() == PracticeSessionFeedbackMode.END_ONLY) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Use final test submission for this session");
         }
+        PracticeQuestion question = findSessionQuestion(session, request.questionId());
 
         Boolean correct = null;
         PracticeConfidence confidence = request.confidence();
         if (request.selectedOptionIndex() != null) {
             int selected = request.selectedOptionIndex();
             if (selected < 0 || selected > 3) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Đáp án được chọn phải nằm trong khoảng 0 đến 3");
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Selected answer must be between 0 and 3");
             }
             correct = selected == question.getCorrectOptionIndex();
             confidence = confidenceFromChoice(user, question, correct);
@@ -134,11 +170,95 @@ public class PracticeService {
                 .orElseThrow(() -> new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Progress was not saved"));
 
         List<PracticeAttempt> attempts = attemptRepository.findBySessionOrderByCreatedAtAsc(session);
-        PracticeQuestion next = selectNextQuestion(user, session, attempts);
-
+        PracticeQuestion next = selectNextQuestion(session, attempts);
         completeSessionIfNeeded(session, next);
 
         return toResponse(session, next, QuestionProgressResponse.from(updatedProgress, Instant.now()));
+    }
+
+    @Transactional
+    public PracticeSessionResponse submitTest(UUID sessionId, SubmitTestRequest request, String email) {
+        User user = findUser(email);
+        PracticeSession session = findOwnedSession(sessionId, user);
+        if (session.getMode() != PracticeSessionMode.TEST) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Session is not a test mode session");
+        }
+        if (session.getStatus() == PracticeSessionStatus.COMPLETED) {
+            return toResponse(session, null);
+        }
+
+        Map<UUID, PracticeQuestion> sessionQuestions = sessionQuestionRepository.findBySessionOrderByPositionAsc(session).stream()
+                .map(PracticeSessionQuestion::getQuestion)
+                .collect(Collectors.toMap(PracticeQuestion::getId, Function.identity()));
+        Set<UUID> alreadyAttempted = attemptRepository.findBySessionOrderByCreatedAtAsc(session).stream()
+                .map(attempt -> attempt.getQuestion().getId())
+                .collect(Collectors.toSet());
+
+        for (SubmitTestAnswerRequest answer : request.answers()) {
+            PracticeQuestion question = sessionQuestions.get(answer.questionId());
+            if (question == null || alreadyAttempted.contains(question.getId()) || answer.selectedOptionIndex() == null) {
+                continue;
+            }
+            int selected = answer.selectedOptionIndex();
+            if (selected < 0 || selected > 3) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Selected answer must be between 0 and 3");
+            }
+            boolean correct = selected == question.getCorrectOptionIndex();
+            PracticeConfidence confidence = confidenceFromChoice(user, question, correct);
+            PracticeAttempt attempt = new PracticeAttempt();
+            attempt.setSession(session);
+            attempt.setUser(user);
+            attempt.setQuestion(question);
+            attempt.setSelectedOptionIndex(selected);
+            attempt.setCorrect(correct);
+            attempt.setTimeSpentSeconds(answer.timeSpentSeconds() == null ? request.timeSpentSeconds() : answer.timeSpentSeconds());
+            attempt.setConfidence(confidence);
+            attemptRepository.save(attempt);
+            updateProgress(user, question, confidence, correct);
+            alreadyAttempted.add(question.getId());
+        }
+
+        session.setStatus(PracticeSessionStatus.COMPLETED);
+        session.setCompletedAt(Instant.now());
+        sessionRepository.save(session);
+        return toResponse(session, null);
+    }
+
+    @Transactional
+    public PracticeSessionResponse submitMatch(UUID sessionId, SubmitMatchRequest request, String email) {
+        User user = findUser(email);
+        PracticeSession session = findOwnedSession(sessionId, user);
+        if (session.getMode() != PracticeSessionMode.MATCH) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Session is not a match mode session");
+        }
+
+        Map<UUID, PracticeQuestion> sessionQuestions = sessionQuestionRepository.findBySessionOrderByPositionAsc(session).stream()
+                .map(PracticeSessionQuestion::getQuestion)
+                .collect(Collectors.toMap(PracticeQuestion::getId, Function.identity()));
+
+        Instant now = Instant.now();
+        for (UUID questionId : request.questionIds()) {
+            PracticeQuestion question = sessionQuestions.get(questionId);
+            if (question == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this match session");
+            }
+
+            PracticeAttempt attempt = new PracticeAttempt();
+            attempt.setSession(session);
+            attempt.setUser(user);
+            attempt.setQuestion(question);
+            attempt.setCorrect(true);
+            attempt.setTimeSpentSeconds(request.timeSpentSeconds());
+            attempt.setConfidence(PracticeConfidence.GOOD);
+            attemptRepository.save(attempt);
+            updateMatchProgress(user, question, now);
+        }
+
+        session.setStatus(PracticeSessionStatus.COMPLETED);
+        session.setCompletedAt(now);
+        sessionRepository.save(session);
+
+        return toResponse(session, null);
     }
 
     private PracticeSessionResponse toResponse(PracticeSession session, PracticeQuestion nextQuestion) {
@@ -150,147 +270,96 @@ public class PracticeService {
             PracticeQuestion nextQuestion,
             QuestionProgressResponse lastProgress
     ) {
+        List<QuestionResponse> questions = sessionQuestionRepository.findBySessionOrderByPositionAsc(session).stream()
+                .map(PracticeSessionQuestion::getQuestion)
+                .map(QuestionResponse::from)
+                .toList();
         List<PracticeAttemptResponse> attempts = attemptRepository.findBySessionOrderByCreatedAtAsc(session).stream()
                 .map(PracticeAttemptResponse::from)
                 .toList();
         return PracticeSessionResponse.from(
                 session,
                 nextQuestion == null ? null : QuestionResponse.from(nextQuestion),
+                questions,
                 attempts,
                 lastProgress
         );
     }
 
-    private PracticeQuestion selectNextQuestion(
-            User user,
-            PracticeSession session,
-            List<PracticeAttempt> sessionAttempts
-    ) {
-        if (session.getMode() == PracticeSessionMode.FLASHCARD || session.getMode() == PracticeSessionMode.LEARN) {
-            return selectNextFlashcardQuestion(user, session, sessionAttempts);
-        }
-        if (session.getMode() == PracticeSessionMode.REVIEW_DUE) {
-            return selectNextDueQuestion(user, session, sessionAttempts);
-        }
-        if (session.getMode() == PracticeSessionMode.TEST || session.getMode() == PracticeSessionMode.MATCH) {
-            return selectNextTestQuestion(user, session, sessionAttempts);
-        }
-
-        return selectNextPracticeQuestion(user, session.getCourse(), sessionAttempts);
-    }
-
-    private PracticeQuestion selectNextPracticeQuestion(User user, Course course, List<PracticeAttempt> sessionAttempts) {
-        List<PracticeQuestion> questions = questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(course);
-        Set<UUID> attemptedInSession = sessionAttempts.stream()
-                .map(attempt -> attempt.getQuestion().getId())
-                .collect(Collectors.toSet());
-        List<UserQuestionProgress> progress = progressRepository.findByUserAndQuestionCourseSlug(user, course.getSlug());
-        Set<UUID> seen = progress.stream()
-                .map(item -> item.getQuestion().getId())
-                .collect(Collectors.toSet());
-
-        return questions.stream()
-                .filter(question -> !attemptedInSession.contains(question.getId()))
-                .filter(question -> !seen.contains(question.getId()))
-                .findFirst()
-                .orElseGet(() -> progress.stream()
-                        .filter(item -> !attemptedInSession.contains(item.getQuestion().getId()))
-                        .filter(item -> !item.isMastered() || !item.getNextReviewAt().isAfter(Instant.now()))
-                        .sorted(Comparator
-                                .comparing(UserQuestionProgress::isMastered)
-                                .thenComparing(UserQuestionProgress::getNextReviewAt))
-                        .map(UserQuestionProgress::getQuestion)
-                        .findFirst()
-                        .orElse(null));
-    }
-
-    private PracticeQuestion selectNextFlashcardQuestion(
-            User user,
-            PracticeSession session,
-            List<PracticeAttempt> sessionAttempts
-    ) {
-        Course course = session.getCourse();
-        List<UserQuestionProgress> progress = progressRepository.findByUserAndQuestionCourseSlug(user, course.getSlug());
-        Map<UUID, UserQuestionProgress> progressByQuestionId = progress.stream()
-                .collect(Collectors.toMap(item -> item.getQuestion().getId(), item -> item));
-        List<PracticeQuestion> questions = questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(course).stream()
-                .filter(question -> matchesSessionFilters(question, session, progressByQuestionId.get(question.getId())))
-                .toList();
-        Set<UUID> attemptedInSession = sessionAttempts.stream()
-                .map(attempt -> attempt.getQuestion().getId())
-                .collect(Collectors.toSet());
-        Set<UUID> mastered = progress.stream()
-                .filter(UserQuestionProgress::isMastered)
-                .map(item -> item.getQuestion().getId())
-                .collect(Collectors.toSet());
-        Set<UUID> seen = progress.stream()
-                .map(item -> item.getQuestion().getId())
-                .collect(Collectors.toSet());
-
-        if (session.getStatusFilter() == FlashcardStatusFilter.MASTERED) {
-            return questions.stream()
-                    .filter(question -> !attemptedInSession.contains(question.getId()))
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        return questions.stream()
-                .filter(question -> !attemptedInSession.contains(question.getId()))
-                .filter(question -> !seen.contains(question.getId()))
-                .findFirst()
-                .orElseGet(() -> progress.stream()
-                        .filter(item -> !attemptedInSession.contains(item.getQuestion().getId()))
-                        .filter(item -> !item.isMastered())
-                        .sorted(Comparator
-                                .comparing(UserQuestionProgress::getNextReviewAt)
-                                .thenComparing(item -> item.getQuestion().getSortOrder()))
-                        .map(UserQuestionProgress::getQuestion)
-                        .findFirst()
-                        .orElseGet(() -> questions.stream()
-                                .filter(question -> !mastered.contains(question.getId()))
-                                .findFirst()
-                                .orElse(null)));
-    }
-
-    private PracticeQuestion selectNextDueQuestion(
-            User user,
-            PracticeSession session,
-            List<PracticeAttempt> sessionAttempts
-    ) {
-        Instant now = Instant.now();
-        Set<UUID> attemptedInSession = sessionAttempts.stream()
-                .map(attempt -> attempt.getQuestion().getId())
-                .collect(Collectors.toSet());
-        return progressRepository.findByUserAndQuestionCourseSlug(user, session.getCourse().getSlug()).stream()
-                .filter(item -> !attemptedInSession.contains(item.getQuestion().getId()))
-                .filter(item -> !item.getNextReviewAt().isAfter(now))
-                .filter(item -> matchesSessionFilters(item.getQuestion(), session, item))
-                .sorted(Comparator
-                        .comparing(UserQuestionProgress::getNextReviewAt)
-                        .thenComparing(item -> item.getQuestion().getSortOrder()))
-                .map(UserQuestionProgress::getQuestion)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private PracticeQuestion selectNextTestQuestion(
-            User user,
-            PracticeSession session,
-            List<PracticeAttempt> sessionAttempts
-    ) {
+    private List<PracticeQuestion> selectSessionQuestions(User user, PracticeSession session, int questionLimit) {
         Map<UUID, UserQuestionProgress> progressByQuestionId = progressRepository
                 .findByUserAndQuestionCourseSlug(user, session.getCourse().getSlug())
                 .stream()
                 .collect(Collectors.toMap(item -> item.getQuestion().getId(), item -> item));
+        List<PracticeQuestion> questions = questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(session.getCourse()).stream()
+                .filter(question -> matchesSessionFilters(question, session, progressByQuestionId.get(question.getId())))
+                .toList();
+
+        Comparator<PracticeQuestion> comparator = session.getMode() == PracticeSessionMode.LEARN
+                || session.getMode() == PracticeSessionMode.FLASHCARD
+                || session.getMode() == PracticeSessionMode.REVIEW_DUE
+                ? learningComparator(progressByQuestionId)
+                : Comparator.comparing(PracticeQuestion::getSortOrder);
+
+        List<PracticeQuestion> ordered = questions.stream()
+                .sorted(comparator)
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (session.isShuffle() && session.getMode() != PracticeSessionMode.LEARN && session.getMode() != PracticeSessionMode.FLASHCARD) {
+            Collections.shuffle(ordered);
+        }
+
+        return ordered.stream()
+                .limit(questionLimit)
+                .toList();
+    }
+
+    private Comparator<PracticeQuestion> learningComparator(Map<UUID, UserQuestionProgress> progressByQuestionId) {
+        Instant now = Instant.now();
+        return Comparator
+                .comparingInt((PracticeQuestion question) -> learningPriority(progressByQuestionId.get(question.getId()), now))
+                .thenComparing(PracticeQuestion::getSortOrder);
+    }
+
+    private int learningPriority(UserQuestionProgress progress, Instant now) {
+        if (progress != null && !progress.getNextReviewAt().isAfter(now)) {
+            return 0;
+        }
+        if (progress == null) {
+            return 1;
+        }
+        if (!progress.isMastered()) {
+            return 2;
+        }
+        return 3;
+    }
+
+    private void saveSessionQuestions(PracticeSession session, List<PracticeQuestion> questions) {
+        for (int index = 0; index < questions.size(); index++) {
+            PracticeSessionQuestion sessionQuestion = new PracticeSessionQuestion();
+            sessionQuestion.setSession(session);
+            sessionQuestion.setQuestion(questions.get(index));
+            sessionQuestion.setPosition(index);
+            sessionQuestionRepository.save(sessionQuestion);
+        }
+    }
+
+    private PracticeQuestion selectNextQuestion(PracticeSession session, List<PracticeAttempt> sessionAttempts) {
         Set<UUID> attemptedInSession = sessionAttempts.stream()
                 .map(attempt -> attempt.getQuestion().getId())
                 .collect(Collectors.toSet());
-
-        return questionRepository.findByCourseAndActiveTrueOrderBySortOrderAsc(session.getCourse()).stream()
+        return sessionQuestionRepository.findBySessionOrderByPositionAsc(session).stream()
+                .map(PracticeSessionQuestion::getQuestion)
                 .filter(question -> !attemptedInSession.contains(question.getId()))
-                .filter(question -> matchesSessionFilters(question, session, progressByQuestionId.get(question.getId())))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private PracticeQuestion findSessionQuestion(PracticeSession session, UUID questionId) {
+        return sessionQuestionRepository.findBySessionOrderByPositionAsc(session).stream()
+                .map(PracticeSessionQuestion::getQuestion)
+                .filter(question -> question.getId().equals(questionId))
+                .findFirst()
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this session"));
     }
 
     private boolean matchesSessionFilters(
@@ -298,17 +367,25 @@ public class PracticeService {
             PracticeSession session,
             UserQuestionProgress progress
     ) {
-        if (session == null) {
-            return true;
-        }
-        if (session.getTopicFilter() != null && !session.getTopicFilter().equals(question.getTopic())) {
+        if (!containsCsv(session.getTopicFilter(), question.getTopic())) {
             return false;
         }
-        if (session.getDeckFilter() != null && !session.getDeckFilter().equals(question.getSection().getSlug())) {
+        if (!containsCsv(session.getDeckFilter(), question.getSection().getSlug())) {
             return false;
         }
-        if (session.getDifficultyFilter() != null && session.getDifficultyFilter() != question.getDifficulty()) {
+        if (!containsCsv(session.getDifficultyFilters(), question.getDifficulty().name())) {
             return false;
+        }
+        if (session.getMode() == PracticeSessionMode.REVIEW_DUE && (progress == null || progress.getNextReviewAt().isAfter(Instant.now()))) {
+            return false;
+        }
+        String query = session.getQueryFilter();
+        if (query != null) {
+            String haystack = (question.getQuestion() + " " + question.getShortAnswer() + " " + question.getTopic() + " "
+                    + String.join(" ", question.getTags())).toLowerCase(Locale.ROOT);
+            if (!haystack.contains(query.toLowerCase(Locale.ROOT))) {
+                return false;
+            }
         }
 
         FlashcardStatusFilter status = session.getStatusFilter() == null
@@ -360,43 +437,6 @@ public class PracticeService {
         progressRepository.save(progress);
     }
 
-    @Transactional
-    public PracticeSessionResponse submitMatch(UUID sessionId, SubmitMatchRequest request, String email) {
-        User user = findUser(email);
-        PracticeSession session = findOwnedSession(sessionId, user);
-        if (session.getMode() != PracticeSessionMode.MATCH) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Session is not a match mode session");
-        }
-
-        Instant now = Instant.now();
-        for (UUID questionId : request.questionIds()) {
-            PracticeQuestion question = questionRepository.findById(questionId)
-                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Question not found"));
-            if (!question.getCourse().getId().equals(session.getCourse().getId())) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this session course");
-            }
-            if (!matchesSessionFilters(question, session, progressRepository.findByUserAndQuestion(user, question).orElse(null))) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Question does not belong to this match session");
-            }
-
-            PracticeAttempt attempt = new PracticeAttempt();
-            attempt.setSession(session);
-            attempt.setUser(user);
-            attempt.setQuestion(question);
-            attempt.setCorrect(true);
-            attempt.setTimeSpentSeconds(request.timeSpentSeconds());
-            attempt.setConfidence(PracticeConfidence.GOOD);
-            attemptRepository.save(attempt);
-            updateMatchProgress(user, question, now);
-        }
-
-        session.setStatus(PracticeSessionStatus.COMPLETED);
-        session.setCompletedAt(now);
-        sessionRepository.save(session);
-
-        return toResponse(session, null);
-    }
-
     private void updateMatchProgress(User user, PracticeQuestion question, Instant now) {
         UserQuestionProgress progress = progressRepository.findByUserAndQuestion(user, question)
                 .orElseGet(() -> {
@@ -440,18 +480,83 @@ public class PracticeService {
         return mode == null ? PracticeSessionMode.FLASHCARD : mode;
     }
 
-    private String normalizeTopic(String topic) {
-        if (topic == null || topic.isBlank()) {
-            return null;
-        }
-        return topic.trim();
+    private PracticeSessionFeedbackMode defaultFeedbackMode(PracticeSessionMode mode) {
+        return mode == PracticeSessionMode.TEST
+                ? PracticeSessionFeedbackMode.END_ONLY
+                : PracticeSessionFeedbackMode.IMMEDIATE;
     }
 
-    private String normalizeSlug(String slug) {
-        if (slug == null || slug.isBlank()) {
+    private int resolveQuestionLimit(PracticeSessionMode mode, Integer requested) {
+        int fallback = mode == PracticeSessionMode.MATCH ? DEFAULT_MATCH_LIMIT : DEFAULT_LEARN_LIMIT;
+        int value = requested == null ? fallback : requested;
+        return Math.max(1, Math.min(value, MAX_SESSION_QUESTIONS));
+    }
+
+    private Integer resolveTimeLimitSeconds(Integer minutes) {
+        if (minutes == null || minutes <= 0) {
             return null;
         }
-        return slug.trim().toLowerCase();
+        return Math.min(minutes, 24 * 60) * 60;
+    }
+
+    private List<String> normalizeSlugs(List<String> values, String fallback) {
+        return normalizeStrings(values, fallback).stream()
+                .map(String::toLowerCase)
+                .toList();
+    }
+
+    private List<String> normalizeTopics(List<String> values, String fallback) {
+        return normalizeStrings(values, fallback);
+    }
+
+    private List<String> normalizeStrings(List<String> values, String fallback) {
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        if (values != null) {
+            values.stream()
+                    .filter(value -> value != null && !value.isBlank())
+                    .map(String::trim)
+                    .forEach(normalized::add);
+        }
+        if (fallback != null && !fallback.isBlank()) {
+            normalized.add(fallback.trim());
+        }
+        return List.copyOf(normalized);
+    }
+
+    private List<QuestionDifficulty> normalizeDifficulties(List<QuestionDifficulty> values, QuestionDifficulty fallback) {
+        LinkedHashSet<QuestionDifficulty> normalized = new LinkedHashSet<>();
+        if (values != null) {
+            values.stream()
+                    .filter(value -> value != null)
+                    .forEach(normalized::add);
+        }
+        if (fallback != null) {
+            normalized.add(fallback);
+        }
+        return List.copyOf(normalized);
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        return query.trim();
+    }
+
+    private String toCsv(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+        return String.join(",", values);
+    }
+
+    private boolean containsCsv(String csv, String value) {
+        if (csv == null || csv.isBlank()) {
+            return true;
+        }
+        return Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .anyMatch(item -> item.equals(value));
     }
 
     private PracticeSession findOwnedSession(UUID sessionId, User user) {

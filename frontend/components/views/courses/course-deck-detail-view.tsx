@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Brain, CalendarClock, ClipboardCheck, Gamepad2, Upload } from "lucide-react"
+import { ArrowLeft, ArrowRight, Brain, ClipboardCheck, Gamepad2, Upload } from "lucide-react"
+import type React from "react"
 import { useEffect, useState } from "react"
 
 import { StateBlock } from "@/components/common/state-block"
@@ -36,7 +37,7 @@ export function CourseDeckDetailView({ courseSlug, deckSlug }: { courseSlug: str
   }
 
   if (!course || !deck) {
-    return <StateBlock title="Đang tải bộ thẻ" description="FreeCard đang chuẩn bị các lựa chọn học..." />
+    return <StateBlock title="Đang tải bộ thẻ" description="Đang chuẩn bị các lựa chọn học..." />
   }
 
   const baseHref = `/courses/${course.slug}/decks/${deck.slug}`
@@ -55,10 +56,9 @@ export function CourseDeckDetailView({ courseSlug, deckSlug }: { courseSlug: str
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Action href={`${baseHref}/learn`} icon={Brain} label="Học" description="Luyện câu hỏi mới và câu chưa thuộc." />
-        <Action href={`${baseHref}/review-due`} icon={CalendarClock} label="Ôn đến hạn" description="Chỉ lấy thẻ đã tới lịch ôn." />
-        <Action href={`${baseHref}/test`} icon={ClipboardCheck} label="Kiểm tra" description="Làm trắc nghiệm trong bộ thẻ này." />
-        <Action href={`${baseHref}/match`} icon={Gamepad2} label="Ghép thẻ" description="Ghép câu hỏi với đáp án như Quizlet." />
+        <Action href={`${baseHref}/learn`} icon={Brain} label="Học" description="Luyện câu mới, câu đến hạn và câu chưa thuộc." />
+        <Action href={`${baseHref}/test`} icon={ClipboardCheck} label="Kiểm tra" description="Tùy chọn phạm vi, số câu và thời gian." />
+        <Action href={`${baseHref}/match`} icon={Gamepad2} label="Ghép thẻ" description="Ghép câu hỏi với đáp án trong một phiên tùy chọn." />
         <Action href={`${baseHref}/import`} icon={Upload} label="Import" description="Thêm JSON vào đúng bộ thẻ này." />
       </section>
 

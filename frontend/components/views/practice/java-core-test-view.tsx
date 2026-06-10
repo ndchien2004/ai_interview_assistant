@@ -1,47 +1,49 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, RotateCcw, XCircle } from "lucide-react"
+import { ArrowLeft, Flag, RotateCcw, Send } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { createTestSession, submitMultipleChoiceAnswer } from "@/services/practice-service"
+import { createTestSession, submitTestSession } from "@/services/practice-service"
 import type { PracticeQuestion, PracticeSession } from "@/types"
-
-type TestResult = {
-  question: PracticeQuestion
-  selectedOptionIndex: number
-  correct: boolean
-}
-
-type FeedbackState = TestResult & {
-  nextSession: PracticeSession
-}
 
 export function JavaCoreTestView({
   courseSlug = "java-fullstack-flashcard-bank",
   deckSlug,
   backHref = "/courses/java-core",
   backLabel = "Java Full-stack",
+  initialSession,
 }: {
   courseSlug?: string
   deckSlug?: string
   backHref?: string
   backLabel?: string
+  initialSession?: PracticeSession
 }) {
-  const [session, setSession] = useState<PracticeSession | null>(null)
-  const [feedback, setFeedback] = useState<FeedbackState | null>(null)
+  const [session, setSession] = useState<PracticeSession | null>(initialSession ?? null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [marked, setMarked] = useState<Set<string>>(new Set())
+  const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [results, setResults] = useState<TestResult[]>([])
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null)
   const [error, setError] = useState("")
 
   useEffect(() => {
+    if (initialSession) {
+      setSession(initialSession)
+      setRemainingSeconds(secondsUntil(initialSession.expiresAt))
+      return
+    }
     let active = true
     createTestSession(courseSlug, deckSlug ? { deckSlug } : {})
       .then((nextSession) => {
-        if (active) setSession(nextSession)
+        if (!active) return
+        setSession(nextSession)
+        setRemainingSeconds(secondsUntil(nextSession.expiresAt))
       })
       .catch(() => {
         if (active) setError("Không thể bắt đầu bài kiểm tra.")
@@ -49,44 +51,45 @@ export function JavaCoreTestView({
     return () => {
       active = false
     }
-  }, [courseSlug, deckSlug])
+  }, [courseSlug, deckSlug, initialSession])
 
-  const question = feedback?.question ?? session?.nextQuestion ?? null
-  const score = useMemo(() => results.filter((result) => result.correct).length, [results])
+  const questions = session?.questions?.length ? session.questions : session?.nextQuestion ? [session.nextQuestion] : []
+  const question = questions[currentIndex] ?? null
+  const elapsedSeconds = useMemo(() => {
+    if (!session) return undefined
+    return Math.max(0, Math.round((Date.now() - new Date(session.createdAt).getTime()) / 1000))
+  }, [session, submitted, submitting, currentIndex])
 
-  const handleChoose = async (selectedOptionIndex: number) => {
-    if (!session || !session.nextQuestion || feedback || submitting) return
+  useEffect(() => {
+    if (!session?.expiresAt || submitted) return
+    const interval = window.setInterval(() => {
+      const next = secondsUntil(session.expiresAt)
+      setRemainingSeconds(next)
+      if (next === 0) {
+        window.clearInterval(interval)
+        void handleSubmit()
+      }
+    }, 1000)
+    return () => window.clearInterval(interval)
+  })
 
-    const currentQuestion = session.nextQuestion
+  const handleSubmit = async () => {
+    if (!session || submitting || submitted) return
     setSubmitting(true)
     setError("")
     try {
-      const nextSession = await submitMultipleChoiceAnswer(session, currentQuestion, selectedOptionIndex)
-      setFeedback({
-        question: currentQuestion,
-        selectedOptionIndex,
-        correct: selectedOptionIndex === currentQuestion.correctOptionIndex,
-        nextSession,
-      })
+      const nextSession = await submitTestSession(
+        session,
+        questions.map((item) => ({ questionId: item.id, selectedOptionIndex: answers[item.id] })),
+        elapsedSeconds
+      )
+      setSession(nextSession)
+      setSubmitted(true)
     } catch {
-      setError("Không thể lưu đáp án.")
+      setError("Không thể nộp bài kiểm tra.")
     } finally {
       setSubmitting(false)
     }
-  }
-
-  const handleContinue = () => {
-    if (!feedback) return
-    setResults((current) => [
-      ...current,
-      {
-        question: feedback.question,
-        selectedOptionIndex: feedback.selectedOptionIndex,
-        correct: feedback.correct,
-      },
-    ])
-    setSession(feedback.nextSession)
-    setFeedback(null)
   }
 
   if (error && !session) {
@@ -94,82 +97,158 @@ export function JavaCoreTestView({
   }
 
   if (!session) {
-    return <StateBlock title="Đang tạo bài kiểm tra" description="FreeCard đang chọn câu hỏi từ bộ thẻ..." />
+    return <StateBlock title="Đang tạo bài kiểm tra" description="Đang chọn câu hỏi từ bộ thẻ..." />
   }
 
-  if (!question) {
-    const total = results.length
-    const percentage = total ? Math.round((score / total) * 100) : 0
-    const weak = results.filter((result) => !result.correct)
+  if (!questions.length) {
+    return <StateBlock title="Không có câu hỏi" description="Không có câu phù hợp với cấu hình kiểm tra." />
+  }
 
-    return (
-      <div className="mx-auto max-w-5xl space-y-6">
-        <BackHeader backHref={backHref} backLabel={backLabel} />
-        <section className="grid gap-4 border-b border-border pb-6 sm:grid-cols-3">
-          <Metric label="Điểm" value={`${score}/${total}`} />
-          <Metric label="Tỉ lệ đúng" value={`${percentage}%`} />
-          <Metric label="Cần ôn" value={weak.length.toString()} />
-        </section>
-        {weak.length ? (
-          <div>
-            <h2 className="text-lg font-semibold">Câu cần ôn lại</h2>
-            <div className="mt-3 divide-y divide-border border-y border-border">
-              {weak.map((result) => (
-                <details key={result.question.id} className="py-4">
-                  <summary className="cursor-pointer list-none text-sm font-medium">{result.question.question}</summary>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Đáp án đúng: {optionLabel(result.question.correctOptionIndex)}.{" "}
-                    {result.question.options[result.question.correctOptionIndex]}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">{result.question.explanation}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <StateBlock title="Làm rất tốt" description="Bạn trả lời đúng toàn bộ câu trong lượt kiểm tra này." />
-        )}
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href={backHref}>Ôn tiếp</Link>
-          </Button>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            <RotateCcw className="size-4" />
-            Kiểm tra lượt mới
-          </Button>
-        </div>
-      </div>
-    )
+  if (submitted || session.status === "COMPLETED") {
+    return <TestSummary session={session} questions={questions} answers={answers} backHref={backHref} backLabel={backLabel} />
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <BackHeader meta={`${results.length} câu đã làm`} backHref={backHref} backLabel={backLabel} />
-      <section className="space-y-4">
-        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span>{question.topic}</span>
-          <span>/</span>
-          <span>{difficultyLabel(question.difficulty)}</span>
-        </div>
-        <h2 className="text-2xl font-semibold leading-snug tracking-tight">{question.question}</h2>
-      </section>
-      <AnswerOptions
-        question={question}
-        selectedOptionIndex={feedback?.selectedOptionIndex ?? null}
-        disabled={submitting || Boolean(feedback)}
-        onChoose={handleChoose}
+      <BackHeader
+        meta={`${Object.keys(answers).length}/${questions.length} câu đã trả lời${remainingSeconds !== null ? ` / ${formatTime(remainingSeconds)}` : ""}`}
+        backHref={backHref}
+        backLabel={backLabel}
       />
-      {feedback ? (
-        <section className="space-y-4 border-y border-border py-5">
-          <div className={cn("flex items-center gap-2 text-sm font-semibold", feedback.correct ? "text-emerald-600" : "text-red-600")}>
-            {feedback.correct ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}
-            {feedback.correct ? "Chính xác" : "Chưa đúng"}
-          </div>
-          <p className="text-sm leading-6 text-muted-foreground">{question.explanation}</p>
-          <Button onClick={handleContinue}>Câu tiếp theo</Button>
-        </section>
+
+      <section className="grid gap-2 sm:grid-cols-10">
+        {questions.map((item, index) => {
+          const answered = answers[item.id] !== undefined
+          const flagged = marked.has(item.id)
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setCurrentIndex(index)}
+              className={cn(
+                "h-10 rounded-md border border-border text-sm font-medium",
+                currentIndex === index && "border-foreground bg-foreground text-background",
+                answered && currentIndex !== index && "bg-muted",
+                flagged && "border-amber-400"
+              )}
+            >
+              {index + 1}
+            </button>
+          )
+        })}
+      </section>
+
+      {question ? (
+        <>
+          <section className="space-y-4">
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span>{question.topic}</span>
+              <span>/</span>
+              <span>{difficultyLabel(question.difficulty)}</span>
+            </div>
+            <h2 className="text-2xl font-semibold leading-snug tracking-tight">{question.question}</h2>
+            {question.codeSnippet ? (
+              <pre className="overflow-auto border-y border-border bg-muted/30 p-4 text-sm">
+                <code>{question.codeSnippet}</code>
+              </pre>
+            ) : null}
+          </section>
+          <AnswerOptions question={question} selectedOptionIndex={answers[question.id] ?? null} onChoose={(index) => setAnswers({ ...answers, [question.id]: index })} />
+        </>
       ) : null}
+
+      <div className="flex flex-wrap justify-between gap-2 border-y border-border py-4">
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (!question) return
+            setMarked((current) => {
+              const next = new Set(current)
+              if (next.has(question.id)) next.delete(question.id)
+              else next.add(question.id)
+              return next
+            })
+          }}
+        >
+          <Flag className="size-4" />
+          Đánh dấu
+        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={currentIndex === 0} onClick={() => setCurrentIndex((value) => Math.max(0, value - 1))}>
+            Trước
+          </Button>
+          <Button variant="outline" disabled={currentIndex >= questions.length - 1} onClick={() => setCurrentIndex((value) => Math.min(questions.length - 1, value + 1))}>
+            Sau
+          </Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            <Send className="size-4" />
+            Nộp bài
+          </Button>
+        </div>
+      </div>
       {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
+    </div>
+  )
+}
+
+function TestSummary({
+  session,
+  questions,
+  answers,
+  backHref,
+  backLabel,
+}: {
+  session: PracticeSession
+  questions: PracticeQuestion[]
+  answers: Record<string, number>
+  backHref: string
+  backLabel: string
+}) {
+  const submittedAnswers = Object.fromEntries(session.attempts.map((attempt) => [attempt.questionId, attempt.selectedOptionIndex]))
+  const answerMap = Object.keys(submittedAnswers).length ? submittedAnswers : answers
+  const scored = questions.map((question) => ({
+    question,
+    selectedOptionIndex: answerMap[question.id] as number | undefined,
+    correct: answerMap[question.id] === question.correctOptionIndex,
+  }))
+  const score = scored.filter((item) => item.correct).length
+  const weak = scored.filter((item) => !item.correct)
+  const percentage = questions.length ? Math.round((score / questions.length) * 100) : 0
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-6">
+      <BackHeader backHref={backHref} backLabel={backLabel} />
+      <section className="grid gap-4 border-b border-border pb-6 sm:grid-cols-3">
+        <Metric label="Điểm" value={`${score}/${questions.length}`} />
+        <Metric label="Tỉ lệ đúng" value={`${percentage}%`} />
+        <Metric label="Cần ôn" value={weak.length.toString()} />
+      </section>
+      <section>
+        <h2 className="text-lg font-semibold">Kết quả chi tiết</h2>
+        <div className="mt-3 divide-y divide-border border-y border-border">
+          {weak.map((result) => (
+            <details key={result.question.id} className="py-4">
+              <summary className="cursor-pointer list-none text-sm font-medium">{result.question.question}</summary>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Bạn chọn: {result.selectedOptionIndex === undefined ? "Chưa trả lời" : `${optionLabel(result.selectedOptionIndex)}. ${result.question.options[result.selectedOptionIndex]}`}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Đáp án đúng: {optionLabel(result.question.correctOptionIndex)}. {result.question.options[result.question.correctOptionIndex]}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{result.question.explanation}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild>
+          <Link href={backHref}>{backLabel}</Link>
+        </Button>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          <RotateCcw className="size-4" />
+          Kiểm tra lượt mới
+        </Button>
+      </div>
     </div>
   )
 }
@@ -194,38 +273,30 @@ function BackHeader({ meta, backHref, backLabel }: { meta?: string; backHref: st
 function AnswerOptions({
   question,
   selectedOptionIndex,
-  disabled,
   onChoose,
 }: {
   question: PracticeQuestion
   selectedOptionIndex: number | null
-  disabled: boolean
   onChoose: (index: number) => void
 }) {
   return (
     <div className="grid gap-3">
-      {question.options.map((option, index) => {
-        const selected = selectedOptionIndex === index
-        const correct = selectedOptionIndex !== null && question.correctOptionIndex === index
-        return (
-          <button
-            key={`${index}-${option}`}
-            type="button"
-            disabled={disabled}
-            onClick={() => onChoose(index)}
-            className={cn(
-              "grid min-h-14 grid-cols-[32px_1fr] items-center gap-3 border border-border px-4 py-3 text-left text-sm transition-colors hover:bg-muted disabled:cursor-default",
-              selected && !correct && "border-red-300 bg-red-50 text-red-700",
-              correct && "border-emerald-300 bg-emerald-50 text-emerald-700"
-            )}
-          >
-            <span className="flex size-8 items-center justify-center rounded-full border border-current text-xs font-semibold">
-              {optionLabel(index)}
-            </span>
-            <span>{option}</span>
-          </button>
-        )
-      })}
+      {question.options.map((option, index) => (
+        <button
+          key={`${index}-${option}`}
+          type="button"
+          onClick={() => onChoose(index)}
+          className={cn(
+            "grid min-h-14 grid-cols-[32px_1fr] items-center gap-3 border border-border px-4 py-3 text-left text-sm transition-colors hover:bg-muted",
+            selectedOptionIndex === index && "border-foreground bg-muted"
+          )}
+        >
+          <span className="flex size-8 items-center justify-center rounded-full border border-current text-xs font-semibold">
+            {optionLabel(index)}
+          </span>
+          <span>{option}</span>
+        </button>
+      ))}
     </div>
   )
 }
@@ -247,4 +318,15 @@ function difficultyLabel(value: string) {
   if (value === "BEGINNER") return "Cơ bản"
   if (value === "INTERMEDIATE") return "Trung bình"
   return "Nâng cao"
+}
+
+function secondsUntil(value?: string | null) {
+  if (!value) return null
+  return Math.max(0, Math.round((new Date(value).getTime() - Date.now()) / 1000))
+}
+
+function formatTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`
 }

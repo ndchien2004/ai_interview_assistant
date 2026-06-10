@@ -92,14 +92,25 @@ export async function listCourseQuestions(slug = COURSE_SLUG, filters: Flashcard
   if (canUseApi()) {
     try {
       const params = new URLSearchParams()
-      if (filters.deckSlug) params.set("deckSlug", filters.deckSlug)
-      if (filters.topic) params.set("topic", filters.topic)
-      if (filters.difficulty) params.set("difficulty", filters.difficulty)
+      const deckSlugs = [...(filters.deckSlugs ?? []), filters.deckSlug].filter(Boolean) as string[]
+      const topics = [...(filters.topics ?? []), filters.topic].filter(Boolean) as string[]
+      const difficulties = [...(filters.difficulties ?? []), filters.difficulty].filter(Boolean) as QuestionDifficulty[]
+      if (deckSlugs.length === 1) params.set("deckSlug", deckSlugs[0])
+      if (topics.length === 1) params.set("topic", topics[0])
+      if (difficulties.length === 1) params.set("difficulty", difficulties[0])
       if (filters.status && filters.status !== "ALL") params.set("status", filters.status)
       if (typeof filters.due === "boolean") params.set("due", String(filters.due))
-      if (filters.q?.trim()) params.set("q", filters.q.trim())
+      if ((filters.query ?? filters.q)?.trim()) params.set("q", (filters.query ?? filters.q)!.trim())
       const query = params.toString()
-      return await apiGet<PracticeQuestion[]>(`/api/courses/${slug}/questions${query ? `?${query}` : ""}`)
+      const questions = await apiGet<PracticeQuestion[]>(`/api/courses/${slug}/questions${query ? `?${query}` : ""}`)
+      if (deckSlugs.length > 1 || topics.length > 1 || difficulties.length > 1) {
+        const course = await getCourse(slug)
+        return filterLocalQuestions({ ...course, sections: course.sections?.map((section) => ({
+          ...section,
+          questions: section.questions.filter((question) => questions.some((item) => item.id === question.id)),
+        })) }, filters)
+      }
+      return questions
     } catch {
       return filterLocalQuestions(mockJavaCourse(), filters)
     }
@@ -609,16 +620,21 @@ export function writeLocalMatchProgress(questionIds: string[]) {
 function filterLocalQuestions(course: Course, filters: FlashcardStudyFilters) {
   const progress = readLocalProgress()
   const now = new Date()
-  const query = filters.q?.trim().toLowerCase()
+  const query = (filters.query ?? filters.q)?.trim().toLowerCase()
+  const deckSlugs = new Set([...(filters.deckSlugs ?? []), filters.deckSlug].filter(Boolean) as string[])
+  const topics = new Set([...(filters.topics ?? []), filters.topic].filter(Boolean) as string[])
+  const difficulties = new Set([...(filters.difficulties ?? []), filters.difficulty].filter(Boolean) as QuestionDifficulty[])
 
   return (course.sections?.flatMap((section) => section.questions) ?? []).filter((question) => {
-    if (filters.deckSlug) {
-      const section = course.sections?.find((item) => item.slug === filters.deckSlug)
-      if (!section?.questions.some((item) => item.id === question.id)) return false
+    if (deckSlugs.size) {
+      const deckQuestions = course.sections
+        ?.filter((item) => deckSlugs.has(item.slug))
+        .flatMap((item) => item.questions)
+      if (!deckQuestions?.some((item) => item.id === question.id)) return false
     }
     const item = progress[question.id]
-    if (filters.topic && question.topic !== filters.topic) return false
-    if (filters.difficulty && question.difficulty !== filters.difficulty) return false
+    if (topics.size && !topics.has(question.topic)) return false
+    if (difficulties.size && !difficulties.has(question.difficulty)) return false
     if (filters.status === "UNSEEN" && item) return false
     if (filters.status === "LEARNING" && (!item || item.mastered)) return false
     if (filters.status === "MASTERED" && !item?.mastered) return false
