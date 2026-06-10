@@ -343,7 +343,7 @@ function Flashcard({
 
 function CardFront({ question }: { question: PracticeQuestion }) {
   return (
-    <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 shadow-lg shadow-black/5 [backface-visibility:hidden] sm:p-7">
+    <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-[1.5rem] border border-border bg-muted/35 p-5 shadow-lg shadow-black/5 [backface-visibility:hidden] dark:bg-muted/20 sm:p-7">
       <div className="flex items-center justify-between gap-4">
         <QuestionMeta question={question} />
         <Pill>Mặt trước</Pill>
@@ -367,7 +367,7 @@ function CardFront({ question }: { question: PracticeQuestion }) {
 
 function CardBack({ question }: { question: PracticeQuestion }) {
   return (
-    <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] overflow-y-auto rounded-[1.5rem] border border-border bg-card p-5 shadow-lg shadow-black/5 [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-7">
+    <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] overflow-y-auto rounded-[1.5rem] border border-border bg-muted/35 p-5 shadow-lg shadow-black/5 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:bg-muted/20 sm:p-7">
       <div className="flex items-center justify-between gap-4">
         <QuestionMeta question={question} />
         <Pill>Mặt sau</Pill>
