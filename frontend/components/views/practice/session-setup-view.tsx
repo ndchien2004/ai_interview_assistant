@@ -1,7 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { ArrowLeft, Brain, CheckSquare, Gamepad2, Play, Shuffle, Timer } from "lucide-react"
+import { Brain, CheckSquare, Gamepad2, Layers3, Minus, Play, Plus, Search, Shuffle, Timer } from "lucide-react"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 
@@ -18,6 +17,15 @@ import type {
   PracticeSessionMode,
   QuestionDifficulty,
 } from "@/types"
+import {
+  difficultyLabel,
+  FilterChip,
+  MetricStrip,
+  Panel,
+  SegmentedControl,
+  SessionTopBar,
+  statusLabel,
+} from "./session-ui"
 
 type SetupMode = Extract<PracticeSessionMode, "LEARN" | "TEST" | "MATCH">
 
@@ -37,8 +45,6 @@ export function SessionSetupView({
   onStart: (session: PracticeSession) => void
 }) {
   const [course, setCourse] = useState<Course | null>(null)
-  const [deckSlugs, setDeckSlugs] = useState<string[]>(deckSlug ? [deckSlug] : [])
-  const [topics, setTopics] = useState<string[]>([])
   const [difficulties, setDifficulties] = useState<QuestionDifficulty[]>([])
   const [status, setStatus] = useState<FlashcardStatusFilter>("ALL")
   const [query, setQuery] = useState("")
@@ -69,22 +75,21 @@ export function SessionSetupView({
     }
   }, [courseSlug])
 
-  const decks = useMemo(() => [...(course?.sections ?? [])].sort((a, b) => a.sortOrder - b.sortOrder), [course])
-  const availableTopics = useMemo(
-    () => Array.from(new Set(decks.flatMap((deck) => deck.questions.map((question) => question.topic)))).sort(),
-    [decks]
+  const scopedDeck = useMemo(() => course?.sections?.find((deck) => deck.slug === deckSlug) ?? null, [course, deckSlug])
+  const scopedQuestions = useMemo(
+    () => (scopedDeck ? scopedDeck.questions : course?.sections?.flatMap((deck) => deck.questions) ?? []),
+    [course, scopedDeck]
   )
   const availableDifficulties = useMemo(
-    () => Array.from(new Set(decks.flatMap((deck) => deck.questions.map((question) => question.difficulty)))),
-    [decks]
+    () => Array.from(new Set(scopedQuestions.map((question) => question.difficulty))),
+    [scopedQuestions]
   )
 
   useEffect(() => {
     let active = true
     if (!course) return
     listCourseQuestions(courseSlug, {
-      deckSlugs,
-      topics,
+      deckSlug,
       difficulties,
       status,
       query,
@@ -98,12 +103,11 @@ export function SessionSetupView({
     return () => {
       active = false
     }
-  }, [course, courseSlug, deckSlugs, difficulties, query, status, topics])
+  }, [course, courseSlug, deckSlug, difficulties, query, status])
 
-  const maxQuestions = Math.max(1, preview.length)
-  const effectiveLimit = Math.min(questionLimit, maxQuestions)
+  const maxQuestions = preview.length
+  const effectiveLimit = maxQuestions ? Math.max(1, Math.min(questionLimit || 1, maxQuestions)) : 0
   const modeCopy = modeContent(mode)
-  const ModeIcon = modeCopy.icon
 
   const handleStart = async () => {
     if (!preview.length || starting) return
@@ -111,15 +115,14 @@ export function SessionSetupView({
     setError("")
     try {
       const filters = {
-        deckSlugs,
-        topics,
+        deckSlug,
         difficulties,
         status,
         query,
         questionLimit: effectiveLimit,
         timeLimitMinutes: timeEnabled ? timeLimitMinutes : undefined,
         shuffle,
-        feedbackMode: mode === "TEST" ? "END_ONLY" as const : "IMMEDIATE" as const,
+        feedbackMode: mode === "TEST" ? ("END_ONLY" as const) : ("IMMEDIATE" as const),
       }
       const create = mode === "TEST" ? createTestSession : mode === "MATCH" ? createMatchSession : createLearnSession
       const session = await create(courseSlug, filters)
@@ -140,157 +143,154 @@ export function SessionSetupView({
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <section className="border-b border-border pb-5">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link href={backHref}>
-            <ArrowLeft className="size-4" />
-            {backLabel}
-          </Link>
-        </Button>
-        <div className="mt-4 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <ModeIcon className="size-4" />
-          {modeCopy.eyebrow}
-        </div>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{modeCopy.title}</h1>
-      </section>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <SessionTopBar
+        title={modeCopy.title}
+        eyebrow={modeCopy.eyebrow}
+        icon={modeCopy.icon}
+        backHref={backHref}
+        backLabel={backLabel}
+        meta={`Đang hiển thị ${maxQuestions} câu hỏi`}
+      />
 
-      <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
-          <Panel title="Phạm vi">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {decks.map((deck) => {
-                const selected = deckSlugs.includes(deck.slug)
-                return (
-                  <label key={deck.slug} className="flex min-h-12 items-center gap-3 rounded-md border border-border px-3 py-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={() => setDeckSlugs((current) => toggle(current, deck.slug))}
-                      disabled={Boolean(deckSlug) && deck.slug === deckSlug}
-                    />
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium">{deck.title}</span>
-                      <span className="text-xs text-muted-foreground">{deck.questions.length} câu</span>
-                    </span>
-                  </label>
-                )
-              })}
+          <Panel title="Nội dung phiên" description="Phiên này tự lấy câu hỏi trong học phần hoặc bộ thẻ bạn vừa mở.">
+            <div className="flex items-start gap-3 rounded-md border border-border bg-background p-3">
+              <Layers3 className="mt-0.5 size-4 text-muted-foreground" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{scopedDeck?.title ?? course.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {scopedQuestions.length} câu hỏi trong {scopedDeck ? "bộ thẻ hiện tại" : "học phần hiện tại"}
+                </p>
+              </div>
             </div>
-            {!deckSlug ? (
-              <Button variant="outline" size="sm" onClick={() => setDeckSlugs([])}>
-                Toàn khóa học
-              </Button>
-            ) : null}
           </Panel>
 
-          <Panel title="Bộ lọc">
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm câu hỏi, đáp án, tag..." />
-            <SelectRow
-              label="Trạng thái"
-              value={status}
-              onChange={(value) => setStatus(value as FlashcardStatusFilter)}
-              options={[
-                ["ALL", "Tất cả"],
-                ["UNSEEN", "Chưa học"],
-                ["LEARNING", "Đang học"],
-                ["MASTERED", "Đã thuộc"],
-              ]}
-            />
-            <CheckGroup title="Topic" values={availableTopics} selected={topics} onToggle={(value) => setTopics((current) => toggle(current, value))} />
-            <CheckGroup
-              title="Độ khó"
-              values={availableDifficulties}
-              selected={difficulties}
-              labelFor={difficultyLabel}
-              onToggle={(value) => setDifficulties((current) => toggle(current, value))}
-            />
-          </Panel>
-        </div>
-
-        <div className="space-y-5">
-          <Panel title="Cấu hình">
-            <label className="grid gap-2 text-sm">
-              <span className="font-medium">Số câu</span>
-              <Input
-                type="number"
-                min={1}
-                max={maxQuestions}
-                value={questionLimit}
-                onChange={(event) => setQuestionLimit(Number(event.target.value))}
-              />
-            </label>
-            <label className="flex items-center gap-3 text-sm">
-              <input type="checkbox" checked={timeEnabled} onChange={(event) => setTimeEnabled(event.target.checked)} />
-              <Timer className="size-4" />
-              Giới hạn thời gian
-            </label>
-            {timeEnabled ? (
+          <Panel title="Bộ lọc" description="Thu hẹp theo từ khóa, độ khó hoặc trạng thái học thật của bạn.">
+            <div className="space-y-5">
               <label className="grid gap-2 text-sm">
-                <span className="font-medium">Số phút</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={1440}
-                  value={timeLimitMinutes}
-                  onChange={(event) => setTimeLimitMinutes(Number(event.target.value))}
-                />
+                <span className="font-medium">Tìm kiếm</span>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Tìm câu hỏi, đáp án, tag..."
+                    className="pl-9"
+                  />
+                </div>
               </label>
-            ) : null}
-            <label className="flex items-center gap-3 text-sm">
-              <input type="checkbox" checked={shuffle} onChange={(event) => setShuffle(event.target.checked)} />
-              <Shuffle className="size-4" />
-              Trộn thứ tự câu
-            </label>
-          </Panel>
 
-          <Panel title="Preview">
-            <Metric label="Câu phù hợp" value={preview.length.toString()} />
-            <Metric label="Sẽ lấy" value={preview.length ? effectiveLimit.toString() : "0"} />
-            <Metric label="Thời gian" value={timeEnabled ? `${timeLimitMinutes} phút` : "Không giới hạn"} />
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            <Button className="w-full" onClick={handleStart} disabled={!preview.length || starting}>
-              <Play className="size-4" />
-              Bắt đầu
-            </Button>
+              <div className="grid gap-2 text-sm">
+                <span className="font-medium">Trạng thái</span>
+                <SegmentedControl
+                  value={status}
+                  onChange={setStatus}
+                  options={[
+                    { value: "ALL", label: "Tất cả" },
+                    { value: "UNSEEN", label: "Chưa học" },
+                    { value: "LEARNING", label: "Đang học" },
+                    { value: "MASTERED", label: "Đã thuộc" },
+                  ]}
+                />
+              </div>
+
+              <CheckGroup
+                title="Độ khó"
+                values={availableDifficulties}
+                selected={difficulties}
+                labelFor={difficultyLabel}
+                onToggle={(value) => setDifficulties((current) => toggle(current, value))}
+              />
+            </div>
           </Panel>
         </div>
+
+        <aside className="space-y-5 lg:sticky lg:top-36 lg:self-start">
+          <Panel title="Cấu hình phiên">
+            <div className="space-y-5">
+              <div className="grid gap-2 text-sm">
+                <span className="font-medium">Số câu</span>
+                <div className="grid grid-cols-[40px_1fr_40px] gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={!maxQuestions || effectiveLimit <= 1}
+                    onClick={() => setQuestionLimit((current) => Math.max(1, current - 1))}
+                    aria-label="Giảm số câu"
+                  >
+                    <Minus className="size-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={Math.max(1, maxQuestions)}
+                    value={questionLimit}
+                    onChange={(event) => {
+                      const next = Number(event.target.value)
+                      setQuestionLimit(maxQuestions ? Math.max(1, Math.min(next, maxQuestions)) : next)
+                    }}
+                    className="text-center"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={!maxQuestions || effectiveLimit >= maxQuestions}
+                    onClick={() => setQuestionLimit((current) => Math.min(maxQuestions, current + 1))}
+                    aria-label="Tăng số câu"
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <ToggleRow selected={timeEnabled} onClick={() => setTimeEnabled((current) => !current)} icon={Timer} label="Giới hạn thời gian" />
+              {timeEnabled ? (
+                <label className="grid gap-2 text-sm">
+                  <span className="font-medium">Số phút</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={timeLimitMinutes}
+                    onChange={(event) => setTimeLimitMinutes(Number(event.target.value))}
+                  />
+                </label>
+              ) : null}
+              <ToggleRow selected={shuffle} onClick={() => setShuffle((current) => !current)} icon={Shuffle} label="Trộn thứ tự câu" />
+            </div>
+          </Panel>
+
+          <MetricStrip
+            className="grid-cols-2 lg:grid-cols-2"
+            items={[
+              { label: "Phù hợp", value: maxQuestions.toString() },
+              { label: "Sẽ lấy", value: effectiveLimit.toString() },
+              { label: "Thời gian", value: timeEnabled ? `${timeLimitMinutes} phút` : "Tự do" },
+              { label: "Trạng thái", value: statusLabel(status) },
+            ]}
+          />
+
+          <Panel title="Sẵn sàng bắt đầu">
+            <div className="space-y-3">
+              {!preview.length ? (
+                <p className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                  Không có câu hỏi phù hợp với bộ lọc hiện tại.
+                </p>
+              ) : null}
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              <Button className="w-full" onClick={handleStart} disabled={!preview.length || starting}>
+                <Play className="size-4" />
+                {starting ? "Đang tạo phiên..." : "Bắt đầu"}
+              </Button>
+            </div>
+          </Panel>
+        </aside>
       </section>
     </div>
-  )
-}
-
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4 border-y border-border py-4">
-      <h2 className="text-sm font-semibold uppercase tracking-normal text-muted-foreground">{title}</h2>
-      {children}
-    </section>
-  )
-}
-
-function SelectRow({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: Array<[string, string]>
-  onChange: (value: string) => void
-}) {
-  return (
-    <label className="grid gap-2 text-sm">
-      <span className="font-medium">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="min-h-10 rounded-md border border-border bg-background px-3">
-        {options.map(([optionValue, optionLabel]) => (
-          <option key={optionValue} value={optionValue}>
-            {optionLabel}
-          </option>
-        ))}
-      </select>
-    </label>
   )
 }
 
@@ -313,26 +313,40 @@ function CheckGroup<T extends string>({
       <p className="text-sm font-medium">{title}</p>
       <div className="flex flex-wrap gap-2">
         {values.map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => onToggle(value)}
-            className={`rounded-md border px-3 py-2 text-sm ${selected.includes(value) ? "border-foreground bg-foreground text-background" : "border-border bg-background"}`}
-          >
+          <FilterChip key={value} selected={selected.includes(value)} onClick={() => onToggle(value)}>
             {labelFor(value)}
-          </button>
+          </FilterChip>
         ))}
       </div>
     </div>
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function ToggleRow({
+  selected,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  selected: boolean
+  onClick: () => void
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+}) {
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{value}</span>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+    >
+      <span className="flex items-center gap-2 font-medium">
+        <Icon className="size-4 text-muted-foreground" />
+        {label}
+      </span>
+      <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${selected ? "bg-primary" : "bg-muted"}`}>
+        <span className={`block size-4 rounded-full bg-background transition-transform ${selected ? "translate-x-4" : ""}`} />
+      </span>
+    </button>
   )
 }
 
@@ -348,10 +362,4 @@ function modeContent(mode: SetupMode) {
     return { title: "Cấu hình ghép thẻ", eyebrow: "Ghép thẻ", icon: Gamepad2 }
   }
   return { title: "Cấu hình phiên học", eyebrow: "Học", icon: Brain }
-}
-
-function difficultyLabel(value: QuestionDifficulty) {
-  if (value === "BEGINNER") return "Cơ bản"
-  if (value === "INTERMEDIATE") return "Trung bình"
-  return "Nâng cao"
 }

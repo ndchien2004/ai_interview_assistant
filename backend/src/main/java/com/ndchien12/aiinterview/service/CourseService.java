@@ -269,12 +269,12 @@ public class CourseService {
         Map<UUID, UserQuestionProgress> progressByQuestion = progress.stream()
                 .collect(Collectors.toMap(item -> item.getQuestion().getId(), item -> item));
 
-        long attempted = progress.size();
-        long mastered = progress.stream().filter(UserQuestionProgress::isMastered).count();
+        long attempted = progress.stream().filter(this::hasStarted).count();
+        long mastered = progress.stream().filter(this::isMastered).count();
         long correctAnswers = progress.stream().mapToLong(UserQuestionProgress::getCorrectCount).sum();
         long incorrectAnswers = progress.stream().mapToLong(UserQuestionProgress::getIncorrectCount).sum();
         long due = progress.stream().filter(item -> isDue(item, now)).count();
-        long learning = progress.stream().filter(item -> !item.isMastered()).count();
+        long learning = progress.stream().filter(this::isLearning).count();
         Instant lastStudyAt = progress.stream()
                 .map(UserQuestionProgress::getLastAttemptAt)
                 .max(Comparator.naturalOrder())
@@ -295,11 +295,11 @@ public class CourseService {
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
                     long topicAttempted = entry.getValue().stream()
-                            .filter(question -> progressByQuestion.containsKey(question.getId()))
+                            .filter(question -> hasStarted(progressByQuestion.get(question.getId())))
                             .count();
                     long topicMastered = entry.getValue().stream()
                             .map(question -> progressByQuestion.get(question.getId()))
-                            .filter(item -> item != null && item.isMastered())
+                            .filter(this::isMastered)
                             .count();
                     long topicCorrect = entry.getValue().stream()
                             .map(question -> progressByQuestion.get(question.getId()))
@@ -317,7 +317,7 @@ public class CourseService {
                             .count();
                     long topicLearning = entry.getValue().stream()
                             .map(question -> progressByQuestion.get(question.getId()))
-                            .filter(item -> item != null && !item.isMastered())
+                            .filter(this::isLearning)
                             .count();
                     int topicMastery = entry.getValue().isEmpty()
                             ? 0
@@ -895,10 +895,22 @@ public class CourseService {
     private boolean matchesStatusFilter(UserQuestionProgress progress, FlashcardStatusFilter status) {
         return switch (status) {
             case ALL -> true;
-            case UNSEEN -> progress == null;
-            case LEARNING -> progress != null && !progress.isMastered();
-            case MASTERED -> progress != null && progress.isMastered();
+            case UNSEEN -> !hasStarted(progress);
+            case LEARNING -> isLearning(progress);
+            case MASTERED -> isMastered(progress);
         };
+    }
+
+    private boolean hasStarted(UserQuestionProgress progress) {
+        return progress != null && progress.getAttemptCount() > 0;
+    }
+
+    private boolean isLearning(UserQuestionProgress progress) {
+        return hasStarted(progress) && !isMastered(progress);
+    }
+
+    private boolean isMastered(UserQuestionProgress progress) {
+        return hasStarted(progress) && (progress.isMastered() || progress.getCorrectStreak() >= 3);
     }
 
     private boolean isDue(UserQuestionProgress progress, Instant now) {

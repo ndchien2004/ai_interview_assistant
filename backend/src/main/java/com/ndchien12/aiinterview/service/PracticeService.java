@@ -393,9 +393,9 @@ public class PracticeService {
                 : session.getStatusFilter();
         return switch (status) {
             case ALL -> true;
-            case UNSEEN -> progress == null;
-            case LEARNING -> progress != null && !progress.isMastered();
-            case MASTERED -> progress != null && progress.isMastered();
+            case UNSEEN -> !hasStarted(progress);
+            case LEARNING -> isLearning(progress);
+            case MASTERED -> isMastered(progress);
         };
     }
 
@@ -406,7 +406,7 @@ public class PracticeService {
         int previousStreak = progressRepository.findByUserAndQuestion(user, question)
                 .map(UserQuestionProgress::getCorrectStreak)
                 .orElse(0);
-        return previousStreak >= 1 ? PracticeConfidence.MASTERED : PracticeConfidence.GOOD;
+        return previousStreak >= 2 ? PracticeConfidence.MASTERED : PracticeConfidence.GOOD;
     }
 
     private void updateProgress(User user, PracticeQuestion question, PracticeConfidence confidence, Boolean correct) {
@@ -431,7 +431,7 @@ public class PracticeService {
                 progress.setCorrectStreak(0);
             }
         }
-        progress.setMastered(confidence == PracticeConfidence.MASTERED);
+        progress.setMastered(confidence == PracticeConfidence.MASTERED || progress.getCorrectStreak() >= 3);
         progress.setLastAttemptAt(now);
         progress.setNextReviewAt(nextReviewAt(now, confidence));
         progressRepository.save(progress);
@@ -446,12 +446,12 @@ public class PracticeService {
                     created.setAttemptCount(0);
                     return created;
                 });
-        boolean alreadyMastered = progress.isMastered();
+        boolean alreadyMastered = isMastered(progress);
         progress.setConfidence(alreadyMastered ? PracticeConfidence.MASTERED : PracticeConfidence.GOOD);
         progress.setAttemptCount(progress.getAttemptCount() + 1);
         progress.setCorrectCount(progress.getCorrectCount() + 1);
         progress.setCorrectStreak(progress.getCorrectStreak() + 1);
-        progress.setMastered(alreadyMastered);
+        progress.setMastered(alreadyMastered || progress.getCorrectStreak() >= 3);
         progress.setLastAttemptAt(now);
         progress.setNextReviewAt(nextReviewAt(now, progress.getConfidence()));
         progressRepository.save(progress);
@@ -474,6 +474,18 @@ public class PracticeService {
             case GOOD -> now.plus(1, ChronoUnit.DAYS);
             case MASTERED -> now.plus(7, ChronoUnit.DAYS);
         };
+    }
+
+    private boolean hasStarted(UserQuestionProgress progress) {
+        return progress != null && progress.getAttemptCount() > 0;
+    }
+
+    private boolean isLearning(UserQuestionProgress progress) {
+        return hasStarted(progress) && !isMastered(progress);
+    }
+
+    private boolean isMastered(UserQuestionProgress progress) {
+        return hasStarted(progress) && (progress.isMastered() || progress.getCorrectStreak() >= 3);
     }
 
     private PracticeSessionMode resolveMode(PracticeSessionMode mode) {

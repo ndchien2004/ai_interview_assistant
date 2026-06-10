@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Flag, RotateCcw, Send } from "lucide-react"
+import { ClipboardCheck, Flag, RotateCcw, Send } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import { StateBlock } from "@/components/common/state-block"
@@ -9,6 +9,18 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { createTestSession, submitTestSession } from "@/services/practice-service"
 import type { PracticeQuestion, PracticeSession } from "@/types"
+import {
+  AnswerOption,
+  formatTime,
+  MetricStrip,
+  optionLabel,
+  Panel,
+  QuestionBlock,
+  SegmentedControl,
+  SessionTopBar,
+} from "./session-ui"
+
+type ResultFilter = "ALL" | "WRONG" | "UNANSWERED"
 
 export function JavaCoreTestView({
   courseSlug = "java-fullstack-flashcard-bank",
@@ -34,8 +46,6 @@ export function JavaCoreTestView({
 
   useEffect(() => {
     if (initialSession) {
-      setSession(initialSession)
-      setRemainingSeconds(secondsUntil(initialSession.expiresAt))
       return
     }
     let active = true
@@ -55,33 +65,22 @@ export function JavaCoreTestView({
 
   const questions = session?.questions?.length ? session.questions : session?.nextQuestion ? [session.nextQuestion] : []
   const question = questions[currentIndex] ?? null
-  const elapsedSeconds = useMemo(() => {
-    if (!session) return undefined
-    return Math.max(0, Math.round((Date.now() - new Date(session.createdAt).getTime()) / 1000))
-  }, [session, submitted, submitting, currentIndex])
+  const answeredCount = Object.keys(answers).length
+  const progressValue = Math.min(100, (answeredCount / Math.max(1, questions.length)) * 100)
+  const timerLabel = remainingSeconds !== null ? formatTime(remainingSeconds) : null
 
-  useEffect(() => {
-    if (!session?.expiresAt || submitted) return
-    const interval = window.setInterval(() => {
-      const next = secondsUntil(session.expiresAt)
-      setRemainingSeconds(next)
-      if (next === 0) {
-        window.clearInterval(interval)
-        void handleSubmit()
-      }
-    }, 1000)
-    return () => window.clearInterval(interval)
-  })
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (force = false) => {
     if (!session || submitting || submitted) return
+    const unanswered = questions.length - Object.keys(answers).length
+    if (!force && unanswered > 0 && !window.confirm(`Bạn còn ${unanswered} câu chưa trả lời. Nộp bài ngay?`)) return
+
     setSubmitting(true)
     setError("")
     try {
       const nextSession = await submitTestSession(
         session,
         questions.map((item) => ({ questionId: item.id, selectedOptionIndex: answers[item.id] })),
-        elapsedSeconds
+        elapsedSeconds(session)
       )
       setSession(nextSession)
       setSubmitted(true)
@@ -91,6 +90,19 @@ export function JavaCoreTestView({
       setSubmitting(false)
     }
   }
+
+  useEffect(() => {
+    if (!session?.expiresAt || submitted) return
+    const interval = window.setInterval(() => {
+      const next = secondsUntil(session.expiresAt)
+      setRemainingSeconds(next)
+      if (next === 0) {
+        window.clearInterval(interval)
+        void handleSubmit(true)
+      }
+    }, 1000)
+    return () => window.clearInterval(interval)
+  })
 
   if (error && !session) {
     return <StateBlock tone="error" title="Không mở được kiểm tra" description={error} />
@@ -109,14 +121,104 @@ export function JavaCoreTestView({
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <BackHeader
-        meta={`${Object.keys(answers).length}/${questions.length} câu đã trả lời${remainingSeconds !== null ? ` / ${formatTime(remainingSeconds)}` : ""}`}
+    <div className="mx-auto max-w-6xl space-y-5">
+      <SessionTopBar
+        title="Kiểm tra trắc nghiệm"
+        eyebrow="Kiểm tra"
+        icon={ClipboardCheck}
         backHref={backHref}
         backLabel={backLabel}
+        meta={`${answeredCount}/${questions.length} câu đã trả lời · ${marked.size} đánh dấu`}
+        timer={timerLabel}
+        progressValue={progressValue}
+        action={
+          <Button size="sm" onClick={() => handleSubmit()} disabled={submitting}>
+            <Send className="size-4" />
+            Nộp bài
+          </Button>
+        }
       />
 
-      <section className="grid gap-2 sm:grid-cols-10">
+      <section className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <QuestionNavigator
+          questions={questions}
+          answers={answers}
+          marked={marked}
+          currentIndex={currentIndex}
+          onSelect={setCurrentIndex}
+        />
+
+        <div className="space-y-5">
+          {question ? (
+            <>
+              <QuestionBlock question={question} />
+              <div className="grid gap-3">
+                {question.options.map((option, index) => (
+                  <AnswerOption
+                    key={`${index}-${option}`}
+                    label={optionLabel(index)}
+                    selected={answers[question.id] === index}
+                    onClick={() => setAnswers({ ...answers, [question.id]: index })}
+                  >
+                    {option}
+                  </AnswerOption>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          <div className="flex flex-wrap justify-between gap-2 rounded-md border border-border bg-card p-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!question) return
+                setMarked((current) => {
+                  const next = new Set(current)
+                  if (next.has(question.id)) next.delete(question.id)
+                  else next.add(question.id)
+                  return next
+                })
+              }}
+            >
+              <Flag className="size-4" />
+              {question && marked.has(question.id) ? "Bỏ đánh dấu" : "Đánh dấu"}
+            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" disabled={currentIndex === 0} onClick={() => setCurrentIndex((value) => Math.max(0, value - 1))}>
+                Trước
+              </Button>
+              <Button variant="outline" disabled={currentIndex >= questions.length - 1} onClick={() => setCurrentIndex((value) => Math.min(questions.length - 1, value + 1))}>
+                Sau
+              </Button>
+              <Button onClick={() => handleSubmit()} disabled={submitting}>
+                <Send className="size-4" />
+                Nộp bài
+              </Button>
+            </div>
+          </div>
+          {error ? <p className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">{error}</p> : null}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function QuestionNavigator({
+  questions,
+  answers,
+  marked,
+  currentIndex,
+  onSelect,
+}: {
+  questions: PracticeQuestion[]
+  answers: Record<string, number>
+  marked: Set<string>
+  currentIndex: number
+  onSelect: (index: number) => void
+}) {
+  return (
+    <Panel title="Bảng câu hỏi" className="lg:sticky lg:top-36 lg:self-start">
+      <div className="grid grid-cols-5 gap-2 lg:grid-cols-4">
         {questions.map((item, index) => {
           const answered = answers[item.id] !== undefined
           const flagged = marked.has(item.id)
@@ -124,70 +226,25 @@ export function JavaCoreTestView({
             <button
               key={item.id}
               type="button"
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => onSelect(index)}
               className={cn(
-                "h-10 rounded-md border border-border text-sm font-medium",
-                currentIndex === index && "border-foreground bg-foreground text-background",
+                "relative h-10 rounded-md border border-border text-sm font-semibold transition-colors",
+                currentIndex === index && "border-primary bg-primary text-primary-foreground",
                 answered && currentIndex !== index && "bg-muted",
-                flagged && "border-amber-400"
+                !answered && currentIndex !== index && "bg-background hover:bg-muted",
+                flagged && "ring-2 ring-amber-400/70"
               )}
             >
               {index + 1}
             </button>
           )
         })}
-      </section>
-
-      {question ? (
-        <>
-          <section className="space-y-4">
-            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span>{question.topic}</span>
-              <span>/</span>
-              <span>{difficultyLabel(question.difficulty)}</span>
-            </div>
-            <h2 className="text-2xl font-semibold leading-snug tracking-tight">{question.question}</h2>
-            {question.codeSnippet ? (
-              <pre className="overflow-auto border-y border-border bg-muted/30 p-4 text-sm">
-                <code>{question.codeSnippet}</code>
-              </pre>
-            ) : null}
-          </section>
-          <AnswerOptions question={question} selectedOptionIndex={answers[question.id] ?? null} onChoose={(index) => setAnswers({ ...answers, [question.id]: index })} />
-        </>
-      ) : null}
-
-      <div className="flex flex-wrap justify-between gap-2 border-y border-border py-4">
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (!question) return
-            setMarked((current) => {
-              const next = new Set(current)
-              if (next.has(question.id)) next.delete(question.id)
-              else next.add(question.id)
-              return next
-            })
-          }}
-        >
-          <Flag className="size-4" />
-          Đánh dấu
-        </Button>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled={currentIndex === 0} onClick={() => setCurrentIndex((value) => Math.max(0, value - 1))}>
-            Trước
-          </Button>
-          <Button variant="outline" disabled={currentIndex >= questions.length - 1} onClick={() => setCurrentIndex((value) => Math.min(questions.length - 1, value + 1))}>
-            Sau
-          </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
-            <Send className="size-4" />
-            Nộp bài
-          </Button>
-        </div>
       </div>
-      {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
-    </div>
+      <div className="mt-4 grid gap-2 text-xs text-muted-foreground">
+        <p>Đã trả lời: {Object.keys(answers).length}</p>
+        <p>Đánh dấu: {marked.size}</p>
+      </div>
+    </Panel>
   )
 }
 
@@ -204,42 +261,84 @@ function TestSummary({
   backHref: string
   backLabel: string
 }) {
+  const [filter, setFilter] = useState<ResultFilter>("WRONG")
   const submittedAnswers = Object.fromEntries(session.attempts.map((attempt) => [attempt.questionId, attempt.selectedOptionIndex]))
   const answerMap = Object.keys(submittedAnswers).length ? submittedAnswers : answers
-  const scored = questions.map((question) => ({
-    question,
-    selectedOptionIndex: answerMap[question.id] as number | undefined,
-    correct: answerMap[question.id] === question.correctOptionIndex,
-  }))
+  const scored = useMemo(
+    () =>
+      questions.map((question) => ({
+        question,
+        selectedOptionIndex: answerMap[question.id] as number | undefined,
+        correct: answerMap[question.id] === question.correctOptionIndex,
+      })),
+    [answerMap, questions]
+  )
   const score = scored.filter((item) => item.correct).length
-  const weak = scored.filter((item) => !item.correct)
+  const wrong = scored.filter((item) => item.selectedOptionIndex !== undefined && !item.correct)
+  const unanswered = scored.filter((item) => item.selectedOptionIndex === undefined)
   const percentage = questions.length ? Math.round((score / questions.length) * 100) : 0
+  const visible = scored.filter((item) => {
+    if (filter === "WRONG") return item.selectedOptionIndex !== undefined && !item.correct
+    if (filter === "UNANSWERED") return item.selectedOptionIndex === undefined
+    return true
+  })
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <BackHeader backHref={backHref} backLabel={backLabel} />
-      <section className="grid gap-4 border-b border-border pb-6 sm:grid-cols-3">
-        <Metric label="Điểm" value={`${score}/${questions.length}`} />
-        <Metric label="Tỉ lệ đúng" value={`${percentage}%`} />
-        <Metric label="Cần ôn" value={weak.length.toString()} />
-      </section>
-      <section>
-        <h2 className="text-lg font-semibold">Kết quả chi tiết</h2>
-        <div className="mt-3 divide-y divide-border border-y border-border">
-          {weak.map((result) => (
-            <details key={result.question.id} className="py-4">
-              <summary className="cursor-pointer list-none text-sm font-medium">{result.question.question}</summary>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Bạn chọn: {result.selectedOptionIndex === undefined ? "Chưa trả lời" : `${optionLabel(result.selectedOptionIndex)}. ${result.question.options[result.selectedOptionIndex]}`}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Đáp án đúng: {optionLabel(result.question.correctOptionIndex)}. {result.question.options[result.question.correctOptionIndex]}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">{result.question.explanation}</p>
-            </details>
-          ))}
+    <div className="mx-auto max-w-5xl space-y-5">
+      <SessionTopBar
+        title="Kết quả kiểm tra"
+        eyebrow="Tổng kết"
+        icon={ClipboardCheck}
+        backHref={backHref}
+        backLabel={backLabel}
+        meta={`${questions.length} câu`}
+        progressValue={100}
+      />
+      <MetricStrip
+        items={[
+          { label: "Điểm", value: `${score}/${questions.length}`, tone: "good" },
+          { label: "Tỷ lệ đúng", value: `${percentage}%` },
+          { label: "Sai", value: wrong.length.toString(), tone: wrong.length ? "bad" : "good" },
+          { label: "Chưa làm", value: unanswered.length.toString(), tone: unanswered.length ? "warn" : "good" },
+          { label: "Thời gian", value: formatTime(elapsedSeconds(session)) },
+        ]}
+      />
+
+      <Panel title="Kết quả chi tiết">
+        <div className="mb-4">
+          <SegmentedControl
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: "ALL", label: "Tất cả" },
+              { value: "WRONG", label: "Sai" },
+              { value: "UNANSWERED", label: "Chưa làm" },
+            ]}
+          />
         </div>
-      </section>
+        {visible.length ? (
+          <div className="divide-y divide-border">
+            {visible.map((result) => (
+              <details key={result.question.id} className="py-4 first:pt-0 last:pb-0">
+                <summary className="cursor-pointer list-none text-sm font-medium">{result.question.question}</summary>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Bạn chọn:{" "}
+                  {result.selectedOptionIndex === undefined
+                    ? "Chưa trả lời"
+                    : `${optionLabel(result.selectedOptionIndex)}. ${result.question.options[result.selectedOptionIndex]}`}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Đáp án đúng: {optionLabel(result.question.correctOptionIndex)}. {result.question.options[result.question.correctOptionIndex]}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{result.question.explanation}</p>
+              </details>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Không có câu nào trong nhóm này.</p>
+        )}
+      </Panel>
+
       <div className="flex flex-wrap gap-2">
         <Button asChild>
           <Link href={backHref}>{backLabel}</Link>
@@ -253,80 +352,12 @@ function TestSummary({
   )
 }
 
-function BackHeader({ meta, backHref, backLabel }: { meta?: string; backHref: string; backLabel: string }) {
-  return (
-    <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
-          <Link href={backHref}>
-            <ArrowLeft className="size-4" />
-            {backLabel}
-          </Link>
-        </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Kiểm tra trắc nghiệm</h1>
-      </div>
-      {meta ? <p className="text-sm text-muted-foreground">{meta}</p> : null}
-    </div>
-  )
-}
-
-function AnswerOptions({
-  question,
-  selectedOptionIndex,
-  onChoose,
-}: {
-  question: PracticeQuestion
-  selectedOptionIndex: number | null
-  onChoose: (index: number) => void
-}) {
-  return (
-    <div className="grid gap-3">
-      {question.options.map((option, index) => (
-        <button
-          key={`${index}-${option}`}
-          type="button"
-          onClick={() => onChoose(index)}
-          className={cn(
-            "grid min-h-14 grid-cols-[32px_1fr] items-center gap-3 border border-border px-4 py-3 text-left text-sm transition-colors hover:bg-muted",
-            selectedOptionIndex === index && "border-foreground bg-muted"
-          )}
-        >
-          <span className="flex size-8 items-center justify-center rounded-full border border-current text-xs font-semibold">
-            {optionLabel(index)}
-          </span>
-          <span>{option}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-t border-border pt-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
-    </div>
-  )
-}
-
-function optionLabel(index: number) {
-  return ["A", "B", "C", "D"][index] ?? "?"
-}
-
-function difficultyLabel(value: string) {
-  if (value === "BEGINNER") return "Cơ bản"
-  if (value === "INTERMEDIATE") return "Trung bình"
-  return "Nâng cao"
-}
-
 function secondsUntil(value?: string | null) {
   if (!value) return null
   return Math.max(0, Math.round((new Date(value).getTime() - Date.now()) / 1000))
 }
 
-function formatTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`
+function elapsedSeconds(session: PracticeSession) {
+  const end = session.completedAt ? new Date(session.completedAt).getTime() : Date.now()
+  return Math.max(0, Math.round((end - new Date(session.createdAt).getTime()) / 1000))
 }

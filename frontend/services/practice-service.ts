@@ -1,7 +1,14 @@
 "use client"
 
 import { getAuthToken, makeId } from "@/services/auth-service"
-import { getCourse, readLocalProgress, writeLocalChoiceProgress, writeLocalMatchProgress, writeLocalProgress } from "@/services/course-service"
+import {
+  getCourse,
+  notifyCourseProgressChanged,
+  readLocalProgress,
+  writeLocalChoiceProgress,
+  writeLocalMatchProgress,
+  writeLocalProgress,
+} from "@/services/course-service"
 import type {
   Course,
   FlashcardStudyFilters,
@@ -146,7 +153,9 @@ export async function submitPracticeAttempt(
         body: JSON.stringify({ questionId, answerText, confidence }),
       })
       if (!response.ok) throw new Error("Unable to submit practice attempt.")
-      return response.json() as Promise<PracticeSession>
+      const nextSession = await response.json() as PracticeSession
+      notifyCourseProgressChanged(nextSession.courseSlug)
+      return nextSession
     } catch {
       return submitLocalPracticeAttempt(session, questionId, answerText, confidence)
     }
@@ -169,7 +178,9 @@ export async function submitMultipleChoiceAnswer(
         body: JSON.stringify({ questionId: question.id, selectedOptionIndex, timeSpentSeconds }),
       })
       if (!response.ok) throw new Error("Không thể lưu đáp án.")
-      return response.json() as Promise<PracticeSession>
+      const nextSession = await response.json() as PracticeSession
+      notifyCourseProgressChanged(nextSession.courseSlug)
+      return nextSession
     } catch {
       return submitLocalChoiceAttempt(session, question, selectedOptionIndex)
     }
@@ -195,7 +206,9 @@ export async function submitMatchResult(session: PracticeSession, questionIds: s
         body: JSON.stringify({ questionIds, mistakeCount, timeSpentSeconds }),
       })
       if (!response.ok) throw new Error("Không thể lưu kết quả ghép thẻ.")
-      return response.json() as Promise<PracticeSession>
+      const nextSession = await response.json() as PracticeSession
+      notifyCourseProgressChanged(nextSession.courseSlug)
+      return nextSession
     } catch {
       return submitLocalMatchResult(session, questionIds, mistakeCount, timeSpentSeconds)
     }
@@ -217,7 +230,9 @@ export async function submitTestSession(
         body: JSON.stringify({ answers, timeSpentSeconds }),
       })
       if (!response.ok) throw new Error("Không thể nộp bài kiểm tra.")
-      return response.json() as Promise<PracticeSession>
+      const nextSession = await response.json() as PracticeSession
+      notifyCourseProgressChanged(nextSession.courseSlug)
+      return nextSession
     } catch {
       return submitLocalTestSession(session, answers, timeSpentSeconds)
     }
@@ -370,10 +385,9 @@ function filterQuestions(questions: PracticeQuestion[], filters: FlashcardStudyF
     if (topics.size && !topics.has(question.topic)) return false
     if (difficulties.size && !difficulties.has(question.difficulty)) return false
 
-    const confidence = progress[question.id]?.confidence
-    if (filters.status === "UNSEEN" && confidence) return false
-    if (filters.status === "LEARNING" && (!confidence || progress[question.id]?.mastered)) return false
-    if (filters.status === "MASTERED" && !progress[question.id]?.mastered) return false
+    if (filters.status === "UNSEEN" && hasStartedProgress(progress[question.id])) return false
+    if (filters.status === "LEARNING" && !isLearningProgress(progress[question.id])) return false
+    if (filters.status === "MASTERED" && !isMasteredProgress(progress[question.id])) return false
     if (typeof filters.due === "boolean") {
       const due = progress[question.id] ? new Date(progress[question.id].nextReviewAt) <= new Date() : false
       if (filters.due !== due) return false
@@ -403,9 +417,21 @@ function selectLocalSessionQuestions(mode: PracticeSessionMode, questions: Pract
     const item = progress[question.id]
     if (item && new Date(item.nextReviewAt) <= now) return 0
     if (!item) return 1
-    if (!item.mastered) return 2
+    if (!isMasteredProgress(item)) return 2
     return 3
   }
+}
+
+function hasStartedProgress(progress?: ReturnType<typeof readLocalProgress>[string]) {
+  return Boolean(progress && (progress.attemptCount ?? 0) > 0)
+}
+
+function isMasteredProgress(progress?: ReturnType<typeof readLocalProgress>[string]) {
+  return Boolean(progress && hasStartedProgress(progress) && (progress.mastered || (progress.correctStreak ?? 0) >= 3))
+}
+
+function isLearningProgress(progress?: ReturnType<typeof readLocalProgress>[string]) {
+  return Boolean(progress && hasStartedProgress(progress) && !isMasteredProgress(progress))
 }
 
 function clampQuestionLimit(value: number | undefined, fallback: number) {

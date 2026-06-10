@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Brain, ClipboardCheck, Gamepad2, Upload } from "lucide-react"
+import { ArrowLeft, ArrowRight, Brain, ClipboardCheck, Gamepad2, Layers3, Upload } from "lucide-react"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -43,28 +43,63 @@ export function CourseDeckDetailView({ courseSlug, deckSlug }: { courseSlug: str
   const baseHref = `/courses/${course.slug}/decks/${deck.slug}`
 
   return (
-    <div className="space-y-7">
-      <section className="border-b border-border pb-5">
+    <div className="space-y-6">
+      <section className="rounded-md border border-border bg-card p-5 shadow-sm">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href={`/courses/${course.slug}`}>
             <ArrowLeft className="size-4" />
             {course.title}
           </Link>
         </Button>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{deck.title}</h1>
-        <p className="mt-2 max-w-3xl text-base leading-7 text-muted-foreground">{deck.description}</p>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Layers3 className="size-4" />
+              Bộ thẻ
+            </div>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{deck.title}</h1>
+            <p className="mt-2 max-w-3xl text-base leading-7 text-muted-foreground">{deck.description}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:w-72">
+            <Metric label="Câu hỏi" value={deck.questions.length.toString()} />
+            <Metric label="Học phần" value={course.title} />
+          </div>
+        </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Action href={`${baseHref}/learn`} icon={Brain} label="Học" description="Luyện câu mới, câu đến hạn và câu chưa thuộc." />
-        <Action href={`${baseHref}/test`} icon={ClipboardCheck} label="Kiểm tra" description="Tùy chọn phạm vi, số câu và thời gian." />
-        <Action href={`${baseHref}/match`} icon={Gamepad2} label="Ghép thẻ" description="Ghép câu hỏi với đáp án trong một phiên tùy chọn." />
-        <Action href={`${baseHref}/import`} icon={Upload} label="Import" description="Thêm JSON vào đúng bộ thẻ này." />
+      <section className="grid gap-3 md:grid-cols-3">
+        <Action
+          href={`${baseHref}/learn`}
+          icon={Brain}
+          label="Học"
+          description="Luyện câu đến hạn, câu mới và câu chưa thuộc."
+          primary
+        />
+        <Action
+          href={`${baseHref}/test`}
+          icon={ClipboardCheck}
+          label="Kiểm tra"
+          description="Chọn phạm vi, số câu và thời gian trước khi làm bài."
+        />
+        <Action
+          href={`${baseHref}/match`}
+          icon={Gamepad2}
+          label="Ghép thẻ"
+          description="Ghép câu hỏi với đáp án trong một phiên có cấu hình."
+        />
       </section>
 
-      <section className="grid gap-4 border-y border-border py-4 sm:grid-cols-2">
-        <Metric label="Câu hỏi" value={deck.questions.length.toString()} />
-        <Metric label="Học phần" value={course.title} />
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card p-4">
+        <div>
+          <p className="text-sm font-semibold">Quản lý nội dung</p>
+          <p className="mt-1 text-sm text-muted-foreground">Thêm câu hỏi vào đúng bộ thẻ này bằng JSON.</p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href={`${baseHref}/import`}>
+            <Upload className="size-4" />
+            Import
+          </Link>
+        </Button>
       </section>
     </div>
   )
@@ -75,34 +110,40 @@ function Action({
   icon: Icon,
   label,
   description,
+  primary,
 }: {
   href: string
   icon: React.ComponentType<{ className?: string }>
   label: string
   description: string
+  primary?: boolean
 }) {
   return (
     <Link
       href={href}
-      className="group rounded-md border border-border bg-card p-4 transition-colors hover:border-foreground/40 hover:bg-muted/40"
+      className={`group rounded-md border p-4 shadow-sm transition-colors ${
+        primary
+          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+          : "border-border bg-card hover:border-foreground/40 hover:bg-muted/40"
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
           <Icon className="size-4 shrink-0" />
           <span>{label}</span>
         </div>
-        <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+        <ArrowRight className={`size-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${primary ? "text-primary-foreground/70" : "text-muted-foreground"}`} />
       </div>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+      <p className={`mt-3 text-sm leading-6 ${primary ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{description}</p>
     </Link>
   )
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words text-2xl font-semibold tracking-tight">{value}</p>
+    <div className="rounded-md border border-border bg-background p-3">
+      <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
+      <p className="mt-1 break-words text-lg font-semibold tracking-tight">{value}</p>
     </div>
   )
 }

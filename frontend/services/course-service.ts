@@ -20,6 +20,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 const COURSE_SLUG = "java-fullstack-flashcard-bank"
 const IMPORTED_QUESTIONS_KEY = "java-fullstack-imported-questions"
 const LOCAL_PROGRESS_KEY = "java-fullstack-progress"
+export const COURSE_PROGRESS_CHANGE_EVENT = "freecard-course-progress-change"
 
 const headers = () => {
   const token = getAuthToken()
@@ -452,18 +453,15 @@ export function readMockProgress(slug: string, course: Course): CourseProgress {
   const progress = readLocalProgress()
   const now = new Date()
   const questions = course.sections?.flatMap((section) => section.questions) ?? []
-  const attempted = questions.filter((question) => progress[question.id]).length
-  const mastered = questions.filter((question) => progress[question.id]?.mastered).length
+  const attempted = questions.filter((question) => hasStartedProgress(progress[question.id])).length
+  const mastered = questions.filter((question) => isMasteredProgress(progress[question.id])).length
   const correctAnswers = questions.reduce((total, question) => total + (progress[question.id]?.correctCount ?? 0), 0)
   const incorrectAnswers = questions.reduce((total, question) => total + (progress[question.id]?.incorrectCount ?? 0), 0)
   const due = questions.filter((question) => {
     const item = progress[question.id]
     return item ? new Date(item.nextReviewAt) <= now : false
   }).length
-  const learning = questions.filter((question) => {
-    const item = progress[question.id]
-    return item ? !item.mastered : false
-  }).length
+  const learning = questions.filter((question) => isLearningProgress(progress[question.id])).length
   const lastStudyAt = Object.values(progress)
     .map((item) => item.lastAttemptAt)
     .sort()
@@ -480,8 +478,8 @@ export function readMockProgress(slug: string, course: Course): CourseProgress {
       (acc, question) => {
         acc[question.topic] ??= { topic: question.topic, total: 0, attempted: 0, mastered: 0, correct: 0, incorrect: 0 }
         acc[question.topic].total += 1
-        if (progress[question.id]) acc[question.topic].attempted += 1
-        if (progress[question.id]?.mastered) acc[question.topic].mastered += 1
+        if (hasStartedProgress(progress[question.id])) acc[question.topic].attempted += 1
+        if (isMasteredProgress(progress[question.id])) acc[question.topic].mastered += 1
         acc[question.topic].correct += progress[question.id]?.correctCount ?? 0
         acc[question.topic].incorrect += progress[question.id]?.incorrectCount ?? 0
         return acc
@@ -494,7 +492,7 @@ export function readMockProgress(slug: string, course: Course): CourseProgress {
       const item = progress[question.id]
       return question.topic === topic.topic && item ? new Date(item.nextReviewAt) <= now : false
     }).length,
-    learning: questions.filter((question) => question.topic === topic.topic && progress[question.id] && !progress[question.id].mastered)
+    learning: questions.filter((question) => question.topic === topic.topic && isLearningProgress(progress[question.id]))
       .length,
     masteryPercentage: topic.total ? Math.round((topic.mastered / topic.total) * 100) : 0,
   }))
@@ -538,7 +536,7 @@ export function readLocalProgress() {
             correctCount: item.correctCount ?? 0,
             incorrectCount: item.incorrectCount ?? 0,
             correctStreak: item.correctStreak ?? 0,
-            mastered: item.mastered ?? confidence === "MASTERED",
+            mastered: item.mastered ?? (confidence === "MASTERED" || (item.correctStreak ?? 0) >= 3),
             lastAttemptAt,
             nextReviewAt,
             due: new Date(nextReviewAt) <= new Date(),
@@ -569,6 +567,7 @@ export function writeLocalProgress(questionId: string, confidence: string, answe
     due: new Date(nextReviewAt) <= new Date(),
   }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
+  notifyCourseProgressChanged(COURSE_SLUG)
 }
 
 export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOptionIndex: number) {
@@ -576,7 +575,7 @@ export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOpt
   const previous = progress[question.id]
   const correct = selectedOptionIndex === question.correctOptionIndex
   const correctStreak = correct ? (previous?.correctStreak ?? 0) + 1 : 0
-  const confidence: QuestionProgress["confidence"] = correct ? (correctStreak >= 2 ? "MASTERED" : "GOOD") : "AGAIN"
+  const confidence: QuestionProgress["confidence"] = correct ? (correctStreak >= 3 ? "MASTERED" : "GOOD") : "AGAIN"
   const now = new Date()
   const nextReviewAt = nextLocalReviewAt(now, confidence)
 
@@ -586,12 +585,13 @@ export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOpt
     correctCount: (previous?.correctCount ?? 0) + (correct ? 1 : 0),
     incorrectCount: (previous?.incorrectCount ?? 0) + (correct ? 0 : 1),
     correctStreak,
-    mastered: confidence === "MASTERED",
+    mastered: confidence === "MASTERED" || correctStreak >= 3,
     lastAttemptAt: now.toISOString(),
     nextReviewAt,
     due: new Date(nextReviewAt) <= new Date(),
   }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
+  notifyCourseProgressChanged(COURSE_SLUG)
   return { questionId: question.id, ...progress[question.id], selectedOptionIndex, correct }
 }
 
@@ -600,21 +600,28 @@ export function writeLocalMatchProgress(questionIds: string[]) {
   const now = new Date()
   for (const questionId of questionIds) {
     const previous = progress[questionId]
-    const alreadyMastered = previous?.mastered ?? false
+    const correctStreak = (previous?.correctStreak ?? 0) + 1
+    const alreadyMastered = isMasteredProgress(previous)
     const confidence: QuestionProgress["confidence"] = alreadyMastered ? "MASTERED" : "GOOD"
     progress[questionId] = {
       confidence,
       attemptCount: (previous?.attemptCount ?? 0) + 1,
       correctCount: (previous?.correctCount ?? 0) + 1,
       incorrectCount: previous?.incorrectCount ?? 0,
-      correctStreak: (previous?.correctStreak ?? 0) + 1,
-      mastered: alreadyMastered,
+      correctStreak,
+      mastered: alreadyMastered || correctStreak >= 3,
       lastAttemptAt: now.toISOString(),
       nextReviewAt: nextLocalReviewAt(now, confidence),
       due: false,
     }
   }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
+  notifyCourseProgressChanged(COURSE_SLUG)
+}
+
+export function notifyCourseProgressChanged(courseSlug = COURSE_SLUG) {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(COURSE_PROGRESS_CHANGE_EVENT, { detail: { courseSlug } }))
 }
 
 function filterLocalQuestions(course: Course, filters: FlashcardStudyFilters) {
@@ -635,9 +642,9 @@ function filterLocalQuestions(course: Course, filters: FlashcardStudyFilters) {
     const item = progress[question.id]
     if (topics.size && !topics.has(question.topic)) return false
     if (difficulties.size && !difficulties.has(question.difficulty)) return false
-    if (filters.status === "UNSEEN" && item) return false
-    if (filters.status === "LEARNING" && (!item || item.mastered)) return false
-    if (filters.status === "MASTERED" && !item?.mastered) return false
+    if (filters.status === "UNSEEN" && hasStartedProgress(item)) return false
+    if (filters.status === "LEARNING" && !isLearningProgress(item)) return false
+    if (filters.status === "MASTERED" && !isMasteredProgress(item)) return false
     if (typeof filters.due === "boolean") {
       const isDue = item ? new Date(item.nextReviewAt) <= now : false
       if (filters.due !== isDue) return false
@@ -657,6 +664,18 @@ function getLocalCourseDeck(deckSlug: string) {
   const section = course.sections?.find((item) => item.slug === deckSlug)
   if (!section) throw new Error("Không tìm thấy bộ thẻ.")
   return section
+}
+
+function hasStartedProgress(progress?: Omit<QuestionProgress, "questionId">) {
+  return Boolean(progress && (progress.attemptCount ?? 0) > 0)
+}
+
+function isMasteredProgress(progress?: Omit<QuestionProgress, "questionId">) {
+  return Boolean(progress && hasStartedProgress(progress) && (progress.mastered || (progress.correctStreak ?? 0) >= 3))
+}
+
+function isLearningProgress(progress?: Omit<QuestionProgress, "questionId">) {
+  return Boolean(progress && hasStartedProgress(progress) && !isMasteredProgress(progress))
 }
 
 function nextLocalReviewAt(now: Date, confidence: string) {
