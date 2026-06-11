@@ -70,55 +70,55 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 const validateName = (value: string) => {
   const trimmed = value.trim()
-  if (!trimmed) return "Please enter your name."
-  if (trimmed.length < 2) return "Name must be at least 2 characters."
-  if (trimmed.length > 120) return "Name must be 120 characters or fewer."
+  if (!trimmed) return "Vui lòng nhập họ tên."
+  if (trimmed.length < 2) return "Họ tên phải có ít nhất 2 ký tự."
+  if (trimmed.length > 120) return "Họ tên không được vượt quá 120 ký tự."
   return ""
 }
 
 const validateEmail = (value: string) => {
   const trimmed = value.trim()
-  if (!trimmed) return "Please enter your email."
-  if (trimmed.length > 180) return "Email must be 180 characters or fewer."
-  if (!emailPattern.test(trimmed)) return "Please enter a valid email address."
+  if (!trimmed) return "Vui lòng nhập email."
+  if (trimmed.length > 180) return "Email không được vượt quá 180 ký tự."
+  if (!emailPattern.test(trimmed)) return "Vui lòng nhập email hợp lệ."
   return ""
 }
 
 const passwordChecks = [
   {
-    label: "At least 8 characters",
+    label: "Ít nhất 8 ký tự",
     test: (value: string) => value.length >= 8,
   },
   {
-    label: "One uppercase letter",
+    label: "Có chữ hoa",
     test: (value: string) => /[A-Z]/.test(value),
   },
   {
-    label: "One lowercase letter",
+    label: "Có chữ thường",
     test: (value: string) => /[a-z]/.test(value),
   },
   {
-    label: "One number",
+    label: "Có chữ số",
     test: (value: string) => /\d/.test(value),
   },
   {
-    label: "One special character",
+    label: "Có ký tự đặc biệt",
     test: (value: string) => /[^A-Za-z0-9]/.test(value),
   },
 ]
 
 const validatePassword = (value: string, isRegister: boolean) => {
-  if (!value) return "Please enter your password."
-  if (value.length > 72) return "Password must be 72 characters or fewer."
+  if (!value) return "Vui lòng nhập mật khẩu."
+  if (value.length > 72) return "Mật khẩu không được vượt quá 72 ký tự."
   if (!isRegister) return ""
 
   const missing = passwordChecks.find((check) => !check.test(value))
-  return missing ? "Password does not meet all requirements." : ""
+  return missing ? "Mật khẩu chưa đáp ứng đủ yêu cầu." : ""
 }
 
 const validateOtp = (value: string) => {
-  if (!value) return "Please enter the OTP."
-  if (!/^\d{6}$/.test(value)) return "OTP must be exactly 6 digits."
+  if (!value) return "Vui lòng nhập mã OTP."
+  if (!/^\d{6}$/.test(value)) return "Mã OTP phải gồm đúng 6 chữ số."
   return ""
 }
 
@@ -128,8 +128,8 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
   const googleButtonRef = useRef<HTMLDivElement>(null)
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([])
   const [name, setName] = useState("")
-  const [email, setEmail] = useState(mode === "login" ? "alex@example.com" : "")
-  const [password, setPassword] = useState(mode === "login" ? "password123" : "")
+  const [email, setEmail] = useState(mode === "login" ? "nguyen@example.com" : "")
+  const [password, setPassword] = useState(mode === "login" ? "Matkhau123!" : "")
   const [otp, setOtp] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [verificationEmail, setVerificationEmail] = useState("")
@@ -146,16 +146,16 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
   const actionAreaClassName = "w-full"
 
   const title = isVerifyingRegistration
-    ? "Check your inbox"
+    ? "Kiểm tra hộp thư"
     : isRegister
-      ? "Create account"
-      : "Welcome back"
+      ? "Tạo tài khoản"
+      : "Chào mừng trở lại"
 
   const description = isVerifyingRegistration
-    ? `We sent a 6-digit OTP to ${verificationEmail}.`
+    ? `Chúng tôi đã gửi mã OTP 6 chữ số tới ${verificationEmail}.`
     : isRegister
-      ? "Use a verified email to start learning with FreeCard."
-      : "Sign in to continue your flashcard practice."
+      ? "Dùng email xác thực để bắt đầu học cùng FreeCard."
+      : "Đăng nhập để tiếp tục ôn tập với thẻ ghi nhớ."
 
   const passedPasswordChecks = useMemo(
     () => passwordChecks.map((check) => ({ ...check, passed: check.test(password) })),
@@ -174,7 +174,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         client_id: googleClientId,
         callback: async (response) => {
           if (!response.credential) {
-            setError("Google sign-in did not return a credential.")
+            setError("Google không trả về thông tin xác thực.")
             return
           }
 
@@ -185,7 +185,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
             await loginWithGoogle(response.credential)
             window.location.assign("/courses/java-core")
           } catch (caught) {
-            setError(caught instanceof Error ? caught.message : "Google sign-in failed.")
+            setError(caught instanceof Error ? caught.message : "Đăng nhập bằng Google thất bại.")
           } finally {
             setGoogleLoading(false)
           }
@@ -277,7 +277,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         window.location.assign("/courses/java-core")
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Something went wrong.")
+      setError(caught instanceof Error ? caught.message : "Đã có lỗi xảy ra.")
     } finally {
       setLoading(false)
     }
@@ -296,7 +296,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
       setOtp("")
       setFieldErrors({})
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not resend OTP.")
+      setError(caught instanceof Error ? caught.message : "Không thể gửi lại mã OTP.")
     } finally {
       setResending(false)
     }
@@ -381,7 +381,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
     <section className="w-full">
       <div className={cn("space-y-2", compact ? "mb-5" : "mb-10")}>
         <p className="text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">
-          {isRegister ? "New profile" : "Existing profile"}
+          {isRegister ? "Hồ sơ mới" : "Hồ sơ đã có"}
         </p>
         <div className="space-y-2">
           <h1 className={cn("font-semibold tracking-normal text-foreground", compact ? "text-[2rem]" : "text-4xl")}>
@@ -394,7 +394,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
       <form className={cn(compact ? "space-y-3.5" : "space-y-6")} onSubmit={handleSubmit} noValidate>
         {isRegister && !isVerifyingRegistration ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field error={fieldErrors.name} htmlFor="name" label="Name">
+            <Field error={fieldErrors.name} htmlFor="name" label="Họ tên">
               <Input
                 id="name"
                 autoComplete="name"
@@ -409,7 +409,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
                     }))
                   }
                 }}
-                placeholder="Alex Morgan"
+                placeholder="Nguyễn Minh Anh"
                 aria-invalid={Boolean(fieldErrors.name)}
                 required
               />
@@ -422,7 +422,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
                 value={email}
                 onBlur={() => setFieldErrors((current) => ({ ...current, email: validateEmail(email) || undefined }))}
                 onChange={(event) => updateEmail(event.target.value)}
-                placeholder="alex@example.com"
+                placeholder="nguyen@example.com"
                 aria-invalid={Boolean(fieldErrors.email)}
                 required
               />
@@ -437,7 +437,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
               value={email}
               onBlur={() => setFieldErrors((current) => ({ ...current, email: validateEmail(email) || undefined }))}
               onChange={(event) => updateEmail(event.target.value)}
-              placeholder="alex@example.com"
+              placeholder="nguyen@example.com"
               aria-invalid={Boolean(fieldErrors.email)}
               required
             />
@@ -445,7 +445,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         ) : null}
 
         {!isVerifyingRegistration ? (
-          <Field error={fieldErrors.password} htmlFor="password" label="Password">
+          <Field error={fieldErrors.password} htmlFor="password" label="Mật khẩu">
             <div className="relative">
               <Input
                 id="password"
@@ -469,7 +469,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
                 type="button"
                 className="absolute right-0 top-1/2 grid size-8 -translate-y-1/2 place-items-center text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -518,7 +518,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
                   onPaste={handleOtpPaste}
                   maxLength={1}
                   aria-invalid={Boolean(fieldErrors.otp)}
-                  aria-label={`OTP digit ${index + 1}`}
+                  aria-label={`Chữ số OTP thứ ${index + 1}`}
                   className={cn(
                     "aspect-square h-12 w-full rounded-xl border bg-background/55 text-center text-xl font-semibold outline-none transition-[border-color,box-shadow,background-color]",
                     "border-input focus:border-foreground focus:ring-2 focus:ring-foreground/10",
@@ -553,13 +553,13 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
             ) : (
               <ArrowRight className="size-4" />
             )}
-            {isVerifyingRegistration ? "Verify and continue" : isRegister ? "Create account" : "Sign in"}
+            {isVerifyingRegistration ? "Xác thực và tiếp tục" : isRegister ? "Tạo tài khoản" : "Đăng nhập"}
           </Button>
 
           {googleClientId && !isVerifyingRegistration ? (
             <button
               type="button"
-              aria-label={isRegister ? "Sign up with Google" : "Sign in with Google"}
+              aria-label={isRegister ? "Đăng ký bằng Google" : "Đăng nhập bằng Google"}
               className={cn(
                 "relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-input bg-background text-foreground transition-colors hover:bg-muted",
                 googleLoading ? "pointer-events-none opacity-60" : ""
@@ -582,19 +582,19 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
               onClick={handleResendOtp}
             >
               {resending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
-              {resendCountdown > 0 ? `Resend OTP in ${resendCountdown}s` : "Resend OTP"}
+              {resendCountdown > 0 ? `Gửi lại OTP sau ${resendCountdown}s` : "Gửi lại OTP"}
             </Button>
           ) : null}
         </div>
       </form>
 
       <p className={cn("text-sm text-muted-foreground", compact ? "mt-4" : "mt-8")}>
-        {isRegister ? "Already have an account?" : "New to the project?"}{" "}
+        {isRegister ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
         <Link
           href={isRegister ? "/login" : "/register"}
           className="font-medium text-foreground underline underline-offset-4"
         >
-          {isRegister ? "Sign in" : "Create one"}
+          {isRegister ? "Đăng nhập" : "Tạo tài khoản"}
         </Link>
       </p>
     </section>

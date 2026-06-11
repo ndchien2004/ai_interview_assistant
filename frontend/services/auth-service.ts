@@ -88,7 +88,7 @@ export async function login(email: string, password: string) {
       ...demoUser,
       id: makeId("user"),
       email: email.trim().toLowerCase(),
-      name: email.split("@")[0] || "FreeCard User",
+      name: email.split("@")[0] || "Người dùng FreeCard",
       avatarUrl: null,
       authProvider: "LOCAL",
       passwordSet: true,
@@ -131,7 +131,7 @@ export async function register(name: string, email: string, password: string) {
     email: normalizedEmail,
     otpRequired: true,
     expiresInSeconds: 600,
-    message: "Use OTP 123456 to complete demo registration.",
+    message: "Dùng mã OTP 123456 để hoàn tất đăng ký demo.",
   }
 }
 
@@ -153,18 +153,18 @@ export async function verifyRegistrationOtp(email: string, otp: string) {
 
   const pending = readJson<PendingRegistration | null>(PENDING_REGISTRATION_KEY, null)
   if (!pending || pending.email !== normalizedEmail) {
-    throw new Error("Registration session was not found.")
+    throw new Error("Không tìm thấy phiên đăng ký.")
   }
 
   if (otp !== "123456") {
-    throw new Error("OTP is invalid.")
+    throw new Error("Mã OTP không hợp lệ.")
   }
 
   const user: User = {
     id: makeId("user"),
     name: pending.name,
     email: normalizedEmail,
-    headline: "FreeCard learner",
+    headline: "Người học FreeCard",
     avatarUrl: null,
     authProvider: "LOCAL",
     passwordSet: true,
@@ -197,20 +197,20 @@ export async function resendRegistrationOtp(email: string) {
 
   const pending = readJson<PendingRegistration | null>(PENDING_REGISTRATION_KEY, null)
   if (!pending || pending.email !== normalizedEmail) {
-    throw new Error("Registration session was not found.")
+    throw new Error("Không tìm thấy phiên đăng ký.")
   }
 
   return {
     email: normalizedEmail,
     otpRequired: true,
     expiresInSeconds: 600,
-    message: "Use OTP 123456 to complete demo registration.",
+    message: "Dùng mã OTP 123456 để hoàn tất đăng ký demo.",
   }
 }
 
 export async function loginWithGoogle(idToken: string) {
   if (!canUseApi()) {
-    throw new Error("Backend API URL is required for Google sign-in.")
+    throw new Error("Cần cấu hình URL API backend để đăng nhập bằng Google.")
   }
 
   return apiAuth("/api/auth/google", {
@@ -240,12 +240,12 @@ export async function updateCurrentUser(input: UserProfileUpdateInput) {
       },
       body: JSON.stringify(input),
     })
-    if (!response.ok) throw new Error(await errorMessage(response, "Unable to update profile."))
+    if (!response.ok) throw new Error(await errorMessage(response, "Không thể cập nhật hồ sơ."))
     return storeCurrentUser((await response.json()) as User)
   }
 
   const user = getCurrentUser()
-  if (!user) throw new Error("You must be signed in to update your profile.")
+  if (!user) throw new Error("Bạn cần đăng nhập để cập nhật hồ sơ.")
   const updated = applyLocalProfileUpdate(user, input)
   return storeCurrentUser({
     ...updated,
@@ -264,12 +264,12 @@ export async function uploadUserAvatar(file: File) {
       headers: authHeaders(),
       body: formData,
     })
-    if (!response.ok) throw new Error(await errorMessage(response, "Unable to upload avatar."))
+    if (!response.ok) throw new Error(await errorMessage(response, "Không thể tải ảnh đại diện lên."))
     return storeCurrentUser((await response.json()) as User)
   }
 
   const user = getCurrentUser()
-  if (!user) throw new Error("You must be signed in to upload an avatar.")
+  if (!user) throw new Error("Bạn cần đăng nhập để tải ảnh đại diện lên.")
   return storeCurrentUser({
     ...user,
     avatarUrl: await fileToDataUrl(file),
@@ -282,12 +282,12 @@ export async function removeUserAvatar() {
       method: "DELETE",
       headers: authHeaders(),
     })
-    if (!response.ok) throw new Error(await errorMessage(response, "Unable to remove avatar."))
+    if (!response.ok) throw new Error(await errorMessage(response, "Không thể xóa ảnh đại diện."))
     return storeCurrentUser((await response.json()) as User)
   }
 
   const user = getCurrentUser()
-  if (!user) throw new Error("You must be signed in to remove an avatar.")
+  if (!user) throw new Error("Bạn cần đăng nhập để xóa ảnh đại diện.")
   return storeCurrentUser({ ...user, avatarUrl: null })
 }
 
@@ -301,14 +301,14 @@ export async function changePassword(input: PasswordUpdateInput) {
       },
       body: JSON.stringify(input),
     })
-    if (!response.ok) throw new Error(await errorMessage(response, "Unable to update password."))
+    if (!response.ok) throw new Error(await errorMessage(response, "Không thể cập nhật mật khẩu."))
     return storeCurrentUser((await response.json()) as User)
   }
 
   const user = getCurrentUser()
-  if (!user) throw new Error("You must be signed in to update your password.")
+  if (!user) throw new Error("Bạn cần đăng nhập để cập nhật mật khẩu.")
   if ((user.passwordSet ?? true) && !input.currentPassword?.trim()) {
-    throw new Error("Current password is required.")
+    throw new Error("Vui lòng nhập mật khẩu hiện tại.")
   }
   const validationError = validatePassword(input.newPassword)
   if (validationError) throw new Error(validationError)
@@ -365,14 +365,14 @@ function applyLocalProfileUpdate(user: User, input: UserProfileUpdateInput): Use
 
   if (nameChanged) {
     const changeCount = user.nameChangeCount ?? 0
-    if (changeCount >= 3) throw new Error("Name change limit has been reached.")
+    if (changeCount >= 3) throw new Error("Bạn đã đạt giới hạn đổi tên.")
     if (user.nameLastChangedAt && Date.now() < new Date(user.nameLastChangedAt).getTime() + 30 * 24 * 60 * 60 * 1000) {
-      throw new Error("Name can only be changed once every 30 days.")
+      throw new Error("Bạn chỉ có thể đổi tên mỗi 30 ngày một lần.")
     }
   }
 
   if (nextDateOfBirth && user.dateOfBirth && user.dateOfBirth !== nextDateOfBirth) {
-    throw new Error("Date of birth can only be set once.")
+    throw new Error("Ngày sinh chỉ có thể được thiết lập một lần.")
   }
 
   return {
@@ -396,7 +396,7 @@ async function apiRequest<T>(path: string, payload: Record<string, string>) {
   })
 
   if (!response.ok) {
-    throw new Error(await errorMessage(response, "Authentication failed."))
+    throw new Error(await errorMessage(response, "Xác thực thất bại."))
   }
 
   return (await response.json()) as T
@@ -413,15 +413,15 @@ async function errorMessage(response: Response, fallback: string) {
 
 function validateAvatarFile(file: File) {
   const supported = ["image/jpeg", "image/png", "image/webp"].includes(file.type)
-  if (!supported) return "Avatar must be a JPG, PNG, or WebP image."
-  if (file.size > 2 * 1024 * 1024) return "Avatar image must be smaller than 2MB."
+  if (!supported) return "Ảnh đại diện phải là ảnh JPG, PNG hoặc WebP."
+  if (file.size > 2 * 1024 * 1024) return "Ảnh đại diện phải nhỏ hơn 2MB."
   return ""
 }
 
 function validatePassword(value: string) {
-  if (value.length < 8 || value.length > 72) return "Password must be between 8 and 72 characters."
+  if (value.length < 8 || value.length > 72) return "Mật khẩu phải có từ 8 đến 72 ký tự."
   if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/\d/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
-    return "Password must include uppercase, lowercase, number, and special character."
+    return "Mật khẩu phải có chữ hoa, chữ thường, chữ số và ký tự đặc biệt."
   }
   return ""
 }
@@ -430,7 +430,7 @@ function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error("Unable to read avatar file."))
+    reader.onerror = () => reject(new Error("Không thể đọc tệp ảnh đại diện."))
     reader.readAsDataURL(file)
   })
 }

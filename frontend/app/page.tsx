@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation"
+import { LandingPage } from "@/components/views/marketing/landing-page"
 
 export default function Home() {
-  redirect("/courses/java-core")
+  return <LandingPage />
 }
