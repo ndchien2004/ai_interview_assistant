@@ -552,7 +552,7 @@ export function readLocalProgress() {
   }
 }
 
-export function writeLocalProgress(questionId: string, confidence: string, answerText?: string) {
+export function writeLocalProgress(questionId: string, confidence: string, answerText?: string, courseSlug = COURSE_SLUG) {
   const progress = readLocalProgress()
   const previous = progress[questionId]
   const now = new Date()
@@ -572,10 +572,10 @@ export function writeLocalProgress(questionId: string, confidence: string, answe
     due: new Date(nextReviewAt) <= new Date(),
   }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
-  notifyCourseProgressChanged(COURSE_SLUG)
+  notifyCourseProgressChanged(courseSlug)
 }
 
-export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOptionIndex: number) {
+export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOptionIndex: number, courseSlug = COURSE_SLUG) {
   const progress = readLocalProgress()
   const previous = progress[question.id]
   const correct = selectedOptionIndex === question.correctOptionIndex
@@ -596,11 +596,11 @@ export function writeLocalChoiceProgress(question: PracticeQuestion, selectedOpt
     due: new Date(nextReviewAt) <= new Date(),
   }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
-  notifyCourseProgressChanged(COURSE_SLUG)
+  notifyCourseProgressChanged(courseSlug)
   return { questionId: question.id, ...progress[question.id], selectedOptionIndex, correct }
 }
 
-export function writeLocalMatchProgress(questionIds: string[]) {
+export function writeLocalMatchProgress(questionIds: string[], courseSlug = COURSE_SLUG) {
   const progress = readLocalProgress()
   const now = new Date()
   for (const questionId of questionIds) {
@@ -621,7 +621,7 @@ export function writeLocalMatchProgress(questionIds: string[]) {
     }
   }
   window.localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(progress))
-  notifyCourseProgressChanged(COURSE_SLUG)
+  notifyCourseProgressChanged(courseSlug)
 }
 
 export function notifyCourseProgressChanged(courseSlug = COURSE_SLUG) {

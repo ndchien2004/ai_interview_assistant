@@ -60,8 +60,8 @@ export function CourseDeckDetailView({ courseSlug, deckSlug }: { courseSlug: str
             <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{deck.title}</h1>
             <p className="mt-2 max-w-3xl text-base leading-7 text-muted-foreground">{deck.description}</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:w-72">
-            <Metric label="Câu hỏi" value={deck.questions.length.toString()} />
+          <div className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 sm:w-80">
+            <Metric label="Câu hỏi" value={deck.questions.length.toString()} compact />
             <Metric label="Học phần" value={course.title} />
           </div>
         </div>
@@ -139,9 +139,9 @@ function Action({
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, compact }: { label: string; value: string; compact?: boolean }) {
   return (
-    <div className="rounded-md border border-border bg-background p-3">
+    <div className={`rounded-md border border-border bg-background ${compact ? "min-h-16 p-2.5" : "p-3"}`}>
       <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
       <p className="mt-1 break-words text-lg font-semibold tracking-tight">{value}</p>
     </div>

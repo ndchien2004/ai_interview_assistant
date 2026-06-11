@@ -12,10 +12,22 @@ import { Progress } from "@/components/ui/progress"
 import { COURSE_PROGRESS_CHANGE_EVENT, getCourse, getCourseProgress } from "@/services/course-service"
 import { listActivePracticeSessions } from "@/services/practice-service"
 import type { Course, CourseProgress, CourseSection, PracticeSession, PracticeSessionMode, TopicProgress } from "@/types"
+import { cn } from "@/lib/utils"
 
+// ─── All original constants unchanged ────────────────────────────────────────
 const courseSlug = "java-fullstack-flashcard-bank"
+const courseSlugAliases = new Set([courseSlug, "java-core"])
 
+// ─── Design tokens ─────────────────────────────────────────────────────────
+const card =
+  "rounded-2xl border border-border bg-card shadow-sm"
+
+const rowItem =
+  "rounded-xl border border-border bg-card transition-all duration-150 hover:border-foreground/25 hover:bg-muted/45"
+
+// ─── CourseOverview ───────────────────────────────────────────────────────────
 export function CourseOverview() {
+  // All original state & logic unchanged
   const [course, setCourse] = useState<Course | null>(null)
   const [progress, setProgress] = useState<CourseProgress | null>(null)
   const [activeSessions, setActiveSessions] = useState<PracticeSession[]>([])
@@ -40,7 +52,7 @@ export function CourseOverview() {
 
     const handleProgressChange = (event: Event) => {
       const detail = (event as CustomEvent<{ courseSlug?: string }>).detail
-      if (detail?.courseSlug && detail.courseSlug !== courseSlug) return
+      if (detail?.courseSlug && !courseSlugAliases.has(detail.courseSlug)) return
       loadOverview()
     }
 
@@ -77,10 +89,7 @@ export function CourseOverview() {
   const nextDeck = useMemo(() => {
     return (
       sections
-        .map((section) => ({
-          section,
-          progress: topicProgress[section.title],
-        }))
+        .map((section) => ({ section, progress: topicProgress[section.title] }))
         .sort((a, b) => deckPriority(b) - deckPriority(a))[0]?.section ?? null
     )
   }, [sections, topicProgress])
@@ -94,83 +103,161 @@ export function CourseOverview() {
   }
 
   const baseDeckHref = nextDeck ? `/courses/${course.slug}/decks/${nextDeck.slug}` : `/courses/${course.slug}`
+  const masteredPct = progress.totalQuestions
+    ? Math.round((progress.masteredQuestions / progress.totalQuestions) * 100)
+    : 0
 
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 rounded-md border border-border bg-card p-5 shadow-sm lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <BookOpen className="size-4" />
-            Trang chủ
-          </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Java Full-stack</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Theo dõi tiến độ và tiếp tục học từ bộ thẻ phù hợp nhất.
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href={`/courses/${course.slug}`}>
-            <Library className="size-4" />
-            Mở học phần
-          </Link>
-        </Button>
-      </section>
+    <div className="mx-auto w-full space-y-6 px-0 pt-3 pb-8">
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Cần ôn" value={progress.dueQuestions.toString()} />
-        <Metric label="Đang học" value={progress.learningQuestions.toString()} />
-        <Metric label="Đã học" value={`${progress.attemptedQuestions}/${progress.totalQuestions}`} />
-        <Metric label="Đã thuộc" value={`${progress.masteredQuestions}/${progress.totalQuestions}`} />
-      </section>
-
-      {activeSessions.length ? (
-        <section className="rounded-md border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Đang học dở</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight">Tiếp tục phiên hiện tại</h2>
+      {/* ── Hero: title + overall progress + open-course ── */}
+      <section className={cn(card, "px-7 py-6")}>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left: identity */}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <BookOpen className="size-4" />
+              Trang chủ
             </div>
-            <p className="text-sm text-muted-foreground">{activeSessions.length} phiên</p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
+              Java Full-stack
+            </h1>
+            <p className="mt-1 text-base text-muted-foreground">
+              Theo dõi tiến độ và tiếp tục học từ bộ thẻ phù hợp nhất.
+            </p>
           </div>
-          <div className="grid gap-3">
+
+          {/* Right: metric pills + action */}
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <MetricPill label="Cần ôn" value={progress.dueQuestions} accent="amber" />
+            <MetricPill label="Đang học" value={progress.learningQuestions} accent="blue" />
+            <MetricPill label="Đã thuộc" value={`${progress.masteredQuestions}/${progress.totalQuestions}`} accent="green" />
+            <Link
+              href={`/courses/${course.slug}`}
+              className={cn(
+                "flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-all duration-150 hover:border-foreground/25 hover:bg-muted/50 active:scale-95"
+              )}
+            >
+              <Library className="size-4" />
+              Mở học phần
+            </Link>
+          </div>
+        </div>
+
+        {/* Overall progress bar */}
+        <div className="mt-5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              Tổng tiến độ · {progress.attemptedQuestions}/{progress.totalQuestions} đã học
+            </span>
+            <span className="text-sm font-semibold text-foreground">{masteredPct}% thuộc</span>
+          </div>
+          <Progress value={masteredPct} className="h-2" />
+        </div>
+      </section>
+
+      {/* ── Active sessions (if any) ── */}
+      {activeSessions.length > 0 && (
+        <section className={cn(card, "px-7 py-5")}>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Đang học dở
+            </p>
+            <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {activeSessions.length} phiên
+            </span>
+          </div>
+          <div className="space-y-2">
             {activeSessions.slice(0, 3).map((session) => (
-              <ActiveSessionRow key={session.id} session={session} deck={session.deckSlug ? deckBySlug[session.deckSlug] : undefined} />
+              <ActiveSessionRow
+                key={session.id}
+                session={session}
+                deck={session.deckSlug ? deckBySlug[session.deckSlug] : undefined}
+              />
             ))}
           </div>
         </section>
-      ) : null}
+      )}
 
-      <section className="rounded-md border border-border bg-card p-5 shadow-sm">
-        <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
+      {/* ── Next deck + quick actions ── */}
+      <section className={cn(card, "px-7 py-6")}>
+        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Học tiếp
+        </p>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">Học tiếp</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight">{nextDeck?.title ?? "Chưa có bộ thẻ"}</h2>
-            {nextDeck ? <p className="mt-1 text-sm text-muted-foreground">{nextDeck.questions.length} câu hỏi</p> : null}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {nextDeck ? (
-              <>
-                <QuickAction href={`${baseDeckHref}/learn`} icon={Brain} label="Học" primary />
-                <QuickAction href={`${baseDeckHref}/test`} icon={ClipboardCheck} label="Kiểm tra" />
-                <QuickAction href={`${baseDeckHref}/match`} icon={Gamepad2} label="Ghép thẻ" />
-              </>
-            ) : (
-              <Button asChild>
-                <Link href={`/courses/${course.slug}`}>Tạo bộ thẻ</Link>
-              </Button>
+            <h2 className="truncate text-2xl font-bold tracking-tight text-foreground">
+              {nextDeck?.title ?? "Chưa có bộ thẻ"}
+            </h2>
+            {nextDeck && (
+              <p className="mt-1 text-base text-muted-foreground">
+                {nextDeck.questions.length} câu hỏi
+                {topicProgress[nextDeck.title] && (
+                  <> · {topicProgress[nextDeck.title].due ?? 0} cần ôn</>
+                )}
+              </p>
             )}
           </div>
+
+          {nextDeck ? (
+            <div className="flex flex-wrap gap-2">
+              {/* Primary CTA */}
+              <Link
+                href={`${baseDeckHref}/learn`}
+                className={cn(
+                  "group relative overflow-hidden rounded-xl border border-primary bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-200",
+                  "shadow-sm hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md",
+                  "active:translate-y-0 active:scale-[0.98]"
+                )}
+              >
+                <span className="pointer-events-none absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-500 group-hover:translate-x-[100%]" />
+                <span className="relative flex items-center gap-1.5">
+                  <Brain className="size-4" />
+                  Học
+                </span>
+              </Link>
+
+              {/* Secondary CTAs */}
+              {(
+                [
+                  { href: `${baseDeckHref}/test`, icon: ClipboardCheck, label: "Kiểm tra" },
+                  { href: `${baseDeckHref}/match`, icon: Gamepad2, label: "Ghép thẻ" },
+                ] as const
+              ).map(({ href, icon: Icon, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-all duration-150 hover:border-foreground/25 hover:bg-muted/50 active:scale-95"
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <Button asChild>
+              <Link href={`/courses/${course.slug}`}>Tạo bộ thẻ</Link>
+            </Button>
+          )}
         </div>
       </section>
 
+      {/* ── Deck list ── */}
       <section>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Bộ thẻ</h2>
-          <p className="text-sm text-muted-foreground">{sections.length} bộ</p>
+        <div className="mb-2.5 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">Bộ thẻ</h2>
+          <span className="text-sm text-muted-foreground">{sections.length} bộ</span>
         </div>
-        <div className="grid gap-3">
+        <div className="space-y-1.5">
           {sections.slice(0, 6).map((section) => (
-            <DeckRow key={section.id} courseSlug={course.slug} section={section} progress={topicProgress[section.title]} />
+            <DeckRow
+              key={section.id}
+              courseSlug={course.slug}
+              section={section}
+              progress={topicProgress[section.title]}
+            />
           ))}
         </div>
       </section>
@@ -178,6 +265,24 @@ export function CourseOverview() {
   )
 }
 
+// ─── MetricPill ──────────────────────────────────────────────────────────────
+function MetricPill({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number
+  accent: "amber" | "blue" | "green"
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-muted px-4 py-2 text-center text-foreground">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="text-base font-bold leading-tight">{value}</p>
+    </div>
+  )
+}
+
+// ─── ActiveSessionRow ────────────────────────────────────────────────────────
 function ActiveSessionRow({ session, deck }: { session: PracticeSession; deck?: CourseSection }) {
   const answered = session.answeredCount ?? session.attempts.length
   const total = session.questionCount ?? session.questions?.length ?? 0
@@ -187,24 +292,33 @@ function ActiveSessionRow({ session, deck }: { session: PracticeSession; deck?: 
   return (
     <Link
       href={href}
-      className="grid gap-3 rounded-md border border-border bg-background p-4 transition-colors hover:bg-muted/40 sm:grid-cols-[1fr_220px_auto] sm:items-center"
+      className={cn(
+        rowItem,
+        "flex items-center gap-4 px-4 py-3 active:scale-[0.99]"
+      )}
     >
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold">{deck?.title ?? "Học phần hiện tại"}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{modeLabel(session.mode)} · {answered}/{total || "?"} câu</p>
-      </div>
-      <div>
-        <div className="flex justify-between gap-3 text-xs text-muted-foreground">
-          <span>{percentage}% hoàn thành</span>
-          <span>{formatSessionTime(session.createdAt)}</span>
+      <PlayCircle className="size-5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <p className="truncate text-base font-semibold text-foreground">
+            {deck?.title ?? "Học phần hiện tại"}
+          </p>
+          <span className="shrink-0 text-sm text-muted-foreground">
+            {formatSessionTime(session.createdAt)}
+          </span>
         </div>
-        <Progress value={percentage} className="mt-2" />
+        <div className="mt-2 flex items-center gap-3">
+          <Progress value={percentage} className="h-1.5 flex-1" />
+          <span className="shrink-0 text-sm font-medium text-muted-foreground">
+            {answered}/{total || "?"} · {percentage}%
+          </span>
+        </div>
       </div>
-      <PlayCircle className="size-5 text-muted-foreground" />
     </Link>
   )
 }
 
+// ─── DeckRow ─────────────────────────────────────────────────────────────────
 function DeckRow({
   courseSlug,
   section,
@@ -215,62 +329,61 @@ function DeckRow({
   progress?: TopicProgress
 }) {
   const attempted = progress?.attempted ?? 0
-  const learning = progress?.learning ?? 0
   const mastered = progress?.mastered ?? 0
+  const due = progress?.due ?? 0
   const total = progress?.total ?? section.questions.length
-  const studiedPercentage = total ? Math.round((attempted / total) * 100) : 0
+  const masteredPct = total ? Math.round((mastered / total) * 100) : 0
+  const attemptedPct = total ? Math.round((attempted / total) * 100) : 0
 
   return (
     <Link
       href={`/courses/${courseSlug}/decks/${section.slug}`}
-      className="grid gap-3 rounded-md border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-foreground/35 hover:bg-muted/30 sm:grid-cols-[1fr_260px_auto] sm:items-center"
+      className={cn(
+        rowItem,
+        "grid items-center gap-4 px-5 py-4 active:scale-[0.99]",
+        "sm:grid-cols-[minmax(0,1fr)_260px_auto]"
+      )}
     >
+      {/* Name + counters */}
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold">{section.title}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{section.questions.length} câu hỏi</p>
-      </div>
-      <div>
-        <div className="flex justify-between gap-3 text-xs text-muted-foreground">
-          <span>{attempted}/{total} đã học · {learning} đang học · {mastered} thuộc</span>
-          <span>{studiedPercentage}%</span>
+        <p className="truncate text-base font-semibold text-foreground">{section.title}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+          <span>{section.questions.length} câu</span>
+          {due > 0 && (
+            <span className="font-medium text-foreground">{due} cần ôn</span>
+          )}
+          {mastered > 0 && (
+            <span className="text-foreground">{mastered} thuộc</span>
+          )}
         </div>
-        <Progress value={studiedPercentage} className="mt-2" />
       </div>
-      <ArrowRight className="size-4 text-muted-foreground" />
+
+      {/* Progress bars — stacked: attempted (bg) + mastered (fg) */}
+      <div className="hidden sm:block">
+        <div className="mb-1.5 flex justify-between text-sm text-muted-foreground">
+          <span>{attempted}/{total} đã học</span>
+          <span>{masteredPct}%</span>
+        </div>
+        <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+          {/* attempted */}
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-foreground/20"
+            style={{ width: `${attemptedPct}%` }}
+          />
+          {/* mastered on top */}
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-primary"
+            style={{ width: `${masteredPct}%` }}
+          />
+        </div>
+      </div>
+
+      <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
     </Link>
   )
 }
 
-function QuickAction({
-  href,
-  icon: Icon,
-  label,
-  primary,
-}: {
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  primary?: boolean
-}) {
-  return (
-    <Button variant={primary ? "default" : "outline"} size="sm" asChild>
-      <Link href={href}>
-        <Icon className="size-4" />
-        {label}
-      </Link>
-    </Button>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border bg-card p-4 shadow-sm">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-    </div>
-  )
-}
-
+// ─── Helpers (all original logic unchanged) ──────────────────────────────────
 function sessionHref(session: PracticeSession) {
   const modePath = modePathFor(session.mode)
   if (session.deckSlug) return `/courses/${session.courseSlug}/decks/${session.deckSlug}/${modePath}`

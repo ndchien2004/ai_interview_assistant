@@ -321,7 +321,7 @@ async function submitLocalPracticeAttempt(
   answerText: string,
   confidence: PracticeConfidence
 ) {
-  writeLocalProgress(questionId, confidence, answerText)
+  writeLocalProgress(questionId, confidence, answerText, session.courseSlug)
   const lastProgress = readLocalProgress()[questionId]
   const attemptedIds = new Set([...session.attempts.map((attempt) => attempt.questionId), questionId])
   const questions = session.questions ?? []
@@ -354,7 +354,7 @@ async function submitLocalChoiceAttempt(
   question: PracticeQuestion,
   selectedOptionIndex: number
 ) {
-  const result = writeLocalChoiceProgress(question, selectedOptionIndex)
+  const result = writeLocalChoiceProgress(question, selectedOptionIndex, session.courseSlug)
   const attemptedIds = new Set([...session.attempts.map((attempt) => attempt.questionId), question.id])
   const questions = session.questions ?? []
   const nextQuestion = questions.find((item) => !attemptedIds.has(item.id)) ?? null
@@ -383,7 +383,7 @@ async function submitLocalChoiceAttempt(
 }
 
 async function submitLocalMatchResult(session: PracticeSession, questionIds: string[], mistakeCount: number, timeSpentSeconds?: number) {
-  writeLocalMatchProgress(questionIds)
+  writeLocalMatchProgress(questionIds, session.courseSlug)
   const nextSession = {
     ...session,
     status: "COMPLETED",
@@ -419,7 +419,7 @@ async function submitLocalTestSession(
     const question = questionsById.get(answer.questionId)
     if (!question || answer.selectedOptionIndex == null) return []
     const correct = answer.selectedOptionIndex === question.correctOptionIndex
-    const result = writeLocalChoiceProgress(question, answer.selectedOptionIndex)
+    const result = writeLocalChoiceProgress(question, answer.selectedOptionIndex, session.courseSlug)
     return [
       {
         id: makeId("attempt"),
