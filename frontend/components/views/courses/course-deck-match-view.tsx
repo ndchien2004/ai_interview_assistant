@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, Clock3, Gamepad2, History, RotateCcw, X, XCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Clock3, Gamepad2, History, RotateCcw, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { StateBlock } from "@/components/common/state-block"
@@ -104,18 +104,20 @@ export function CourseDeckMatchView({
   const title = deck?.title ? `Ghép thẻ · ${deck.title}` : "Ghép thẻ"
   const progressValue = (matchedIds.size / Math.max(1, questions.length)) * 100
 
-  const loadHistory = async () => {
-    const sessions = await listPracticeSessions({
+  useEffect(() => {
+    let active = true
+    listPracticeSessions({
       courseSlug,
       mode: "MATCH",
       deckSlug,
       status: "COMPLETED",
+    }).then((sessions) => {
+      if (active) setHistory(sessions.slice(0, 8))
     })
-    setHistory(sessions.slice(0, 8))
-  }
 
-  useEffect(() => {
-    void loadHistory()
+    return () => {
+      active = false
+    }
   }, [courseSlug, deckSlug])
 
   useEffect(() => {
@@ -128,7 +130,14 @@ export function CourseDeckMatchView({
       .then(() => {
         if (!active) return
         setSaved(true)
-        void loadHistory()
+        listPracticeSessions({
+          courseSlug,
+          mode: "MATCH",
+          deckSlug,
+          status: "COMPLETED",
+        }).then((sessions) => {
+          if (active) setHistory(sessions.slice(0, 8))
+        })
       })
       .catch(() => {
         if (active) {
@@ -143,7 +152,7 @@ export function CourseDeckMatchView({
     return () => {
       active = false
     }
-  }, [complete, elapsedSeconds, matchedIds, mistakes, saved, session])
+  }, [complete, courseSlug, deckSlug, elapsedSeconds, matchedIds, mistakes, saved, session])
 
   const handleTileSelect = (tile: MatchTile) => {
     if (complete || correctTileIds.size || wrongTileIds.size || matchedIds.has(tile.questionId)) return

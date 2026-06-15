@@ -4,9 +4,10 @@ import { Brain, CheckSquare, Gamepad2, Layers3, Minus, Play, Plus, Search, Shuff
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 
+import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { neo } from "@/lib/neo"
 import { cn } from "@/lib/utils"
 import { getCourse, listCourseQuestions } from "@/services/course-service"
 import { createLearnSession, createMatchSession, createTestSession } from "@/services/practice-service"
@@ -28,10 +29,10 @@ const MATCH_MAX_PAIRS = 7
 // Dark: near-background glass surfaces with neutral borders
 
 const surface =
-  "rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.045]"
+  neo.section
 
 const subtleRow =
-  "rounded-xl border border-slate-200/70 bg-slate-50/80 dark:border-white/10 dark:bg-white/[0.035]"
+  neo.row
 
 // ─── SessionTopBar (compact) ──────────────────────────────────────────────────
 function SessionTopBar({
@@ -54,20 +55,20 @@ function SessionTopBar({
       <div>
         <a
           href={backHref}
-          className="mb-3 inline-flex -translate-y-1 items-center gap-1.5 text-base text-slate-500 transition-colors hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+          className="mb-3 inline-flex items-center gap-1.5 rounded-full border-2 border-transparent px-1 text-base font-extrabold text-muted-foreground transition-colors hover:border-[#172018] hover:bg-[#fef08a] hover:text-[#172018] dark:hover:border-white/80"
         >
           <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
           {backLabel}
         </a>
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-400 dark:text-zinc-500">
+        <div className="flex items-center gap-2 text-sm font-extrabold text-muted-foreground">
           <Icon className="size-4" />
           {eyebrow}
         </div>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{title}</h1>
+        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-foreground">{title}</h1>
       </div>
-      <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-500 dark:border-white/10 dark:bg-white/[0.055] dark:text-zinc-400">
+      <span className={cn("shrink-0 px-4 py-2 text-sm", neo.pill, neo.tones.sky)}>
         {meta}
       </span>
     </header>
@@ -87,7 +88,7 @@ function Panel({
   return (
     <div className={cn(surface, "px-5 py-4", className)}>
       {title && (
-        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-zinc-500">
+        <p className="mb-3 text-xs font-extrabold uppercase tracking-normal text-muted-foreground">
           {title}
         </p>
       )}
@@ -107,17 +108,17 @@ function SegmentedControl<T extends string>({
   options: { value: T; label: string }[]
 }) {
   return (
-    <div className="grid auto-cols-fr grid-flow-col rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-white/10 dark:bg-black/20">
+    <div className="grid auto-cols-fr grid-flow-col rounded-md border-2 border-[#172018] bg-muted/40 p-1 shadow-[4px_4px_0_#172018] dark:border-white/80 dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
           className={cn(
-            "rounded-lg px-4 py-2.5 text-base font-medium transition-all duration-150",
+            "rounded-sm border-2 border-transparent px-4 py-2.5 text-base font-extrabold transition-all duration-150",
             value === opt.value
-              ? "bg-white text-slate-900 shadow-sm dark:bg-white/12 dark:text-white"
-              : "text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              ? "border-[#172018] bg-[#fef08a] text-[#172018] shadow-[2px_2px_0_#172018] dark:border-white/80 dark:bg-accent dark:text-accent-foreground"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           {opt.label}
@@ -142,10 +143,11 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-4 py-2 text-base font-medium transition-all duration-150 active:scale-95",
+        "rounded-full border-2 px-4 py-2 text-base font-extrabold shadow-[3px_3px_0_#172018] duration-150 active:translate-x-1 active:translate-y-1 active:shadow-none dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]",
+        neo.interactive,
         selected
-          ? "border-slate-700 bg-slate-800 text-white shadow-sm dark:border-white/35 dark:bg-white/22 dark:text-white"
-          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.035] dark:text-zinc-400 dark:hover:border-white/18 dark:hover:bg-white/[0.07]"
+          ? "border-[#172018] bg-[#fef08a] text-[#172018] dark:border-white/80"
+          : "border-[#172018] bg-white text-[#172018] hover:bg-[#fef08a] dark:border-white/80 dark:bg-card dark:text-card-foreground"
       )}
     >
       {children}
@@ -171,25 +173,24 @@ function ToggleRow({
       onClick={onClick}
       className={cn(
         subtleRow,
-        "flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-base transition-all duration-150",
-        "hover:border-slate-300 hover:bg-slate-100/80 dark:hover:border-white/18 dark:hover:bg-white/[0.07]"
+        "flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-base"
       )}
     >
-      <span className="flex items-center gap-2 font-medium text-slate-700 dark:text-zinc-300">
-        <Icon className="size-5 text-slate-400 dark:text-zinc-500" />
+      <span className="flex items-center gap-2 font-extrabold text-foreground">
+        <Icon className="size-5 text-muted-foreground" />
         {label}
       </span>
       {/* Toggle pill */}
       <span
         className={cn(
-          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200",
-          selected ? "bg-zinc-300 dark:bg-zinc-200" : "bg-slate-300 dark:bg-white/20"
+          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-[#172018] p-0.5 shadow-[2px_2px_0_#172018] transition-colors duration-200 dark:border-white/80 dark:shadow-[2px_2px_0_rgba(255,255,255,0.24)]",
+          selected ? "bg-[#fef08a]" : "bg-muted"
         )}
       >
         <span
           className={cn(
-            "block size-4 rounded-full bg-white shadow-sm transition-transform duration-200",
-            selected ? "translate-x-4" : "translate-x-0"
+            "block size-4 rounded-full border border-[#172018] bg-white transition-transform duration-200",
+            selected ? "translate-x-5" : "translate-x-0"
           )}
         />
       </span>
@@ -214,7 +215,7 @@ function CheckGroup<T extends string>({
   if (!values.length) return null
   return (
     <div className="space-y-2">
-      <p className="text-base font-medium text-slate-700 dark:text-zinc-300">{title}</p>
+      <p className="text-base font-extrabold text-foreground">{title}</p>
       <div className="flex flex-wrap gap-2">
         {values.map((v) => (
           <FilterChip key={v} selected={selected.includes(v)} onClick={() => onToggle(v)}>
@@ -317,6 +318,8 @@ export function SessionSetupView({
   const modeCopy = modeContent(mode)
   const itemLabel = mode === "LEARN" ? "thẻ" : mode === "MATCH" ? "cặp" : "câu"
 
+  if (loading) return <LoadingSpinner />
+
   const handleStart = async () => {
     if (!preview.length || starting) return
     setStarting(true)
@@ -352,7 +355,7 @@ export function SessionSetupView({
 
   // ── UI ─────────────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto flex h-[calc(100dvh-8rem)] w-full max-w-7xl flex-col gap-4 overflow-hidden px-5 md:px-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 overflow-visible px-5 pb-8 pr-7 md:px-8 md:pr-10 lg:min-h-[calc(100dvh-8rem)]">
       {/* ── Header ── */}
       <SessionTopBar
         title={modeCopy.title}
@@ -364,10 +367,10 @@ export function SessionSetupView({
       />
 
       {/* ── Two-column body ── */}
-      <div className="grid min-h-0 flex-1 gap-5 overflow-hidden lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid flex-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_400px]">
 
         {/* ── Left column: scope info + filters ── */}
-        <div className="min-h-0 space-y-4 overflow-hidden">
+        <div className="space-y-5 overflow-visible">
 
           {/* Scope row — compact, informational only */}
           <div
@@ -376,12 +379,12 @@ export function SessionSetupView({
               "flex items-center gap-4 px-5 py-4"
             )}
           >
-            <Layers3 className="size-5 shrink-0 text-slate-400 dark:text-zinc-500" />
+            <Layers3 className="size-5 shrink-0 text-amber-600 dark:text-amber-300" />
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-slate-800 dark:text-zinc-100">
+              <p className="truncate text-base font-extrabold text-foreground">
                 {scopedDeck?.title ?? course.title}
               </p>
-              <p className="text-sm text-slate-500 dark:text-zinc-400">
+              <p className="text-sm font-medium text-muted-foreground">
                 {scopedQuestions.length} câu trong {scopedDeck ? "bộ thẻ này" : "học phần này"}
               </p>
             </div>
@@ -392,12 +395,12 @@ export function SessionSetupView({
             <div className="space-y-4">
               {/* Search */}
               <div className="relative">
-                <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
+                <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Tìm câu hỏi, đáp án, tag..."
-                  className="h-12 rounded-xl border-slate-200 bg-slate-50/80 pl-12 text-base placeholder:text-slate-400 focus-visible:ring-zinc-400/40 dark:border-white/10 dark:bg-black/20 dark:placeholder:text-zinc-500"
+                  className="h-12 pl-12 text-base"
                 />
               </div>
 
@@ -429,7 +432,7 @@ export function SessionSetupView({
         </div>
 
         {/* ── Right column: config + start ── */}
-        <aside className="min-h-0 space-y-4 overflow-hidden lg:self-start">
+        <aside className="space-y-5 overflow-visible lg:self-start">
 
           {/* Session config */}
           <Panel title="Cấu hình phiên">
@@ -452,9 +455,8 @@ export function SessionSetupView({
                     onClick={() => setQuestionLimit((c) => Math.max(1, c - 1))}
                     aria-label={`Giảm số ${itemLabel}`}
                     className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-150 active:scale-95",
-                      "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-                      "dark:border-white/10 dark:bg-white/[0.035] dark:text-zinc-400 dark:hover:border-white/18 dark:hover:bg-white/[0.07]",
+                      "flex h-11 w-11 items-center justify-center rounded-md border-2 border-[#172018] bg-white text-[#172018] shadow-[3px_3px_0_#172018] duration-150 hover:bg-[#fef08a] active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white/80 dark:bg-card dark:text-card-foreground dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]",
+                      neo.interactive,
                       "disabled:pointer-events-none disabled:opacity-40"
                     )}
                   >
@@ -469,7 +471,7 @@ export function SessionSetupView({
                       const next = Number(e.target.value)
                       setQuestionLimit(maxQuestions ? Math.max(1, Math.min(next, maxQuestions)) : next)
                     }}
-                    className="h-11 rounded-xl border-slate-200 bg-slate-50/80 text-center text-base font-semibold focus-visible:ring-zinc-400/40 dark:border-white/10 dark:bg-black/20"
+                    className="h-11 text-center text-base font-extrabold"
                   />
                   <button
                     type="button"
@@ -477,9 +479,8 @@ export function SessionSetupView({
                     onClick={() => setQuestionLimit((c) => Math.min(maxQuestions, c + 1))}
                     aria-label={`Tăng số ${itemLabel}`}
                     className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-150 active:scale-95",
-                      "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-                      "dark:border-white/10 dark:bg-white/[0.035] dark:text-zinc-400 dark:hover:border-white/18 dark:hover:bg-white/[0.07]",
+                      "flex h-11 w-11 items-center justify-center rounded-md border-2 border-[#172018] bg-white text-[#172018] shadow-[3px_3px_0_#172018] duration-150 hover:bg-[#fef08a] active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white/80 dark:bg-card dark:text-card-foreground dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]",
+                      neo.interactive,
                       "disabled:pointer-events-none disabled:opacity-40"
                     )}
                   >
@@ -505,7 +506,7 @@ export function SessionSetupView({
                     max={1440}
                     value={timeLimitMinutes}
                     onChange={(e) => setTimeLimitMinutes(Number(e.target.value))}
-                    className="h-11 rounded-xl border-slate-200 bg-slate-50/80 text-base focus-visible:ring-zinc-400/40 dark:border-white/10 dark:bg-black/20"
+                    className="h-11 text-base"
                   />
                 </div>
               )}
@@ -522,12 +523,12 @@ export function SessionSetupView({
           {/* Start section */}
           <div className="space-y-2">
             {!preview.length && (
-              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.035] dark:text-zinc-400">
+              <p className={cn(neo.notice, "bg-[#fef08a]")}>
                 Không có câu hỏi phù hợp với bộ lọc hiện tại.
               </p>
             )}
             {error && (
-              <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+              <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p>
             )}
 
             {/* CTA — signature element */}
@@ -536,11 +537,11 @@ export function SessionSetupView({
               onClick={handleStart}
               disabled={!preview.length || starting}
               className={cn(
-                "group relative w-full overflow-hidden rounded-2xl px-6 py-3.5 text-base font-semibold transition-all duration-200",
-                "border border-slate-900 bg-slate-950 text-white shadow-[0_12px_30px_rgba(15,23,42,0.22)]",
-                "hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-[0_16px_38px_rgba(15,23,42,0.26)]",
-                "active:translate-y-0 active:scale-[0.98] active:shadow-[0_6px_18px_rgba(15,23,42,0.22)]",
-                "dark:border-white/14 dark:bg-white/12 dark:text-white dark:shadow-[0_16px_36px_rgba(0,0,0,0.2)] dark:hover:bg-white/16",
+                "group w-full overflow-hidden rounded-md border-2 border-[#172018] bg-[#172018] px-6 py-3.5 text-base font-extrabold text-white shadow-[6px_6px_0_#f59e0b] duration-200",
+                neo.interactive,
+                "hover:bg-[#2d3b2f] hover:shadow-[7px_7px_0_#f59e0b]",
+                "active:translate-x-1 active:translate-y-1 active:shadow-none",
+                "dark:border-white/85 dark:bg-primary dark:text-primary-foreground dark:shadow-[6px_6px_0_rgba(255,255,255,0.28)]",
                 "disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
               )}
             >

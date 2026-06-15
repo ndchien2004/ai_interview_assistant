@@ -380,14 +380,14 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
   return (
     <section className="w-full">
       <div className={cn("space-y-2", compact ? "mb-5" : "mb-10")}>
-        <p className="text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">
+        <p className="inline-flex rounded-full border-2 border-[#172018] bg-[#d9f99d] px-3 py-1 text-xs font-extrabold uppercase tracking-normal text-lime-950 shadow-[3px_3px_0_#172018] dark:border-white/80">
           {isRegister ? "Hồ sơ mới" : "Hồ sơ đã có"}
         </p>
         <div className="space-y-2">
-          <h1 className={cn("font-semibold tracking-normal text-foreground", compact ? "text-[2rem]" : "text-4xl")}>
+          <h1 className={cn("font-extrabold tracking-normal text-foreground", compact ? "text-[2rem]" : "text-4xl")}>
             {title}
           </h1>
-          <p className="max-w-sm text-sm leading-6 text-muted-foreground">{description}</p>
+          <p className="max-w-sm text-sm font-medium leading-6 text-muted-foreground">{description}</p>
         </div>
       </div>
 
@@ -467,7 +467,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
               />
               <button
                 type="button"
-                className="absolute right-0 top-1/2 grid size-8 -translate-y-1/2 place-items-center text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-md border-2 border-transparent text-muted-foreground transition-colors hover:border-[#172018] hover:bg-[#fef08a] hover:text-foreground dark:hover:border-white/80"
                 onClick={() => setShowPassword((current) => !current)}
                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
@@ -480,14 +480,16 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
                   <div
                     key={check.label}
                     className={cn(
-                      "flex items-center gap-2 text-xs",
-                      check.passed ? "text-foreground" : "text-muted-foreground"
+                      "flex items-center gap-2 rounded-full border-2 px-2.5 py-1 text-xs font-extrabold",
+                      check.passed
+                        ? "border-[#172018] bg-emerald-200 text-emerald-950 dark:border-white/80 dark:bg-emerald-950/50 dark:text-emerald-100"
+                        : "border-border bg-muted text-muted-foreground"
                     )}
                   >
                     <span
                       className={cn(
-                        "grid size-4 place-items-center rounded-full border",
-                        check.passed ? "border-foreground bg-foreground text-background" : "border-border"
+                        "grid size-4 place-items-center rounded-full border-2",
+                        check.passed ? "border-foreground bg-foreground text-background" : "border-border bg-background"
                       )}
                     >
                       {check.passed ? <Check className="size-3" /> : null}
@@ -520,8 +522,8 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
                   aria-invalid={Boolean(fieldErrors.otp)}
                   aria-label={`Chữ số OTP thứ ${index + 1}`}
                   className={cn(
-                    "aspect-square h-12 w-full rounded-xl border bg-background/55 text-center text-xl font-semibold outline-none transition-[border-color,box-shadow,background-color]",
-                    "border-input focus:border-foreground focus:ring-2 focus:ring-foreground/10",
+                    "aspect-square h-12 w-full rounded-md border-2 bg-white text-center text-xl font-extrabold shadow-[3px_3px_0_#172018] outline-none transition-[border-color,box-shadow,background-color] dark:bg-background dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]",
+                    "border-[#172018] focus:border-foreground focus:ring-3 focus:ring-ring/35 dark:border-white/80",
                     fieldErrors.otp ? "border-destructive focus:border-destructive focus:ring-destructive/15" : ""
                   )}
                 />
@@ -531,7 +533,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         )}
 
         {error ? (
-          <p className="border-l border-destructive pl-3 text-sm leading-6 text-destructive">{error}</p>
+          <p className="rounded-md border-2 border-destructive bg-destructive/10 px-3 py-2 text-sm font-semibold leading-6 text-destructive shadow-[3px_3px_0_rgba(220,38,38,0.35)]">{error}</p>
         ) : null}
 
         <div
@@ -543,7 +545,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         >
           <Button
             type="submit"
-            className={cn("h-11 rounded-lg", isVerifyingRegistration ? "w-full" : "flex-1")}
+            className={cn("h-11", isVerifyingRegistration ? "w-full" : "flex-1")}
             disabled={loading || googleLoading}
           >
             {loading ? (
@@ -561,7 +563,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
               type="button"
               aria-label={isRegister ? "Đăng ký bằng Google" : "Đăng nhập bằng Google"}
               className={cn(
-                "relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-input bg-background text-foreground transition-colors hover:bg-muted",
+                "relative z-0 grid size-11 shrink-0 place-items-center overflow-hidden rounded-md border-2 border-[#172018] bg-white text-foreground shadow-[4px_4px_0_#172018] transition-all hover:z-10 motion-safe:sm:hover:-translate-y-0.5 hover:bg-[#dff0ff] hover:shadow-[5px_5px_0_#172018] active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white/85 dark:bg-card dark:shadow-[4px_4px_0_rgba(255,255,255,0.28)]",
                 googleLoading ? "pointer-events-none opacity-60" : ""
               )}
             >
@@ -577,7 +579,7 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full rounded-lg"
+              className="h-11 w-full"
               disabled={loading || resending || googleLoading || resendCountdown > 0}
               onClick={handleResendOtp}
             >
@@ -588,11 +590,11 @@ export function AuthForm({ compact = false, mode }: AuthFormProps) {
         </div>
       </form>
 
-      <p className={cn("text-sm text-muted-foreground", compact ? "mt-4" : "mt-8")}>
+      <p className={cn("text-sm font-medium text-muted-foreground", compact ? "mt-4" : "mt-8")}>
         {isRegister ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
         <Link
           href={isRegister ? "/login" : "/register"}
-          className="font-medium text-foreground underline underline-offset-4"
+          className="font-extrabold text-foreground underline underline-offset-4"
         >
           {isRegister ? "Đăng nhập" : "Tạo tài khoản"}
         </Link>
@@ -637,11 +639,11 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={htmlFor} className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+      <Label htmlFor={htmlFor} className="text-xs uppercase tracking-normal text-muted-foreground">
         {label}
       </Label>
       {children}
-      {error ? <p className="text-xs leading-5 text-destructive">{error}</p> : null}
+      {error ? <p className="text-xs font-semibold leading-5 text-destructive">{error}</p> : null}
     </div>
   )
 }

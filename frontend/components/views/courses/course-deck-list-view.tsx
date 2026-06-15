@@ -10,6 +10,8 @@ import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { neo } from "@/lib/neo"
+import { cn } from "@/lib/utils"
 import { createCourseDeck, deleteCourseDeck, getCourse, updateCourseDeck } from "@/services/course-service"
 import type { Course, CourseSection } from "@/types"
 
@@ -126,7 +128,7 @@ export function CourseDeckListView({ courseSlug }: { courseSlug: string }) {
 
   return (
     <div className="space-y-6">
-      <section className="border-b border-border pb-5">
+      <section className={neo.header}>
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/courses">
             <ArrowLeft className="size-4" />
@@ -150,7 +152,7 @@ export function CourseDeckListView({ courseSlug }: { courseSlug: string }) {
       </section>
 
       {lastCreatedDeck ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3">
+        <div className={cn("flex flex-wrap items-center justify-between gap-3 px-4 py-3", neo.notice, "bg-[#cdf7ed]")}>
           <p className="text-sm text-muted-foreground">
             Đã tạo <span className="font-medium text-foreground">{lastCreatedDeck.title}</span>
           </p>
@@ -163,7 +165,7 @@ export function CourseDeckListView({ courseSlug }: { courseSlug: string }) {
         </div>
       ) : null}
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p> : null}
 
       <section className="grid content-start gap-3">
         {decks.map((deck) => (
@@ -234,7 +236,7 @@ function DeckCard({
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") router.push(`/courses/${courseSlug}/decks/${deck.slug}`)
       }}
-      className="cursor-pointer rounded-md border border-border bg-card px-4 py-3 transition-colors hover:border-foreground/35 hover:bg-muted/30"
+      className={cn("cursor-pointer px-4 py-3", neo.row)}
     >
       <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="min-w-0">
@@ -301,7 +303,7 @@ function DeckDialog({
 }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" role="presentation">
-      <div className="w-full max-w-md rounded-md border border-border bg-card p-5 shadow-lg" role="dialog" aria-modal="true">
+      <div className={cn("w-full max-w-md p-5", neo.section)} role="dialog" aria-modal="true">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">{editing ? "Đổi tên bộ thẻ" : "Tạo bộ thẻ"}</h2>
           <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Đóng">
@@ -310,7 +312,7 @@ function DeckDialog({
         </div>
         <div className="mt-5 space-y-4">
           <Input autoFocus value={title} onChange={(event) => onTitleChange(event.target.value)} placeholder="Tên bộ thẻ" />
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p> : null}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={saving}>
               Hủy

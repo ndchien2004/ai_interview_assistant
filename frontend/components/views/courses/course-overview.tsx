@@ -20,10 +20,10 @@ const courseSlugAliases = new Set([courseSlug, "java-core"])
 
 // ─── Design tokens ─────────────────────────────────────────────────────────
 const card =
-  "rounded-2xl border border-border bg-card shadow-sm"
+  "rounded-md border-2 border-[#172018] bg-card shadow-[6px_6px_0_#172018] dark:border-white/80 dark:shadow-[6px_6px_0_rgba(255,255,255,0.24)]"
 
 const rowItem =
-  "rounded-xl border border-border bg-card transition-all duration-150 hover:border-foreground/25 hover:bg-muted/45"
+  "rounded-md border-2 border-[#172018] bg-card shadow-[4px_4px_0_#172018] transition-all duration-150 hover:-translate-y-0.5 hover:bg-muted/45 dark:border-white/80 dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]"
 
 // ─── CourseOverview ───────────────────────────────────────────────────────────
 export function CourseOverview() {

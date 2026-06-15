@@ -1,5 +1,6 @@
 import * as React from "react"
 
+import { neo } from "@/lib/neo"
 import { cn } from "@/lib/utils"
 
 function Badge({ className, ...props }: React.ComponentProps<"span">) {
@@ -7,7 +8,8 @@ function Badge({ className, ...props }: React.ComponentProps<"span">) {
     <span
       data-slot="badge"
       className={cn(
-        "inline-flex items-center rounded-none border border-border/80 !bg-transparent px-2 py-0.5 text-xs font-medium uppercase tracking-[0.08em] !text-muted-foreground",
+        "uppercase tracking-normal",
+        neo.pill,
         className
       )}
       {...props}

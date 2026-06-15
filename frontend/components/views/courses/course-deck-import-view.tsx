@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Header } from "@/components/views/courses/course-deck-cards-view"
+import { neo } from "@/lib/neo"
+import { cn } from "@/lib/utils"
 import { importCourseDeckJson, type DeckJsonImportPayload } from "@/services/course-service"
 
 const sampleJson = `{
@@ -78,13 +80,13 @@ export function CourseDeckImportView({ courseSlug, deckSlug }: { courseSlug: str
       <Header href={`/courses/${courseSlug}/decks/${deckSlug}`} label="Bộ thẻ" title="Import JSON" />
       <section className="grid gap-7 lg:grid-cols-[320px_1fr]">
         <aside className="space-y-5">
-          <div className="grid gap-4 border-y border-border py-5">
+          <div className={cn("grid gap-4 p-5", neo.section)}>
             <label className="text-sm font-medium" htmlFor="file">
               File JSON
             </label>
             <Input id="file" type="file" accept=".json,application/json" onChange={handleFile} />
           </div>
-          <div className="border-y border-border py-5 text-sm text-muted-foreground">
+          <div className={cn("p-5 text-sm font-medium text-muted-foreground", neo.section)}>
             <div className="flex items-center gap-2 font-semibold text-foreground">
               <FileJson className="size-4" />
               Kiểm tra nhanh
@@ -94,9 +96,9 @@ export function CourseDeckImportView({ courseSlug, deckSlug }: { courseSlug: str
         </aside>
         <div className="space-y-5">
           <Textarea value={content} onChange={(event) => setContent(event.target.value)} className="min-h-[420px] resize-y font-mono text-xs" />
-          {message ? <p className="border-y border-border py-3 text-sm text-muted-foreground">{message}</p> : null}
-          {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
-          <div className="flex items-center justify-between gap-3 border-y border-border py-4">
+          {message ? <p className={cn(neo.notice, "bg-[#cdf7ed]")}>{message}</p> : null}
+          {error ? <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p> : null}
+          <div className={cn("flex items-center justify-between gap-3 p-4", neo.section)}>
             <p className="text-sm text-muted-foreground">{questionCount} câu sẵn sàng import</p>
             <Button disabled={!parsed || !questionCount || importing} onClick={handleImport}>
               <Upload className="size-4" />

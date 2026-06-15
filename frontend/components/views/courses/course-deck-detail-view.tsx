@@ -5,8 +5,11 @@ import { ArrowLeft, ArrowRight, Brain, ClipboardCheck, Gamepad2, Layers3, Upload
 import type React from "react"
 import { useEffect, useState } from "react"
 
+import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
+import { neo } from "@/lib/neo"
+import { cn } from "@/lib/utils"
 import { getCourse, getCourseDeck } from "@/services/course-service"
 import type { Course, CourseSection } from "@/types"
 
@@ -37,14 +40,15 @@ export function CourseDeckDetailView({ courseSlug, deckSlug }: { courseSlug: str
   }
 
   if (!course || !deck) {
-    return <StateBlock title="Đang tải bộ thẻ" description="Đang chuẩn bị các lựa chọn học..." />
+    return <LoadingSpinner />
   }
+
 
   const baseHref = `/courses/${course.slug}/decks/${deck.slug}`
 
   return (
     <div className="space-y-6">
-      <section className="rounded-md border border-border bg-card p-5 shadow-sm">
+      <section className={neo.header}>
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href={`/courses/${course.slug}`}>
             <ArrowLeft className="size-4" />
@@ -89,7 +93,7 @@ export function CourseDeckDetailView({ courseSlug, deckSlug }: { courseSlug: str
         />
       </section>
 
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card p-4">
+      <section className={cn("flex flex-wrap items-center justify-between gap-3 p-4", neo.section)}>
         <div>
           <p className="text-sm font-semibold">Quản lý nội dung</p>
           <p className="mt-1 text-sm text-muted-foreground">Thêm câu hỏi vào đúng bộ thẻ này bằng JSON.</p>
@@ -121,10 +125,10 @@ function Action({
   return (
     <Link
       href={href}
-      className={`group rounded-md border p-4 shadow-sm transition-colors ${
+      className={`group rounded-md border-2 p-4 shadow-[5px_5px_0_#172018] dark:shadow-[5px_5px_0_rgba(255,255,255,0.24)] ${neo.interactive} ${
         primary
-          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
-          : "border-border bg-card hover:border-foreground/40 hover:bg-muted/40"
+          ? "border-[#172018] bg-[#fef08a] text-[#172018] hover:bg-[#fde047] dark:border-white/80"
+          : "border-[#172018] bg-card hover:bg-muted/40 dark:border-white/80"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -141,9 +145,10 @@ function Action({
 
 function Metric({ label, value, compact }: { label: string; value: string; compact?: boolean }) {
   return (
-    <div className={`rounded-md border border-border bg-background ${compact ? "min-h-16 p-2.5" : "p-3"}`}>
+    <div className={`rounded-md border-2 border-[#172018] bg-white shadow-[3px_3px_0_#172018] dark:border-white/80 dark:bg-background dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)] ${compact ? "min-h-16 p-2.5" : "p-3"}`}>
       <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
       <p className="mt-1 break-words text-lg font-semibold tracking-tight">{value}</p>
     </div>
   )
 }
+

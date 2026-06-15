@@ -15,38 +15,48 @@ nav a:hover {
 }
 
 :root {
-  --background: oklch(0.992 0.002 95);
-  --foreground: oklch(0.18 0.01 90);
-  --card: oklch(0.992 0.002 95);
-  --card-foreground: oklch(0.18 0.01 90);
+  --neo-ink: #172018;
+  --neo-cream: #fff8e8;
+  --neo-mint: #fef08a;
+  --neo-sky: #dff0ff;
+  --neo-yellow: #fef08a;
+  --neo-amber: #fbbf24;
+  --neo-green: #facc15;
+  --neo-rose: #fb7185;
+  --neo-shadow: 4px 4px 0 #172018;
+  --neo-shadow-lg: 7px 7px 0 #172018;
+  --background: oklch(0.978 0.026 91);
+  --foreground: oklch(0.18 0.028 145);
+  --card: oklch(0.998 0.006 95);
+  --card-foreground: oklch(0.18 0.028 145);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.24 0.012 95);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.965 0.004 95);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.955 0.004 95);
-  --muted-foreground: oklch(0.47 0.01 90);
-  --accent: oklch(0.955 0.004 95);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.18 0.028 145);
+  --primary: oklch(0.25 0.034 145);
+  --primary-foreground: oklch(0.985 0.018 95);
+  --secondary: oklch(0.92 0.079 193);
+  --secondary-foreground: oklch(0.18 0.028 145);
+  --muted: oklch(0.94 0.035 95);
+  --muted-foreground: oklch(0.43 0.028 145);
+  --accent: oklch(0.91 0.14 92);
+  --accent-foreground: oklch(0.18 0.028 145);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.86 0.006 95);
-  --input: oklch(0.82 0.006 95);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.18 0.028 145);
+  --input: oklch(0.18 0.028 145);
+  --ring: oklch(0.74 0.16 92);
+  --chart-1: oklch(0.86 0.15 92);
+  --chart-2: oklch(0.78 0.13 225);
+  --chart-3: oklch(0.88 0.14 95);
+  --chart-4: oklch(0.72 0.18 25);
+  --chart-5: oklch(0.73 0.17 345);
   --radius: 0.25rem;
-  --sidebar: oklch(0.992 0.002 95);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.978 0.026 91);
+  --sidebar-foreground: oklch(0.18 0.028 145);
+  --sidebar-primary: oklch(0.25 0.034 145);
+  --sidebar-primary-foreground: oklch(0.985 0.018 95);
+  --sidebar-accent: oklch(0.91 0.14 92);
+  --sidebar-accent-foreground: oklch(0.18 0.028 145);
+  --sidebar-border: oklch(0.18 0.028 145);
+  --sidebar-ring: oklch(0.72 0.15 160);
 }
 
 @theme inline {
@@ -99,37 +109,44 @@ body {
 }
 
 .dark {
-  --background: oklch(0.215 0.012 260);
-  --foreground: oklch(0.955 0.006 260);
-  --card: oklch(0.255 0.012 260);
-  --card-foreground: oklch(0.955 0.006 260);
-  --popover: oklch(0.255 0.012 260);
-  --popover-foreground: oklch(0.955 0.006 260);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.215 0.012 260);
-  --secondary: oklch(0.305 0.014 260);
-  --secondary-foreground: oklch(0.955 0.006 260);
-  --muted: oklch(0.305 0.014 260);
-  --muted-foreground: oklch(0.72 0.012 260);
-  --accent: oklch(0.32 0.018 260);
-  --accent-foreground: oklch(0.955 0.006 260);
+  --neo-ink: #f8fafc;
+  --neo-cream: #172018;
+  --neo-mint: #713f12;
+  --neo-sky: #1e3a5f;
+  --neo-yellow: #713f12;
+  --neo-shadow: 4px 4px 0 rgba(255, 255, 255, 0.28);
+  --neo-shadow-lg: 7px 7px 0 rgba(255, 255, 255, 0.28);
+  --background: oklch(0.215 0.018 145);
+  --foreground: oklch(0.955 0.018 95);
+  --card: oklch(0.27 0.02 145);
+  --card-foreground: oklch(0.955 0.018 95);
+  --popover: oklch(0.27 0.02 145);
+  --popover-foreground: oklch(0.955 0.018 95);
+  --primary: oklch(0.93 0.108 102);
+  --primary-foreground: oklch(0.18 0.028 145);
+  --secondary: oklch(0.35 0.045 193);
+  --secondary-foreground: oklch(0.955 0.018 95);
+  --muted: oklch(0.31 0.02 145);
+  --muted-foreground: oklch(0.78 0.025 95);
+  --accent: oklch(0.68 0.14 82);
+  --accent-foreground: oklch(0.14 0.02 95);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 13%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.195 0.012 260);
-  --sidebar-foreground: oklch(0.955 0.006 260);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.295 0.014 260);
-  --sidebar-accent-foreground: oklch(0.955 0.006 260);
-  --sidebar-border: oklch(1 0 0 / 13%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(1 0 0 / 82%);
+  --input: oklch(1 0 0 / 82%);
+  --ring: oklch(0.74 0.16 92);
+  --chart-1: oklch(0.86 0.15 92);
+  --chart-2: oklch(0.78 0.13 225);
+  --chart-3: oklch(0.88 0.14 95);
+  --chart-4: oklch(0.72 0.18 25);
+  --chart-5: oklch(0.73 0.17 345);
+  --sidebar: oklch(0.19 0.018 145);
+  --sidebar-foreground: oklch(0.955 0.018 95);
+  --sidebar-primary: oklch(0.93 0.108 102);
+  --sidebar-primary-foreground: oklch(0.18 0.028 145);
+  --sidebar-accent: oklch(0.32 0.026 145);
+  --sidebar-accent-foreground: oklch(0.955 0.018 95);
+  --sidebar-border: oklch(1 0 0 / 82%);
+  --sidebar-ring: oklch(0.72 0.15 160);
 }
 
 @layer base {
@@ -141,6 +158,30 @@ body {
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer components {
+  .neo-grid-bg {
+    background-image:
+      linear-gradient(rgba(23, 32, 24, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23, 32, 24, 0.08) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  .dark .neo-grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.11) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.11) 1px, transparent 1px);
+  }
+
+  .neo-dot-bg {
+    background-image: radial-gradient(rgba(23, 32, 24, 0.16) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  .dark .neo-dot-bg {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
   }
 }
 

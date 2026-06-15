@@ -10,6 +10,8 @@ import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { neo } from "@/lib/neo"
+import { cn } from "@/lib/utils"
 import { createCourse, deleteCourse, listCourses, updateCourse } from "@/services/course-service"
 import type { Course } from "@/types"
 
@@ -108,7 +110,7 @@ export function CourseDecksView() {
 
   return (
     <div className="space-y-6">
-      <section className="border-b border-border pb-5">
+      <section className={neo.header}>
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <BookOpenCheck className="size-4" />
           Bộ thẻ
@@ -133,7 +135,7 @@ export function CourseDecksView() {
           {!courses.length ? <StateBlock title="Chưa có học phần" description="Tạo học phần đầu tiên để bắt đầu gom bộ thẻ." /> : null}
         </div>
 
-        <aside className="space-y-4 rounded-md border border-border bg-card p-4">
+        <aside className={cn("space-y-4", neo.section)}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold">
               {editingCourse ? <Pencil className="size-4" /> : <Plus className="size-4" />}
@@ -147,7 +149,7 @@ export function CourseDecksView() {
           </div>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Tên học phần" />
           <Textarea value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-20 resize-none" />
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p> : null}
           <Button disabled={saving || !title.trim() || !description.trim()} onClick={handleSave} className="w-full">
             {editingCourse ? <Pencil className="size-4" /> : <Plus className="size-4" />}
             {editingCourse ? "Lưu học phần" : "Tạo học phần"}
@@ -196,7 +198,7 @@ function CourseCard({
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") router.push(`/courses/${course.slug}`)
       }}
-      className="cursor-pointer rounded-md border border-border bg-card px-4 py-3 transition-colors hover:border-foreground/35 hover:bg-muted/30"
+      className={cn("cursor-pointer px-4 py-3", neo.row)}
     >
       <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="min-w-0">

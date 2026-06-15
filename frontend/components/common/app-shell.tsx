@@ -285,9 +285,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!ready || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+      <div className="neo-grid-bg flex min-h-screen items-center justify-center bg-background px-6">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-px w-20 animate-pulse bg-primary/40" />
+          <div className="mx-auto mb-4 h-3 w-24 animate-pulse rounded-full border-2 border-[#172018] bg-[#22c55e] shadow-[3px_3px_0_#172018] dark:border-white/80" />
           <p className="text-sm text-muted-foreground">Đang chuẩn bị không gian học...</p>
         </div>
       </div>
@@ -295,10 +295,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="neo-grid-bg min-h-screen bg-background text-foreground">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-48 border-r border-border/80 bg-sidebar px-4 py-5 text-sidebar-foreground transition-all duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-48 border-r-2 border-[#172018] bg-sidebar px-4 py-5 text-sidebar-foreground shadow-[6px_0_0_#172018] transition-all duration-200 dark:border-white/80 dark:shadow-[6px_0_0_rgba(255,255,255,0.18)] lg:translate-x-0",
           menuOpen ? "translate-x-0" : "-translate-x-full",
           sidebarCollapsed && "lg:w-20 lg:px-3"
         )}
@@ -306,7 +306,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className={cn("flex items-center justify-between gap-2", sidebarCollapsed && "lg:flex-col lg:justify-center")}>
           <Link
             href="/courses/java-core"
-            className={cn("flex items-center gap-2 font-semibold", sidebarCollapsed && "lg:justify-center")}
+            className={cn("flex items-center gap-2 rounded-full border-2 border-[#172018] bg-[#fef08a] px-3 py-2 font-extrabold text-[#172018] shadow-[3px_3px_0_#172018] dark:border-white/85", sidebarCollapsed && "lg:justify-center lg:px-2")}
             title="FreeCard"
           >
             <BarChart3 className="size-5 text-sidebar-foreground" />
@@ -339,10 +339,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 title={item.label}
                 onClick={() => setMenuOpen(false)}
                 className={cn(
-                  "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-md border-2 px-3 py-2 text-sm font-extrabold transition-all",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+                    ? "border-[#172018] bg-[#cdf7ed] text-[#172018] shadow-[3px_3px_0_#172018] dark:border-white/80 dark:bg-accent dark:text-accent-foreground dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]"
+                    : "border-transparent text-muted-foreground hover:border-[#172018] hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground dark:hover:border-white/80",
                   sidebarCollapsed && "lg:justify-center lg:px-0"
                 )}
               >
@@ -354,18 +354,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div
-          className={cn(
-            "absolute inset-x-5 bottom-5 border-t border-border pt-4",
+            className={cn(
+              "absolute inset-x-5 bottom-5 border-t-2 border-[#172018] pt-4 dark:border-white/80",
             sidebarCollapsed && "lg:inset-x-3 lg:flex lg:flex-col lg:items-center"
           )}
         >
           <div className={cn("block", sidebarCollapsed && "lg:hidden")}>
-            <p className="text-sm font-medium">{user.name}</p>
+            <p className="text-sm font-extrabold">{user.name}</p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
           <div
             className={cn(
-              "hidden size-9 items-center justify-center overflow-hidden rounded-full border border-sidebar-border text-sm font-semibold text-sidebar-foreground",
+              "hidden size-9 items-center justify-center overflow-hidden rounded-full border-2 border-sidebar-border bg-[#fef08a] text-sm font-extrabold text-[#172018] shadow-[3px_3px_0_#172018]",
               sidebarCollapsed && "lg:flex"
             )}
             title={user.name}
@@ -391,7 +391,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       <div className={cn("transition-[padding] duration-200 lg:pl-48", sidebarCollapsed && "lg:pl-20")}>
-        <header className="sticky top-0 z-20 border-b border-border/80 bg-background/90 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b-2 border-[#172018] bg-background/95 shadow-[0_4px_0_#172018] backdrop-blur dark:border-white/80 dark:shadow-[0_4px_0_rgba(255,255,255,0.18)]">
           <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
             <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Mở điều hướng">
               <Menu />
@@ -412,7 +412,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       void loadSearchCourses()
                     }}
                     placeholder="Tìm học phần, câu hỏi..."
-                    className="h-9 rounded-full pl-9 pr-4"
+                    className="h-10 rounded-md pl-9 pr-4"
                   />
                   <select
                     value={searchFilter}
@@ -440,11 +440,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Plus className="size-4" />
                   </Button>
                   {quickOpen ? (
-                    <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-md border border-border bg-background shadow-xl">
+                    <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-md border-2 border-[#172018] bg-background shadow-[6px_6px_0_#172018] dark:border-white/80 dark:shadow-[6px_6px_0_rgba(255,255,255,0.24)]">
                       <button
                         type="button"
                         onClick={() => openQuickDialog("course")}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-extrabold transition-colors hover:bg-[#cdf7ed] dark:hover:bg-muted"
                       >
                         <FolderPlus className="size-4" />
                         Tạo học phần
@@ -452,7 +452,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <button
                         type="button"
                         onClick={() => openQuickDialog("deck")}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-extrabold transition-colors hover:bg-[#cdf7ed] dark:hover:bg-muted"
                       >
                         <BookOpen className="size-4" />
                         Tạo bộ thẻ
@@ -494,21 +494,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setProfileOpen((current) => !current)}
-                  className="flex size-9 items-center justify-center overflow-hidden rounded-full border border-border text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="relative z-0 flex size-10 items-center justify-center overflow-hidden rounded-full border-2 border-[#172018] bg-[#fef08a] text-sm font-extrabold text-[#172018] shadow-[3px_3px_0_#172018] transition-all hover:z-10 motion-safe:sm:hover:-translate-y-0.5 hover:bg-[#fde047] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 dark:border-white/85"
                   aria-label="Mở menu hồ sơ"
                   aria-expanded={profileOpen}
                 >
                   <UserAvatar user={user} />
                 </button>
                 {profileOpen ? (
-                  <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-border bg-background shadow-2xl">
-                    <div className="border-b border-border px-4 py-4">
+                  <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-md border-2 border-[#172018] bg-background shadow-[7px_7px_0_#172018] dark:border-white/80 dark:shadow-[7px_7px_0_rgba(255,255,255,0.24)]">
+                    <div className="border-b-2 border-[#172018] px-4 py-4 dark:border-white/80">
                       <div className="flex items-center gap-3">
-                        <div className="flex size-11 items-center justify-center overflow-hidden rounded-full border border-border text-sm font-semibold">
+                        <div className="flex size-11 items-center justify-center overflow-hidden rounded-full border-2 border-[#172018] bg-[#fef08a] text-sm font-extrabold text-[#172018] dark:border-white/80">
                           <UserAvatar user={user} />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">{user.name}</p>
+                          <p className="truncate text-sm font-extrabold">{user.name}</p>
                           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
@@ -516,11 +516,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <div className="py-1">
                       <DropdownLink href="/profile" label="Hồ sơ" icon={UserRound} onClick={() => setProfileOpen(false)} />
                     </div>
-                    <div className="border-t border-border p-2">
+                    <div className="border-t-2 border-[#172018] p-2 dark:border-white/80">
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                        className="flex w-full items-center gap-2 rounded-md border-2 border-transparent px-3 py-2 text-left text-sm font-extrabold text-destructive transition-colors hover:border-destructive hover:bg-destructive/10"
                       >
                         <LogOut className="size-4" />
                         Đăng xuất
@@ -578,15 +578,15 @@ function SearchPanel({
 }) {
   if (!query) {
     return (
-      <div className="absolute left-0 right-0 top-12 z-50 rounded-md border border-border bg-background p-3 shadow-xl">
+      <div className="absolute left-0 right-0 top-12 z-50 rounded-md border-2 border-[#172018] bg-background p-3 shadow-[6px_6px_0_#172018] dark:border-white/80 dark:shadow-[6px_6px_0_rgba(255,255,255,0.24)]">
         <p className="text-sm text-muted-foreground">Nhập tên học phần hoặc nội dung câu hỏi để tìm.</p>
       </div>
     )
   }
 
   return (
-    <div className="absolute left-0 right-0 top-12 z-50 max-h-[70vh] overflow-y-auto rounded-md border border-border bg-background shadow-xl">
-      <div className="border-b border-border px-3 pt-3">
+    <div className="absolute left-0 right-0 top-12 z-50 max-h-[70vh] overflow-y-auto rounded-md border-2 border-[#172018] bg-background shadow-[6px_6px_0_#172018] dark:border-white/80 dark:shadow-[6px_6px_0_rgba(255,255,255,0.24)]">
+      <div className="border-b-2 border-[#172018] px-3 pt-3 dark:border-white/80">
         <p className="text-sm font-semibold">Kết quả cho &quot;{query}&quot;</p>
         <div className="mt-3 flex gap-6 overflow-x-auto">
           {[
@@ -692,7 +692,7 @@ function QuickCreateDialog({
 }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" role="presentation">
-      <div className="w-full max-w-md rounded-md border border-border bg-background p-5 shadow-2xl" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-md border-2 border-[#172018] bg-background p-5 shadow-[9px_9px_0_#172018] dark:border-white/80 dark:shadow-[9px_9px_0_rgba(255,255,255,0.24)]" role="dialog" aria-modal="true">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">{mode === "course" ? "Tạo học phần" : "Tạo bộ thẻ"}</h2>
           <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Đóng">
@@ -705,7 +705,7 @@ function QuickCreateDialog({
               value={courseSlug}
               onChange={(event) => onCourseChange(event.target.value)}
               disabled={loadingCourses}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-foreground focus-visible:ring-2 focus-visible:ring-foreground/10"
+              className="h-11 w-full rounded-md border-2 border-[#172018] bg-white px-3 text-sm font-semibold shadow-[3px_3px_0_#172018] outline-none focus-visible:ring-3 focus-visible:ring-ring/35 dark:border-white/80 dark:bg-background dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]"
             >
               <option value="">Chọn học phần</option>
               {courses.map((course) => (
@@ -758,7 +758,7 @@ function DropdownLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      className="flex items-center gap-2 border-2 border-transparent px-4 py-2 text-sm font-extrabold text-muted-foreground transition-colors hover:border-[#172018] hover:bg-[#cdf7ed] hover:text-foreground dark:hover:border-white/80 dark:hover:bg-muted"
     >
       <Icon className="size-4" />
       {label}

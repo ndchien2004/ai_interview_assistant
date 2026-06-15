@@ -4,10 +4,12 @@ import Link from "next/link"
 import { ArrowLeft, Check, Save } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { neo } from "@/lib/neo"
 import { cn } from "@/lib/utils"
 import { getCourse, getCourseDeck, updateCourseDeckQuestion } from "@/services/course-service"
 import type { Course, CourseSection, PracticeQuestion } from "@/types"
@@ -100,12 +102,12 @@ export function CourseDeckCardsView({ courseSlug, deckSlug }: { courseSlug: stri
   }
 
   if (error && !deck) return <StateBlock tone="error" title="Không mở được thẻ" description={error} />
-  if (!course || !deck) return <StateBlock title="Đang tải thẻ" description="FreeCard đang lấy câu hỏi trong bộ thẻ..." />
+  if (!course || !deck) return <LoadingSpinner />
 
   return (
     <div className="space-y-7">
       <Header href={`/courses/${course.slug}/decks/${deck.slug}`} label={deck.title} title="Sửa thẻ" />
-      {error ? <p className="rounded-md border border-destructive/40 px-4 py-3 text-sm text-destructive">{error}</p> : null}
+      {error ? <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p> : null}
       <section className="grid gap-3">
         {deck.questions.map((question, index) => (
           <QuestionEditor
@@ -146,7 +148,7 @@ function QuestionEditor({
   onSave: () => void
 }) {
   return (
-    <article className="rounded-md border border-border bg-card p-4">
+    <article className={cn("p-4", neo.section)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold">Thẻ {index + 1}</h2>
         <Button size="sm" onClick={onSave} disabled={saving}>
@@ -188,7 +190,7 @@ function QuestionEditor({
                   id={`option-${question.id}-${optionIndex}`}
                   value={option}
                   onChange={(event) => onOptionChange(optionIndex, event.target.value)}
-                  className={cn(form.correctOptionIndex === optionIndex && "border-emerald-500")}
+                  className={cn(form.correctOptionIndex === optionIndex && "border-amber-500")}
                 />
               </div>
             </div>
@@ -213,14 +215,14 @@ function QuestionEditor({
 
 export function Header({ href, label, title }: { href: string; label: string; title: string }) {
   return (
-    <div className="border-b border-border pb-5">
+    <div className={neo.header}>
       <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link href={href}>
           <ArrowLeft className="size-4" />
           {label}
         </Link>
       </Button>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="mt-3 text-2xl font-extrabold tracking-tight">{title}</h1>
     </div>
   )
 }
@@ -235,3 +237,4 @@ function formFromQuestion(question: PracticeQuestion): QuestionForm {
     explanation: question.explanation,
   }
 }
+

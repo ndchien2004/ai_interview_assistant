@@ -5,10 +5,13 @@ import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog"
+import { LoadingSpinner } from "@/components/common/loading-spinner"
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { neo } from "@/lib/neo"
+import { cn } from "@/lib/utils"
 import { makeId } from "@/services/auth-service"
 import { createAdminQuestion, deleteAdminQuestion, getCourse, updateAdminQuestion } from "@/services/course-service"
 import type { Course, PracticeQuestion, QuestionDifficulty } from "@/types"
@@ -206,12 +209,12 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
   }
 
   if (!course) {
-    return <StateBlock title="Loading admin workspace" description="Preparing courses, sections, and questions..." />
+    return <LoadingSpinner />
   }
 
   return (
     <div className="space-y-7">
-      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", neo.header)}>
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2">
             <Link href="/courses/java-core">
@@ -219,7 +222,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
               Java + Full-stack
             </Link>
           </Button>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+          <h1 className="mt-3 text-2xl font-extrabold tracking-tight">
             {mode === "detail" ? course.title : "Admin Courses"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -231,14 +234,14 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
         </Button>
       </div>
 
-      {message ? <p className="border-y border-border py-3 text-sm text-muted-foreground">{message}</p> : null}
-      {error ? <p className="border-y border-destructive/40 py-3 text-sm text-destructive">{error}</p> : null}
+      {message ? <p className={cn(neo.notice, "bg-[#fef08a]")}>{message}</p> : null}
+      {error ? <p className={cn(neo.notice, "border-destructive bg-destructive/10 text-destructive")}>{error}</p> : null}
 
       <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-        <form onSubmit={handleSubmit} className="space-y-4 border-y border-border py-5">
+        <form onSubmit={handleSubmit} className={cn("space-y-4 p-5", neo.section)}>
           <div className="flex items-center gap-2">
             <Plus className="size-4" />
-            <h2 className="text-sm font-semibold">{draft.id ? "Edit question" : "Create question"}</h2>
+            <h2 className="text-sm font-extrabold">{draft.id ? "Edit question" : "Create question"}</h2>
           </div>
           <select
             value={draft.sectionId}
@@ -250,7 +253,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
                 topic: section?.title ?? current.topic,
               }))
             }}
-            className="h-9 w-full border border-border bg-background px-2 text-sm"
+            className={neo.select}
           >
             {course.sections?.map((section) => (
               <option key={section.id} value={section.id}>
@@ -286,7 +289,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
             onChange={(event) =>
               setDraft((current) => ({ ...current, correctOptionIndex: Number(event.target.value) }))
             }
-            className="h-9 w-full border border-border bg-background px-2 text-sm"
+            className={neo.select}
           >
             <option value={0}>Correct answer: A</option>
             <option value={1}>Correct answer: B</option>
@@ -305,7 +308,7 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
               onChange={(event) =>
                 setDraft((current) => ({ ...current, difficulty: event.target.value as QuestionDifficulty }))
               }
-              className="h-9 border border-border bg-background px-2 text-sm"
+              className={neo.select}
             >
               <option value="BEGINNER">Beginner</option>
               <option value="INTERMEDIATE">Intermediate</option>
@@ -329,18 +332,18 @@ export function AdminCoursesView({ mode = "list" }: { mode?: "list" | "detail" }
 
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Question bank</h2>
+            <h2 className="text-sm font-extrabold">Question bank</h2>
             <span className="text-sm text-muted-foreground">{questions.length} questions</span>
           </div>
-          <div className="max-h-[720px] divide-y divide-border overflow-auto border-y border-border">
+          <div className={cn("max-h-[720px] overflow-auto p-4", neo.section)}>
             {course.sections?.map((section) => (
               <div key={section.id} className="py-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {section.title}
                 </p>
-                <div className="divide-y divide-border/70">
+                <div className="space-y-2">
                   {section.questions.slice(0, mode === "detail" ? undefined : 6).map((question) => (
-                    <div key={question.id} className="flex items-start justify-between gap-4 py-3">
+                    <div key={question.id} className={cn("flex items-start justify-between gap-4 px-3 py-3", neo.row)}>
                       <div>
                         <p className="text-sm font-medium">{question.question}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{question.difficulty}</p>

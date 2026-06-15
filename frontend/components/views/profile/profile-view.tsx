@@ -20,6 +20,7 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { neo } from "@/lib/neo"
 import { cn } from "@/lib/utils"
 import {
   changePassword,
@@ -179,7 +180,7 @@ export function ProfileView() {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-5xl rounded-md border border-border p-6">
+      <div className={cn("mx-auto max-w-5xl p-6", neo.section)}>
         <p className="text-sm text-muted-foreground">Đang tải hồ sơ...</p>
       </div>
     )
@@ -197,10 +198,10 @@ export function ProfileView() {
       {message || error ? (
         <div
           className={cn(
-            "rounded-md border px-4 py-3 text-sm",
+            "rounded-md border-2 px-4 py-3 text-sm font-semibold shadow-[4px_4px_0_#172018] dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]",
             error
-              ? "border-destructive/30 bg-destructive/5 text-destructive"
-              : "border-emerald-500/20 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"
+              ? "border-destructive bg-destructive/10 text-destructive"
+              : "border-[#172018] bg-emerald-200 text-emerald-950 dark:border-white/80 dark:bg-emerald-950/50 dark:text-emerald-100"
           )}
         >
           {error || message}
@@ -347,7 +348,7 @@ function ProfileHero({
   onRemoveAvatar: () => void
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+    <section className={cn("p-5 sm:p-6", neo.header)}>
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
           <AvatarPreview user={user} />
@@ -371,7 +372,7 @@ function ProfileHero({
 
 function AvatarPreview({ user }: { user: User }) {
   return (
-    <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-foreground shadow-sm">
+    <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#172018] bg-[#fef08a] text-[#172018] shadow-[5px_5px_0_#172018] dark:border-white/80 dark:shadow-[5px_5px_0_rgba(255,255,255,0.24)]">
       {user.avatarUrl ? (
         <Image src={user.avatarUrl} alt="" width={96} height={96} unoptimized className="size-full object-cover" />
       ) : (
@@ -402,7 +403,7 @@ function AvatarActions({
           onChange={onAvatarChange}
           disabled={saving}
         />
-        <span className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+        <span className={cn("inline-flex h-10 cursor-pointer items-center justify-center gap-2 px-4 text-sm text-primary-foreground", neo.button, "bg-primary hover:bg-primary/90")}>
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
           Đổi ảnh
         </span>
@@ -425,10 +426,10 @@ function ProfilePanel({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <section className={cn("p-5", neo.section)}>
       <div className="mb-5">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-        {description ? <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p> : null}
+        <h2 className="text-lg font-extrabold tracking-tight">{title}</h2>
+        {description ? <p className="mt-1 text-sm font-medium leading-6 text-muted-foreground">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -453,7 +454,7 @@ function StreakCalendar({
   const monthLabel = new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(month)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#3b4268] bg-[#20213f] p-5 text-white shadow-sm sm:p-6">
+    <section className="overflow-hidden rounded-md border-2 border-[#172018] bg-[#20213f] p-5 text-white shadow-[7px_7px_0_#172018] dark:border-white/80 dark:shadow-[7px_7px_0_rgba(255,255,255,0.24)] sm:p-6">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-stretch">
         <div>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -512,7 +513,7 @@ function StreakCalendar({
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-white/5 p-4 text-center">
+        <div className="flex flex-col items-center justify-center rounded-md border-2 border-white/35 bg-white/10 p-4 text-center shadow-[4px_4px_0_rgba(255,255,255,0.18)]">
           <p className="text-lg font-semibold">Chuỗi hiện tại</p>
           <p className="mt-1 text-3xl font-semibold">{currentStreak}</p>
           <p className="text-sm text-white/70">{currentStreak === 1 ? "ngày" : "ngày"}</p>
@@ -549,9 +550,9 @@ function Field({
 
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid gap-1 py-3">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="break-words font-medium">{value}</span>
+    <div className="grid gap-1 border-b-2 border-[#172018]/20 py-3 last:border-b-0 dark:border-white/20">
+      <span className="text-xs font-extrabold text-muted-foreground">{label}</span>
+      <span className="break-words font-extrabold">{value}</span>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { AlertCircle, Inbox } from "lucide-react"
 
+import { neo } from "@/lib/neo"
 import { cn } from "@/lib/utils"
 
 type StateBlockProps = {
@@ -15,13 +16,15 @@ export function StateBlock({ title, description, tone = "empty", className }: St
   return (
     <div
       className={cn(
-        "flex min-h-44 flex-col items-center justify-center border-y border-dashed border-border/80 bg-transparent p-8 text-center",
+        "flex min-h-44 flex-col items-center justify-center p-8 text-center",
+        tone === "error" ? "bg-rose-100 dark:bg-destructive/20" : "bg-white dark:bg-card",
+        neo.panelSoft,
         className
       )}
     >
-      <Icon className="mb-3 size-8 text-muted-foreground" />
-      <h2 className="text-base font-semibold">{title}</h2>
-      <p className="mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
+      <Icon className={cn("mb-3 size-8", tone === "error" ? "text-destructive" : "text-amber-600 dark:text-amber-300")} />
+      <h2 className="text-base font-extrabold">{title}</h2>
+      <p className="mt-1 max-w-md text-sm font-medium text-muted-foreground">{description}</p>
     </div>
   )
 }
