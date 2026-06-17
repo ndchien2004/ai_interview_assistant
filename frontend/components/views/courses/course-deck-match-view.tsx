@@ -1,15 +1,19 @@
 "use client"
 
-import Link from "next/link"
-import { ArrowLeft, CheckCircle2, Clock3, Gamepad2, History, RotateCcw, X } from "lucide-react"
+import { CheckCircle2, History, RotateCcw, Volume2, VolumeX, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import gsap from "gsap"
 
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { getCourseDeck } from "@/services/course-service"
-import { createMatchSession, listPracticeSessions, submitMatchResult } from "@/services/practice-service"
+import {
+  cancelPracticeSession,
+  createMatchSession,
+  listPracticeSessions,
+  submitMatchResult,
+} from "@/services/practice-service"
 import type { CourseSection, PracticeQuestion, PracticeSession } from "@/types"
 import { formatTime, Pill } from "@/components/views/practice/session-ui"
 
@@ -20,18 +24,20 @@ type MatchTile = {
   text: string
 }
 
-const MATCH_MAX_PAIRS = 7
+const MATCH_MAX_PAIRS = 6
+const MATCH_MUSIC_SRC = "/audio/funny-cartoon-music.mp3"
 
 export function CourseDeckMatchView({
   courseSlug,
   deckSlug,
   initialSession,
-  backHref,
+  onExitToSetup,
 }: {
   courseSlug: string
   deckSlug?: string
   initialSession?: PracticeSession
   backHref?: string
+  onExitToSetup?: () => void
 }) {
   const [deck, setDeck] = useState<CourseSection | null>(null)
   const [session, setSession] = useState<PracticeSession | null>(initialSession ?? null)
@@ -45,8 +51,13 @@ export function CourseDeckMatchView({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [exitDialogOpen, setExitDialogOpen] = useState(false)
   const [history, setHistory] = useState<PracticeSession[]>([])
   const [error, setError] = useState("")
+  const [musicEnabled, setMusicEnabled] = useState(true)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const musicRef = useRef<HTMLAudioElement | null>(null)
+  const musicEnabledRef = useRef(true)
   const saveStartedRef = useRef(false)
 
   useEffect(() => {
@@ -87,7 +98,6 @@ export function CourseDeckMatchView({
     void shuffleSeed
     return shuffle(questions.flatMap(questionToTiles))
   }, [questions, shuffleSeed])
-  const boardColumns = Math.max(2, Math.ceil(tiles.length / 2))
 
   const complete = questions.length > 0 && matchedIds.size === questions.length
 
@@ -100,9 +110,98 @@ export function CourseDeckMatchView({
     return () => window.clearInterval(interval)
   }, [complete, session])
 
-  const resolvedBackHref = backHref ?? (deckSlug ? `/courses/${courseSlug}/decks/${deckSlug}` : `/courses/${courseSlug}`)
-  const title = deck?.title ? `Ghép thẻ · ${deck.title}` : "Ghép thẻ"
-  const progressValue = (matchedIds.size / Math.max(1, questions.length)) * 100
+  useEffect(() => {
+    musicEnabledRef.current = musicEnabled
+  }, [musicEnabled])
+
+  useEffect(() => {
+    const music = new Audio(MATCH_MUSIC_SRC)
+    music.loop = true
+    music.volume = 0.22
+    music.preload = "auto"
+    musicRef.current = music
+
+    const playMusic = () => {
+      if (!musicEnabledRef.current) return
+      void music.play().catch(() => {
+        // Some browsers require the first user interaction before audible autoplay.
+      })
+    }
+    const playAfterInteraction = () => {
+      if (music.paused) playMusic()
+    }
+
+    playMusic()
+    window.addEventListener("pointerdown", playAfterInteraction)
+    window.addEventListener("keydown", playAfterInteraction)
+
+    return () => {
+      window.removeEventListener("pointerdown", playAfterInteraction)
+      window.removeEventListener("keydown", playAfterInteraction)
+      music.pause()
+      musicRef.current = null
+    }
+  }, [])
+
+  const handleToggleMusic = () => {
+    const music = musicRef.current
+    if (!music) return
+
+    if (musicEnabled) {
+      music.pause()
+      setMusicEnabled(false)
+      return
+    }
+
+    music
+      .play()
+      .then(() => setMusicEnabled(true))
+      .catch(() => setMusicEnabled(false))
+  }
+
+  const getAudioContext = () => {
+    if (typeof window === "undefined") return null
+    const audioWindow = window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext }
+    const AudioContextClass = window.AudioContext ?? audioWindow.webkitAudioContext
+    if (!AudioContextClass) return null
+    if (!audioContextRef.current) audioContextRef.current = new AudioContextClass()
+    if (audioContextRef.current.state === "suspended") {
+      void audioContextRef.current.resume()
+    }
+    return audioContextRef.current
+  }
+
+  const playTone = (frequency: number, duration = 0.08, delay = 0, type: OscillatorType = "sine", volume = 0.04) => {
+    const audio = getAudioContext()
+    if (!audio) return
+    const oscillator = audio.createOscillator()
+    const gain = audio.createGain()
+    const start = audio.currentTime + delay
+    oscillator.type = type
+    oscillator.frequency.setValueAtTime(frequency, start)
+    gain.gain.setValueAtTime(0.0001, start)
+    gain.gain.exponentialRampToValueAtTime(volume, start + 0.012)
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
+    oscillator.connect(gain)
+    gain.connect(audio.destination)
+    oscillator.start(start)
+    oscillator.stop(start + duration + 0.02)
+  }
+
+  const playSelectSound = () => playTone(520, 0.055, 0, "triangle", 0.03)
+  const playMatchSound = () => {
+    playTone(660, 0.08, 0, "sine", 0.04)
+    playTone(920, 0.12, 0.07, "sine", 0.035)
+  }
+  const playMissSound = () => {
+    playTone(220, 0.12, 0, "sawtooth", 0.025)
+    playTone(160, 0.12, 0.08, "sawtooth", 0.02)
+  }
+  const playWinSound = () => {
+    ;[523, 659, 784, 1047].forEach((frequency, index) => {
+      playTone(frequency, 0.13, index * 0.08, "triangle", 0.04)
+    })
+  }
 
   useEffect(() => {
     let active = true
@@ -158,6 +257,7 @@ export function CourseDeckMatchView({
     if (complete || correctTileIds.size || wrongTileIds.size || matchedIds.has(tile.questionId)) return
 
     if (!selectedTile) {
+      playSelectSound()
       setSelectedTile(tile)
       return
     }
@@ -168,22 +268,27 @@ export function CourseDeckMatchView({
     }
 
     if (selectedTile.kind === tile.kind) {
+      playSelectSound()
       setSelectedTile(tile)
       return
     }
 
     const selectedIds = new Set([selectedTile.id, tile.id])
     if (selectedTile.questionId === tile.questionId) {
+      const completesGame = matchedIds.size + 1 === questions.length
+      playMatchSound()
       setCorrectTileIds(selectedIds)
       window.setTimeout(() => {
         setMatchedIds((current) => new Set([...current, tile.questionId]))
         setCorrectTileIds(new Set())
         setSelectedTile(null)
+        if (completesGame) playWinSound()
       }, 220)
       return
     }
 
     setMistakes((current) => current + 1)
+    playMissSound()
     setWrongTileIds(selectedIds)
     window.setTimeout(() => {
       setWrongTileIds(new Set())
@@ -218,31 +323,34 @@ export function CourseDeckMatchView({
     }
   }
 
+  const handleCancelAndExit = () => {
+    if (session) cancelPracticeSession(session)
+    setExitDialogOpen(false)
+    onExitToSetup?.()
+  }
+
   if (error && !deck) return <StateBlock tone="error" title="Không mở được ghép thẻ" description={error} />
   if (!deck || !session) return <StateBlock title="Đang chuẩn bị ghép thẻ" description="Đang xáo câu hỏi và đáp án..." />
 
   return (
-    <div className="-mt-2 mx-auto flex h-[calc(100dvh-8rem)] max-w-7xl flex-col gap-3 overflow-hidden lg:-mt-4">
+    <div className="relative -m-4 flex min-h-[calc(100dvh-4rem)] flex-col overflow-y-auto overflow-x-hidden bg-background px-4 py-4 text-foreground sm:-m-6 sm:px-8 sm:py-5 lg:-my-8 lg:mx-[-1.5rem] lg:h-[calc(100dvh-4rem)] lg:min-h-0 lg:overflow-hidden lg:px-12">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(23,32,24,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(23,32,24,0.08)_1px,transparent_1px)] [background-size:52px_52px] dark:opacity-35 dark:[background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)]"
+      />
       <MatchHeader
-        title={title}
-        backHref={resolvedBackHref}
-        backLabel={deck.title}
-        matched={matchedIds.size}
-        total={questions.length}
-        mistakes={mistakes}
         elapsedSeconds={elapsedSeconds}
-        saved={saved}
-        saving={saving}
-        progressValue={progressValue}
+        musicEnabled={musicEnabled}
         historyCount={history.length}
-        onRestart={handleRestartSameConfig}
+        onToggleMusic={handleToggleMusic}
         onOpenHistory={() => setHistoryOpen(true)}
+        onRequestExit={() => setExitDialogOpen(true)}
       />
 
       {!questions.length ? (
         <StateBlock title="Không có câu hỏi" description="Không có câu phù hợp với cấu hình ghép thẻ." />
       ) : (
-        <section className="min-h-0 flex-1 overflow-hidden rounded-[1.5rem] border border-border bg-muted/25 p-3 shadow-lg shadow-black/5 dark:bg-muted/15 sm:p-4">
+        <section className="relative z-10 mx-auto flex w-full max-w-[1460px] flex-1 items-start overflow-visible py-4 sm:py-6 lg:min-h-0 lg:items-center lg:overflow-hidden lg:py-8">
           {complete ? (
             <MatchComplete
               matched={matchedIds.size}
@@ -253,10 +361,7 @@ export function CourseDeckMatchView({
               onRestart={handleRestartSameConfig}
             />
           ) : (
-            <div
-              className="grid h-full auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-[repeat(var(--match-cols),minmax(0,1fr))] xl:grid-rows-2"
-              style={{ "--match-cols": boardColumns } as React.CSSProperties}
-            >
+            <div className="grid h-auto w-full auto-rows-[minmax(104px,1fr)] grid-cols-2 gap-3 pb-5 sm:auto-rows-[minmax(118px,1fr)] sm:grid-cols-3 sm:gap-4 lg:h-full lg:max-h-[720px] lg:auto-rows-fr lg:grid-cols-4 lg:grid-rows-3 lg:gap-4 lg:pb-0">
               {tiles.map((tile) => (
                 <MatchTileButton
                   key={tile.id}
@@ -281,75 +386,110 @@ export function CourseDeckMatchView({
           onClose={() => setHistoryOpen(false)}
         />
       ) : null}
+
+      {exitDialogOpen ? (
+        <MatchExitDialog
+          onClose={() => setExitDialogOpen(false)}
+          onCancelSession={handleCancelAndExit}
+        />
+      ) : null}
     </div>
   )
 }
 
 function MatchHeader({
-  title,
-  backHref,
-  backLabel,
-  matched,
-  total,
-  mistakes,
   elapsedSeconds,
-  saved,
-  saving,
-  progressValue,
+  musicEnabled,
   historyCount,
-  onRestart,
+  onToggleMusic,
   onOpenHistory,
+  onRequestExit,
 }: {
-  title: string
-  backHref: string
-  backLabel: string
-  matched: number
-  total: number
-  mistakes: number
   elapsedSeconds: number
-  saved: boolean
-  saving: boolean
-  progressValue: number
+  musicEnabled: boolean
   historyCount: number
-  onRestart: () => void
+  onToggleMusic: () => void
   onOpenHistory: () => void
+  onRequestExit: () => void
 }) {
   return (
-    <header className="shrink-0 space-y-2">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0">
-          <Button variant="ghost" size="sm" asChild className="-ml-2 h-8">
-            <Link href={backHref}>
-              <ArrowLeft className="size-4" />
-              {backLabel}
-            </Link>
-          </Button>
-          <div className="mt-1 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Gamepad2 className="size-4" />
-            Ghép thẻ
+    <header className="relative z-20 flex h-14 shrink-0 items-center justify-between">
+      <div className="w-32" aria-hidden="true" />
+
+      <div className="absolute left-1/2 top-1/2 rounded-full border-2 border-[#172018] bg-card px-5 py-2 text-base font-extrabold tabular-nums text-card-foreground shadow-[4px_4px_0_#172018] -translate-x-1/2 -translate-y-1/2 dark:border-white/80 dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]">
+        {formatTime(elapsedSeconds)}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onToggleMusic}
+          className="grid size-10 place-items-center rounded-md border-2 border-[#172018] bg-card text-card-foreground shadow-[3px_3px_0_#172018] transition-transform hover:-translate-y-0.5 hover:bg-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]"
+          aria-label={musicEnabled ? "Tắt nhạc nền" : "Bật nhạc nền"}
+        >
+          {musicEnabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+        </button>
+        <button
+          type="button"
+          onClick={onOpenHistory}
+          className="relative grid size-10 place-items-center rounded-md border-2 border-[#172018] bg-card text-card-foreground shadow-[3px_3px_0_#172018] transition-transform hover:-translate-y-0.5 hover:bg-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]"
+          aria-label="Lịch sử chơi"
+          title={historyCount ? `${historyCount} phiên gần đây` : "Lịch sử chơi"}
+        >
+          <History className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={onRequestExit}
+          className="grid size-10 place-items-center rounded-md border-2 border-[#172018] bg-card text-card-foreground shadow-[3px_3px_0_#172018] transition-transform hover:-translate-y-0.5 hover:bg-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]"
+          aria-label="Thoát ghép thẻ"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
+    </header>
+  )
+}
+
+function MatchExitDialog({
+  onClose,
+  onCancelSession,
+}: {
+  onClose: () => void
+  onCancelSession: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-background/70 p-4 backdrop-blur-sm" role="presentation">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="match-exit-dialog-title"
+        className="relative w-full max-w-md overflow-hidden rounded-md border-2 border-[#172018] bg-background p-5 shadow-[9px_9px_0_#172018] dark:border-white/80 dark:shadow-[9px_9px_0_rgba(255,255,255,0.24)]"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 id="match-exit-dialog-title" className="text-base font-extrabold">
+              Rời phiên ghép thẻ?
+            </h2>
+            <p className="mt-2 text-sm font-medium leading-6 text-muted-foreground">
+              Nếu hủy phiên, tiến trình ghép thẻ hiện tại sẽ không được giữ lại và bạn sẽ quay về màn cấu hình ghép thẻ.
+            </p>
           </div>
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          <Pill>{matched}/{total} cặp</Pill>
-          <Pill>
-            <Clock3 className="size-3.5" />
-            {formatTime(elapsedSeconds)}
-          </Pill>
-          <Pill>{mistakes} lỗi</Pill>
-          <Pill>{saved ? "Đã lưu" : saving ? "Đang lưu" : "Đang chơi"}</Pill>
-          <Button variant="outline" size="sm" onClick={onOpenHistory} className="rounded-full">
-            <History className="size-4" />
-            Lịch sử{historyCount ? ` (${historyCount})` : ""}
+          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Đóng">
+            <X className="size-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onRestart} className="rounded-full">
-            <RotateCcw className="size-4" />
-            Chơi lại
+        </div>
+
+        <div className="mt-6 grid gap-2 sm:grid-cols-[1fr_1fr]">
+          <Button variant="destructive" onClick={onCancelSession}>
+            Hủy phiên
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Tiếp tục ghép
           </Button>
         </div>
       </div>
-      <Progress value={progressValue} />
-    </header>
+    </div>
   )
 }
 
@@ -430,18 +570,15 @@ function MatchTileButton({
       disabled={matched}
       aria-hidden={matched}
       className={cn(
-        "group relative min-h-0 overflow-hidden rounded-xl border border-border bg-card p-3 text-left text-sm leading-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-        tile.kind === "answer" && "bg-background",
-        selected && "border-foreground bg-muted shadow-md ring-2 ring-foreground/10",
-        correct && "scale-95 border-emerald-300 bg-emerald-50 text-emerald-800 opacity-80 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200",
-        wrong && "animate-pulse border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950/40 dark:text-red-200",
+        "group relative grid min-h-0 place-items-center overflow-hidden rounded-md border-2 border-[#172018] bg-card p-3 text-center text-[0.72rem] font-extrabold leading-4 text-card-foreground shadow-[5px_5px_0_#172018] transition-all duration-150 hover:-translate-y-0.5 hover:bg-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:text-xs sm:leading-5 md:text-sm lg:text-[0.86rem] dark:border-white/80 dark:shadow-[5px_5px_0_rgba(255,255,255,0.24)]",
+        tile.kind === "answer" && "bg-muted/35",
+        selected && "bg-[#fef08a] text-[#172018] hover:bg-[#fde047]",
+        correct && "scale-95 bg-[#bbf7d0] text-[#12351d] opacity-80 dark:bg-emerald-950/70 dark:text-emerald-100",
+        wrong && "animate-pulse bg-[#fecdd3] text-[#4a0f18] dark:bg-rose-950/70 dark:text-rose-100",
         matched && "pointer-events-none border-transparent bg-transparent opacity-0 shadow-none"
       )}
     >
-      <span className="mb-2 inline-flex rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-        {tile.kind === "prompt" ? "Câu hỏi" : "Đáp án"}
-      </span>
-      <span className="line-clamp-5 text-balance font-medium">{tile.text}</span>
+      <span className="line-clamp-6 max-w-full text-balance break-words sm:line-clamp-5">{tile.text}</span>
     </button>
   )
 }
@@ -461,25 +598,69 @@ function MatchComplete({
   saving: boolean
   onRestart: () => void
 }) {
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const fireworksRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const panel = panelRef.current
+    const fireworks = fireworksRef.current
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!panel || !fireworks || reduceMotion) return
+
+    const particles = createMatchFireworkParticles(fireworks)
+    const timeline = gsap
+      .timeline({
+        onComplete: () => {
+          particles.forEach((particle) => particle.remove())
+        },
+      })
+      .set(panel, { autoAlpha: 0, y: 34, scale: 0.92, rotateZ: -1.2 })
+      .set(particles, { autoAlpha: 0, scale: 0.45, x: 0, y: 0 })
+      .to(panel, { autoAlpha: 1, y: 0, scale: 1, rotateZ: 0, duration: 0.48, ease: "back.out(1.8)" })
+      .to(
+        particles,
+        {
+          autoAlpha: 1,
+          scale: 1,
+          x: (index) => matchFireworkVector(index, particles.length).x,
+          y: (index) => matchFireworkVector(index, particles.length).y,
+          duration: 0.68,
+          ease: "power3.out",
+          stagger: 0.006,
+        },
+        "-=0.2"
+      )
+      .to(particles, { autoAlpha: 0, scale: 0.35, duration: 0.24, ease: "power2.in" }, "-=0.14")
+      .set(panel, { clearProps: "all" })
+
+    return () => {
+      timeline.kill()
+      particles.forEach((particle) => particle.remove())
+    }
+  }, [])
+
   return (
-    <div className="grid h-full place-items-center">
-      <div className="w-full max-w-xl rounded-2xl border border-border bg-background p-6 text-center shadow-sm">
-        <CheckCircle2 className="mx-auto size-10 text-emerald-600" />
-        <h2 className="mt-4 text-2xl font-semibold tracking-tight">Hoàn thành ghép thẻ</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+    <div className="relative grid h-full w-full place-items-center overflow-visible py-6">
+      <div ref={fireworksRef} className="pointer-events-none absolute inset-0 z-10 overflow-visible" aria-hidden="true" />
+      <div ref={panelRef} className="relative z-20 w-full max-w-xl rounded-md border-2 border-[#172018] bg-card p-5 text-center text-card-foreground shadow-[8px_8px_0_#172018] sm:p-7 dark:border-white/80 dark:shadow-[8px_8px_0_rgba(255,255,255,0.24)]">
+        <CheckCircle2 className="mx-auto size-12 text-emerald-700" />
+        <h2 className="mt-4 text-3xl font-extrabold tracking-normal">Hoàn thành ghép thẻ</h2>
+        <p className="mt-2 text-sm font-medium text-[#526057]">
           Bạn đã ghép đúng {matched} cặp trong {formatTime(elapsedSeconds)} với {mistakes} lỗi.
         </p>
-        <div className="mt-5 grid grid-cols-3 gap-2">
+        <div className="mt-6 grid grid-cols-3 gap-3">
           <ResultStat label="Cặp đúng" value={matched.toString()} />
           <ResultStat label="Lỗi" value={mistakes.toString()} />
           <ResultStat label="Thời gian" value={formatTime(elapsedSeconds)} />
         </div>
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Button variant="outline" onClick={onRestart}>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button onClick={onRestart} className="border-2 border-[#172018] bg-[#fef08a] text-[#172018] shadow-[4px_4px_0_#172018] hover:bg-[#fde047] dark:border-white/80 dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]">
             <RotateCcw className="size-4" />
             Chơi lại
           </Button>
-          <Pill>{saved ? "Đã lưu kết quả" : saving ? "Đang lưu kết quả" : "Chưa lưu"}</Pill>
+          <span className="inline-flex items-center rounded-md border-2 border-[#172018] bg-[#bbf7d0] px-4 py-2 text-sm font-extrabold text-[#12351d] shadow-[3px_3px_0_#172018] dark:border-white/80 dark:bg-emerald-950/70 dark:text-emerald-100 dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]">
+            {saved ? "Đã lưu kết quả" : saving ? "Đang lưu kết quả" : "Chưa lưu"}
+          </span>
         </div>
       </div>
     </div>
@@ -488,11 +669,32 @@ function MatchComplete({
 
 function ResultStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border bg-muted/30 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+    <div className="rounded-md border-2 border-[#172018] bg-background p-3 shadow-[3px_3px_0_#172018] dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]">
+      <p className="text-xs font-bold text-[#526057]">{label}</p>
+      <p className="mt-1 text-lg font-extrabold text-foreground">{value}</p>
     </div>
   )
+}
+
+function createMatchFireworkParticles(container: HTMLDivElement) {
+  container.innerHTML = ""
+  const colors = ["#22c55e", "#38bdf8", "#fef08a", "#fb7185", "#f59e0b", "#172018"]
+  return Array.from({ length: 42 }, (_, index) => {
+    const particle = document.createElement("span")
+    particle.className = "absolute left-1/2 top-1/2 size-2 rounded-full border border-[#172018]/30 shadow-[2px_2px_0_rgba(23,32,24,0.25)]"
+    particle.style.backgroundColor = colors[index % colors.length]
+    container.appendChild(particle)
+    return particle
+  })
+}
+
+function matchFireworkVector(index: number, total: number) {
+  const angle = (Math.PI * 2 * index) / total
+  const radius = 92 + (index % 6) * 16
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+  }
 }
 
 function questionToTiles(question: PracticeQuestion): MatchTile[] {

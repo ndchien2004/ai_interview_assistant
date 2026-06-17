@@ -65,7 +65,15 @@ export function PracticeModeView({
   }
 
   if (mode === "MATCH") {
-    return <CourseDeckMatchView courseSlug={courseSlug} deckSlug={deckSlug} initialSession={session} backHref={backHref} />
+    return (
+      <CourseDeckMatchView
+        courseSlug={courseSlug}
+        deckSlug={deckSlug}
+        initialSession={session}
+        backHref={backHref}
+        onExitToSetup={() => setSession(null)}
+      />
+    )
   }
 
   return (

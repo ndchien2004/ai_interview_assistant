@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowLeft, Brain, CheckCircle2, Eye, RotateCcw, Shuffle, XCircle } from "lucide-react"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
+import gsap from "gsap"
 
 import { StateBlock } from "@/components/common/state-block"
 import { Button } from "@/components/ui/button"
@@ -40,7 +41,13 @@ export function JavaCoreStudySessionView({
   const [results, setResults] = useState<CardResult[]>([])
   const [finished, setFinished] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [completing, setCompleting] = useState(false)
   const [error, setError] = useState("")
+  const cardStageRef = useRef<HTMLDivElement | null>(null)
+  const cardMotionRef = useRef<HTMLDivElement | null>(null)
+  const answerBadgeRef = useRef<HTMLDivElement | null>(null)
+  const completionBadgeRef = useRef<HTMLDivElement | null>(null)
+  const fireworksRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (initialSession) return
@@ -80,9 +87,21 @@ export function JavaCoreStudySessionView({
     setError("")
     try {
       const nextSession = await submitFlashcardResult(session, question.id, remembered)
-      setResults((current) => [...current, { question, remembered }])
+      const nextResults = [...results, { question, remembered }]
+      const hasNextQuestion = Boolean(nextSession.nextQuestion)
+      setResults(nextResults)
+      await playAnswerAnimation(remembered, hasNextQuestion)
+      if (!hasNextQuestion) {
+        setCompleting(true)
+        await playCompletionAnimation()
+        setCompleting(false)
+      }
       setSession(nextSession)
       setRevealed(false)
+      if (hasNextQuestion) {
+        await waitForNextPaint()
+        await playQuestionIntroAnimation(remembered)
+      }
     } catch {
       setError("Không thể lưu tiến trình thẻ này.")
     } finally {
@@ -117,6 +136,121 @@ export function JavaCoreStudySessionView({
     setFinished(true)
   }
 
+  const playAnswerAnimation = (remembered: boolean, hasNextQuestion: boolean) => {
+    const cardMotion = cardMotionRef.current
+    const badge = answerBadgeRef.current
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!cardMotion || !badge || reduceMotion) return Promise.resolve()
+
+    const direction = remembered ? 1 : -1
+    badge.textContent = remembered ? "Đã thuộc" : "Cần học lại"
+    badge.style.backgroundColor = remembered ? "#bbf7d0" : "#fee2e2"
+    badge.style.color = remembered ? "#12351d" : "#991b1b"
+
+    return new Promise<void>((resolve) => {
+      gsap
+        .timeline({ onComplete: resolve })
+        .set(badge, { display: "block", autoAlpha: 0, scale: 0.72, x: direction * 26, y: 16 })
+        .to(badge, { autoAlpha: 1, scale: 1, x: 0, y: 0, duration: 0.22, ease: "back.out(2.4)" })
+        .to(cardMotion, { x: direction * 58, rotateZ: direction * 1.6, scale: 0.985, duration: 0.26, ease: "power2.out" }, "-=0.14")
+        .to(cardMotion, {
+          x: hasNextQuestion ? direction * 118 : 0,
+          rotateZ: hasNextQuestion ? direction * 3.5 : 0,
+          scale: hasNextQuestion ? 0.965 : 1.012,
+          autoAlpha: hasNextQuestion ? 0 : 1,
+          duration: 0.28,
+          ease: hasNextQuestion ? "power2.in" : "back.out(2)",
+        })
+        .to(badge, { autoAlpha: 0, y: -18, scale: 0.92, duration: 0.18, ease: "power2.in" }, "-=0.16")
+        .set(badge, { clearProps: "all" })
+    })
+  }
+
+  const playQuestionIntroAnimation = (previousRemembered: boolean) => {
+    const cardMotion = cardMotionRef.current
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!cardMotion || reduceMotion) return Promise.resolve()
+
+    const direction = previousRemembered ? 1 : -1
+    return new Promise<void>((resolve) => {
+      gsap
+        .timeline({ onComplete: resolve })
+        .set(cardMotion, { x: -direction * 52, rotateZ: -direction * 1.2, scale: 0.975, autoAlpha: 0 })
+        .to(cardMotion, { x: 0, rotateZ: 0, scale: 1, autoAlpha: 1, duration: 0.42, ease: "back.out(1.7)" })
+        .set(cardMotion, { clearProps: "all" })
+    })
+  }
+
+  const waitForNextPaint = () =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    })
+
+  const playCompletionAnimation = () => {
+    const cardStage = cardStageRef.current
+    const badge = completionBadgeRef.current
+    const fireworks = fireworksRef.current
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!cardStage || !badge || !fireworks || reduceMotion) return Promise.resolve()
+
+    const particles = createFireworkParticles(fireworks)
+
+    return new Promise<void>((resolve) => {
+      gsap
+        .timeline({
+          onComplete: () => {
+            particles.forEach((particle) => particle.remove())
+            resolve()
+          },
+        })
+        .set(badge, { display: "block", autoAlpha: 0, scale: 0.72, y: 22 })
+        .set(particles, { autoAlpha: 0, scale: 0.4, x: 0, y: 0 })
+        .to(cardStage, { y: -18, scale: 1.018, rotateZ: -0.6, duration: 0.24, ease: "back.out(2.4)" })
+        .to(badge, { autoAlpha: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(2.2)" }, "-=0.12")
+        .to(
+          particles,
+          {
+            autoAlpha: 1,
+            scale: 1,
+            x: (index) => fireworkVector(index, particles.length).x,
+            y: (index) => fireworkVector(index, particles.length).y,
+            duration: 0.58,
+            ease: "power3.out",
+            stagger: 0.006,
+          },
+          "-=0.18"
+        )
+        .to(particles, { autoAlpha: 0, scale: 0.35, duration: 0.28, ease: "power2.in" }, "-=0.1")
+        .to(cardStage, { y: 10, scale: 0.985, rotateZ: 0, duration: 0.28, ease: "sine.inOut" }, "+=0.35")
+        .to([cardStage, badge], { y: -18, autoAlpha: 0, duration: 0.28, ease: "power2.in" })
+        .set([cardStage, badge], { clearProps: "all" })
+    })
+  }
+
+  const createFireworkParticles = (container: HTMLDivElement) => {
+    container.innerHTML = ""
+    const colors = ["#22c55e", "#38bdf8", "#f97316", "#fb7185", "#facc15", "#a78bfa"]
+    return Array.from({ length: 34 }, (_, index) => {
+      const particle = document.createElement("span")
+      particle.className = "absolute left-1/2 top-1/2 block rounded-full border border-[#172018]/30"
+      particle.style.width = `${index % 3 === 0 ? 10 : 7}px`
+      particle.style.height = particle.style.width
+      particle.style.backgroundColor = colors[index % colors.length]
+      particle.style.boxShadow = "3px 3px 0 #172018"
+      container.appendChild(particle)
+      return particle
+    })
+  }
+
+  const fireworkVector = (index: number, total: number) => {
+    const angle = (Math.PI * 2 * index) / total
+    const radius = 82 + (index % 5) * 18
+    return {
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+    }
+  }
+
   if (error && !session) {
     return <StateBlock tone="error" title="Không mở được phiên học" description={error} />
   }
@@ -143,51 +277,66 @@ export function JavaCoreStudySessionView({
             <Button
               variant="outline"
               size="sm"
-              disabled={submitting}
+              disabled={submitting || completing}
               onClick={handleStartShuffledSession}
               className="rounded-full"
             >
               <Shuffle className="size-4" />
               <span className="hidden sm:inline">Xáo trộn</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="rounded-full">
+            <Button variant="outline" size="sm" disabled={submitting || completing} onClick={() => window.location.reload()} className="rounded-full">
               <RotateCcw className="size-4" />
               <span className="hidden sm:inline">Tải lại</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleFinish} className="rounded-full">
+            <Button variant="outline" size="sm" disabled={submitting || completing} onClick={handleFinish} className="rounded-full">
               Kết thúc phiên
             </Button>
           </div>
         }
       />
 
-      <Flashcard
-        question={question}
-        revealed={revealed}
-        saving={submitting}
-        onToggle={() => setRevealed((current) => !current)}
-        onResult={handleResult}
-      />
+      <div ref={cardStageRef} className="relative flex min-h-0 flex-1">
+        <div
+          ref={answerBadgeRef}
+          className="pointer-events-none absolute left-1/2 top-1/2 z-40 hidden -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#172018] px-6 py-3 text-lg font-extrabold opacity-0 shadow-[7px_7px_0_#172018]"
+        />
+        <div
+          ref={completionBadgeRef}
+          className="pointer-events-none absolute left-1/2 top-1/2 z-40 hidden -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#172018] bg-[#bbf7d0] px-6 py-3 text-lg font-extrabold text-[#12351d] opacity-0 shadow-[7px_7px_0_#172018]"
+        >
+          Hoàn thành!
+        </div>
+        <div ref={fireworksRef} className="pointer-events-none absolute inset-0 z-30 overflow-visible" aria-hidden="true" />
+        <div ref={cardMotionRef} className="flex min-h-0 flex-1">
+          <Flashcard
+            question={question}
+            revealed={revealed}
+            saving={submitting || completing}
+            onToggle={() => setRevealed((current) => !current)}
+            onResult={handleResult}
+          />
+        </div>
+      </div>
 
       <section className="grid shrink-0 gap-3 pb-1 md:grid-cols-[1fr_auto_1fr]">
         <Button
           type="button"
           variant="outline"
           className="h-12 justify-center text-red-600 hover:text-red-700"
-          disabled={submitting}
+          disabled={submitting || completing}
           onClick={() => handleResult(false)}
         >
           <XCircle className="size-5" />
           Chưa thuộc
         </Button>
-        <Button type="button" variant="outline" className="h-12" onClick={() => setRevealed((current) => !current)}>
+        <Button type="button" variant="outline" className="h-12" disabled={submitting || completing} onClick={() => setRevealed((current) => !current)}>
           <Eye className="size-5" />
           {revealed ? "Mặt trước" : "Mặt sau"}
         </Button>
         <Button
           type="button"
           className="h-12 justify-center"
-          disabled={submitting}
+          disabled={submitting || completing}
           onClick={() => handleResult(true)}
         >
           <CheckCircle2 className="size-5" />

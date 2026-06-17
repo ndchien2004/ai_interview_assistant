@@ -22,7 +22,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 const COURSE_SLUG = "java-fullstack-flashcard-bank"
 const LOCAL_SESSIONS_KEY = "java-fullstack-sessions"
 const ACTIVE_SESSIONS_KEY = "java-fullstack-active-sessions"
-const LOCAL_MATCH_LIMIT = 7
+const LOCAL_MATCH_LIMIT = 6
 
 const headers = () => {
   const token = getAuthToken()
@@ -188,6 +188,14 @@ export async function listActivePracticeSessions(courseSlug = COURSE_SLUG) {
   return sessions
     .filter((session): session is PracticeSession => Boolean(session))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+}
+
+export function cancelPracticeSession(session: PracticeSession) {
+  if (typeof window === "undefined") return
+  const sessions = readLocalSessions().filter((item) => item.id !== session.id)
+  window.localStorage.setItem(LOCAL_SESSIONS_KEY, JSON.stringify(sessions))
+  if (!session.mode) return
+  clearActiveSession(session.courseSlug, session.mode, session.deckSlug ?? session.filters?.deckSlug)
 }
 
 export async function listPracticeSessions({
