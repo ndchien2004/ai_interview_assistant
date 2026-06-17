@@ -136,9 +136,9 @@ function Action({
           <Icon className="size-4 shrink-0" />
           <span>{label}</span>
         </div>
-        <ArrowRight className={`size-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${primary ? "text-primary-foreground/70" : "text-muted-foreground"}`} />
+        <ArrowRight className={`size-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${primary ? "text-[#172018]/70" : "text-muted-foreground"}`} />
       </div>
-      <p className={`mt-3 text-sm leading-6 ${primary ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{description}</p>
+      <p className={`mt-3 text-sm leading-6 ${primary ? "font-medium text-[#172018]/80" : "text-muted-foreground"}`}>{description}</p>
     </Link>
   )
 }

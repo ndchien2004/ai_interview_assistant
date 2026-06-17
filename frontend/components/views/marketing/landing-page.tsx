@@ -13,8 +13,6 @@ import {
   Layers3,
   Mail,
   MessageCircleQuestion,
-  Rocket,
-  ShieldCheck,
   Star,
   Trophy,
   WandSparkles,
@@ -75,6 +73,9 @@ export function LandingPage() {
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const ctx = gsap.context(() => {
+      const floatSet = new Set(floatRefs.current.filter(Boolean))
+      const parallaxCards = cardRefs.current.filter(Boolean).filter((card) => !floatSet.has(card))
+
       if (!reduceMotion) {
         gsap.set(".hero-pop", { y: 24, opacity: 0, scale: 0.97 })
         gsap.set(".nav-pop", { y: -16, opacity: 0 })
@@ -114,17 +115,22 @@ export function LandingPage() {
             { y: 0, opacity: 1, rotateX: 0, rotateY: 0, duration: 0.8, stagger: 0.08 },
             "-=0.55"
           )
+          .call(() => {
+            floatRefs.current.filter(Boolean).forEach((item, index) => {
+              const distance = index === 2 ? 12 : index % 2 === 0 ? -10 : 10
+              const drift = index % 2 === 0 ? 6 : -6
 
-        floatRefs.current.filter(Boolean).forEach((item, index) => {
-          const distance = index === 2 ? 12 : index % 2 === 0 ? -10 : 10
-          const rotation = index % 2 === 0 ? 2 : -2
-
-          gsap
-            .timeline({ repeat: -1, delay: index * 0.18 })
-            .to(item, { y: distance, rotateZ: rotation, duration: 2.4, ease: "sine.inOut" })
-            .to(item, { y: -distance, rotateZ: -rotation, duration: 4.8, ease: "sine.inOut" })
-            .to(item, { y: 0, rotateZ: 0, duration: 2.4, ease: "sine.inOut" })
-        })
+              gsap.to(item, {
+                y: distance,
+                x: drift,
+                duration: 3.8 + index * 0.35,
+                ease: "sine.inOut",
+                repeat: -1,
+                yoyo: true,
+                delay: index * 0.22,
+              })
+            })
+          })
 
         const pathSteps = gsap.utils.toArray<HTMLElement>(".path-step")
         gsap
@@ -211,7 +217,7 @@ export function LandingPage() {
           duration: 0.65,
           ease: "power2.out",
         })
-        gsap.to(cardRefs.current.filter(Boolean), {
+        gsap.to(parallaxCards, {
           x: (index) => x * (index + 1) * 8,
           duration: 0.65,
           ease: "power2.out",
@@ -221,7 +227,7 @@ export function LandingPage() {
       const onLeave = () => {
         if (reduceMotion) return
         gsap.to(board, { rotateX: 0, rotateY: 0, duration: 0.7, ease: "power2.out" })
-        gsap.to(cardRefs.current.filter(Boolean), { x: 0, duration: 0.7, ease: "power2.out" })
+        gsap.to(parallaxCards, { x: 0, duration: 0.7, ease: "power2.out" })
       }
 
       board.addEventListener("pointermove", onMove)
@@ -280,25 +286,6 @@ export function LandingPage() {
               FreeCard biến kiến thức khô thành những vòng luyện tập ngắn, có nhịp, có thành tựu nhỏ để bạn muốn quay lại học mỗi ngày.
             </p>
 
-            <div className="hero-pop mt-6 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-12 border-2 border-[#172018] bg-[#22c55e] px-5 text-[#09210f] shadow-[5px_5px_0_#172018] hover:bg-[#4ade80]">
-                <Link href="/register">
-                  Bắt đầu học ngay
-                  <Rocket className="size-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                className="h-12 border-2 border-[#172018] bg-[#fef08a] px-5 text-[#172018] shadow-[5px_5px_0_#172018] hover:bg-[#fde047]"
-              >
-                <Link href="/login">
-                  <ShieldCheck className="size-4" />
-                  Đăng nhập để ôn
-                </Link>
-              </Button>
-            </div>
-
             <div className="hero-pop mt-7 grid max-w-xl grid-cols-3 gap-3">
               {stats.map((item) => (
                 <div key={item.label} className={`rounded-md border-2 border-[#172018] px-4 py-3 shadow-[4px_4px_0_#172018] ${item.tone}`}>
@@ -310,13 +297,13 @@ export function LandingPage() {
           </div>
 
           <div className="hero-pop relative flex min-h-[430px] items-center justify-center sm:min-h-[460px] lg:min-h-[510px]" style={{ perspective: "1200px" }}>
-            <div className="relative h-[430px] w-full max-w-[690px] translate-x-2 scale-[1.03] sm:h-[460px] lg:h-[510px] lg:translate-x-6 lg:scale-[1.06] xl:translate-x-10">
+            <div className="relative h-[430px] w-full max-w-[690px] translate-x-2 scale-[1.03] sm:h-[460px] lg:h-[510px] lg:translate-x-[10px] lg:scale-[1.06] xl:translate-x-[-10px] translate-y-[55px]">
               <div ref={boardRef} className="relative h-full min-h-[430px] transform-gpu sm:min-h-[460px] lg:min-h-[510px]" style={{ transformStyle: "preserve-3d" }}>
               <div
                 ref={(node) => {
                   cardRefs.current[0] = node
                 }}
-                className="absolute left-[9%] top-[8%] w-[72%] rotate-[-5deg] rounded-md border-2 border-[#172018] bg-white p-5 shadow-[12px_12px_0_#172018]"
+                className="absolute left-[9%] top-[8%] z-10 w-[72%] rotate-[-5deg] rounded-md border-2 border-[#172018] bg-white p-5 shadow-[12px_12px_0_#172018]"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="flex items-center justify-between">
@@ -377,12 +364,7 @@ export function LandingPage() {
                 <p className="mt-1 text-xs font-bold text-rose-950">Tập nói đáp án trước khi xem gợi ý.</p>
               </div>
 
-              <div
-                ref={(node) => {
-                  cardRefs.current[4] = node
-                }}
-                className="absolute right-[22%] top-[2%] hidden rounded-full border-2 border-[#172018] bg-[#fb7185] px-4 py-2 text-sm font-extrabold text-white shadow-[5px_5px_0_#172018] sm:block"
-              >
+              <div className="absolute right-[22%] top-[2%] z-50 hidden rounded-full border-2 border-[#172018] bg-[#fb7185] px-4 py-2 text-sm font-extrabold text-white shadow-[5px_5px_0_#172018] sm:block">
                 +120 điểm tự tin
               </div>
               </div>
