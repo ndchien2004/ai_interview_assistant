@@ -10,6 +10,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   FileQuestion,
+  Flame,
   FolderPlus,
   LayoutDashboard,
   LogOut,
@@ -26,7 +27,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { getCurrentUser, logout, USER_CHANGE_EVENT } from "@/services/auth-service"
-import { createCourse, createCourseDeck, getCourse, listCourses } from "@/services/course-service"
+import { COURSE_PROGRESS_CHANGE_EVENT, createCourse, createCourseDeck, getCourse, listCourses } from "@/services/course-service"
+import {
+  EMPTY_STREAK_SUMMARY,
+  loadStudyStreakSummary,
+  type StudyStreakSummary,
+} from "@/services/streak-service"
 import { cn } from "@/lib/utils"
 import type { Course, CourseSection, PracticeQuestion, User } from "@/types"
 
@@ -81,6 +87,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [streakOpen, setStreakOpen] = useState(false)
+  const [streakSummary, setStreakSummary] = useState<StudyStreakSummary>(EMPTY_STREAK_SUMMARY)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [theme, setTheme] = useState<Theme>("light")
   const [searchQuery, setSearchQuery] = useState("")
@@ -97,6 +105,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [quickSaving, setQuickSaving] = useState(false)
   const [quickError, setQuickError] = useState("")
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const streakMenuRef = useRef<HTMLDivElement | null>(null)
   const searchRef = useRef<HTMLDivElement | null>(null)
   const quickRef = useRef<HTMLDivElement | null>(null)
   const activeNavHref = navItems.find((item) => item.isActive(pathname))?.href
@@ -170,18 +179,50 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!profileOpen && !searchOpen && !quickOpen) return
+    if (!profileOpen && !searchOpen && !quickOpen && !streakOpen) return
 
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node
       if (!profileMenuRef.current?.contains(target)) setProfileOpen(false)
+      if (!streakMenuRef.current?.contains(target)) setStreakOpen(false)
       if (!searchRef.current?.contains(target)) setSearchOpen(false)
       if (!quickRef.current?.contains(target)) setQuickOpen(false)
     }
 
     window.addEventListener("pointerdown", handlePointerDown)
     return () => window.removeEventListener("pointerdown", handlePointerDown)
-  }, [profileOpen, quickOpen, searchOpen])
+  }, [profileOpen, quickOpen, searchOpen, streakOpen])
+
+  useEffect(() => {
+    if (!ready) return
+    let active = true
+
+    const loadStreak = () => {
+      loadStudyStreakSummary()
+        .then((summary) => {
+          if (active) setStreakSummary(summary)
+        })
+        .catch(() => {
+          if (active) setStreakSummary(EMPTY_STREAK_SUMMARY)
+        })
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") loadStreak()
+    }
+
+    loadStreak()
+    window.addEventListener(COURSE_PROGRESS_CHANGE_EVENT, loadStreak)
+    window.addEventListener("focus", loadStreak)
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    return () => {
+      active = false
+      window.removeEventListener(COURSE_PROGRESS_CHANGE_EVENT, loadStreak)
+      window.removeEventListener("focus", loadStreak)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [ready])
 
   const loadSearchCourses = async () => {
     if (searchCourses.length || searchLoading) return
@@ -481,6 +522,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-3">
+              <div ref={streakMenuRef} className="relative">
+                <StreakNavButton
+                  summary={streakSummary}
+                  open={streakOpen}
+                  onToggle={() => {
+                    setStreakOpen((current) => !current)
+                    setProfileOpen(false)
+                  }}
+                />
+                {streakOpen ? <StreakPopover summary={streakSummary} onClose={() => setStreakOpen(false)} /> : null}
+              </div>
               <Button
                 variant="outline"
                 size="icon-sm"
@@ -516,11 +568,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <div className="py-1">
                       <DropdownLink href="/profile" label="Hồ sơ" icon={UserRound} onClick={() => setProfileOpen(false)} />
                     </div>
-                    <div className="border-t-2 border-[#172018] p-2 dark:border-white/80">
+                    <div className="border-t-2 border-[#172018] dark:border-white/80">
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-2 rounded-md border-2 border-transparent px-3 py-2 text-left text-sm font-extrabold text-destructive transition-colors hover:border-destructive hover:bg-destructive/10"
+                        className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm font-extrabold text-destructive transition-colors hover:text-destructive/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
                         <LogOut className="size-4" />
                         Đăng xuất
@@ -735,6 +787,102 @@ function QuickCreateDialog({
   )
 }
 
+function StreakNavButton({
+  summary,
+  open,
+  onToggle,
+}: {
+  summary: StudyStreakSummary
+  open: boolean
+  onToggle: () => void
+}) {
+  const active = summary.studiedToday
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={cn(
+        "relative z-0 inline-flex h-10 items-center gap-2 rounded-full border-2 px-3 text-sm font-extrabold shadow-[3px_3px_0_#172018] transition-all hover:z-10 motion-safe:hover:-translate-y-0.5 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 dark:border-white/85 dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]",
+        active
+          ? "border-[#166534] bg-[#bbf7d0] text-[#12351d] hover:bg-[#86efac] dark:bg-emerald-950 dark:text-emerald-100"
+          : "border-[#172018] bg-[#fef08a] text-[#172018] hover:bg-[#fde047] dark:bg-amber-950 dark:text-amber-100"
+      )}
+      aria-label={active ? "Đã giữ chuỗi ngày học" : "Học hôm nay để giữ chuỗi"}
+      aria-expanded={open}
+    >
+      <Flame className="size-4 fill-orange-500 text-orange-700 dark:text-orange-400" />
+      <span>{summary.current}</span>
+      <span className="hidden sm:inline">ngày</span>
+    </button>
+  )
+}
+
+function StreakPopover({ summary, onClose }: { summary: StudyStreakSummary; onClose: () => void }) {
+  return (
+    <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-2rem))] rounded-md border-2 border-[#172018] bg-background p-4 shadow-[7px_7px_0_#172018] dark:border-white/80 dark:shadow-[7px_7px_0_rgba(255,255,255,0.24)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+            Chuỗi ngày học
+          </p>
+          <p className="mt-1 text-3xl font-extrabold">{summary.current} ngày</p>
+        </div>
+        <div
+          className={cn(
+            "rounded-full border-2 px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_#172018] dark:shadow-[2px_2px_0_rgba(255,255,255,0.22)]",
+            summary.studiedToday
+              ? "border-[#166534] bg-[#bbf7d0] text-[#12351d] dark:border-emerald-200 dark:bg-emerald-950 dark:text-emerald-100"
+              : "border-[#172018] bg-[#fef08a] text-[#172018] dark:border-amber-200 dark:bg-amber-950 dark:text-amber-100"
+          )}
+        >
+          {summary.studiedToday ? "Đã giữ streak" : "Học hôm nay"}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-7 gap-1.5">
+        {summary.recentDays.map((day) => (
+          <div key={day.dateKey} className="text-center">
+            <p className="text-[10px] font-bold uppercase text-muted-foreground">{day.label}</p>
+            <div
+              className={cn(
+                "mt-1 flex aspect-square items-center justify-center rounded-full border-2 text-xs font-extrabold",
+                day.active
+                  ? "border-[#166534] bg-[#bbf7d0] text-[#12351d] dark:border-emerald-200 dark:bg-emerald-950 dark:text-emerald-100"
+                  : "border-[#172018]/30 bg-muted text-muted-foreground dark:border-white/25",
+                day.isToday && "ring-2 ring-[#f59e0b] ring-offset-2 ring-offset-background"
+              )}
+              title={day.active ? `${day.count} hoạt động` : "Chưa học"}
+            >
+              {day.active ? <Flame className="size-3 fill-orange-500 text-orange-700 dark:text-orange-400" /> : day.date.getDate()}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+        <div className="rounded-md border-2 border-[#172018] bg-card px-3 py-2 shadow-[3px_3px_0_#172018] dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.2)]">
+          <p className="text-xs font-bold text-muted-foreground">Dài nhất</p>
+          <p className="font-extrabold">{summary.longest} ngày</p>
+        </div>
+        <div className="rounded-md border-2 border-[#172018] bg-card px-3 py-2 shadow-[3px_3px_0_#172018] dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.2)]">
+          <p className="text-xs font-bold text-muted-foreground">Hôm nay</p>
+          <p className="font-extrabold">{summary.studiedToday ? "Xong" : "Chưa"}</p>
+        </div>
+      </div>
+
+      <Link
+        href="/courses/java-core"
+        onClick={onClose}
+        className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border-2 border-[#172018] bg-[#22c55e] px-4 text-sm font-extrabold text-[#09210f] shadow-[4px_4px_0_#172018] transition-all hover:-translate-y-0.5 hover:bg-[#4ade80] dark:border-white/80 dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]"
+      >
+        <Flame className="size-4 fill-orange-500 text-orange-700 dark:text-orange-400" />
+        Học tiếp
+      </Link>
+    </div>
+  )
+}
+
 function UserAvatar({ user }: { user: User }) {
   if (user.avatarUrl) {
     return <Image src={user.avatarUrl} alt="" width={44} height={44} unoptimized className="size-full object-cover" />
@@ -758,7 +906,7 @@ function DropdownLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-2 border-2 border-transparent px-4 py-2 text-sm font-extrabold text-muted-foreground transition-colors hover:border-[#172018] hover:bg-[#cdf7ed] hover:text-foreground dark:hover:border-white/80 dark:hover:bg-muted"
+      className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-sm font-extrabold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
     >
       <Icon className="size-4" />
       {label}

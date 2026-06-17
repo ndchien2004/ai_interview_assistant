@@ -29,14 +29,15 @@ import {
   updateCurrentUser,
   uploadUserAvatar,
 } from "@/services/auth-service"
-import { readLocalProgress } from "@/services/course-service"
-import { listPracticeSessions } from "@/services/practice-service"
+import {
+  EMPTY_STREAK_SUMMARY,
+  buildCalendarMonth,
+  loadStudyStreakSummary,
+  startOfMonth,
+  toDateKey,
+  type StudyDay,
+} from "@/services/streak-service"
 import type { User } from "@/types"
-
-type StudyDay = {
-  dateKey: string
-  count: number
-}
 
 export function ProfileView() {
   const initialUser = getCurrentUser()
@@ -47,7 +48,7 @@ export function ProfileView() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [studyDays, setStudyDays] = useState<StudyDay[]>([])
+  const [streakSummary, setStreakSummary] = useState(EMPTY_STREAK_SUMMARY)
   const [calendarMonth, setCalendarMonth] = useState(() => startOfMonth(new Date()))
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
@@ -70,8 +71,8 @@ export function ProfileView() {
 
   useEffect(() => {
     let active = true
-    loadStudyDays().then((days) => {
-      if (active) setStudyDays(days)
+    loadStudyStreakSummary().then((summary) => {
+      if (active) setStreakSummary(summary)
     })
     return () => {
       active = false
@@ -85,8 +86,6 @@ export function ProfileView() {
         year: "numeric",
       }).format(new Date(user.createdAt))
     : "Chưa rõ"
-
-  const streakStats = useMemo(() => calculateStreakStats(studyDays), [studyDays])
 
   const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -210,9 +209,9 @@ export function ProfileView() {
 
       <StreakCalendar
         month={calendarMonth}
-        studyDays={studyDays}
-        currentStreak={streakStats.current}
-        longestStreak={streakStats.longest}
+        studyDays={streakSummary.studyDays}
+        currentStreak={streakSummary.current}
+        longestStreak={streakSummary.longest}
         onMonthChange={setCalendarMonth}
       />
 
@@ -452,22 +451,22 @@ function StreakCalendar({
   const activeDays = useMemo(() => new Map(studyDays.map((day) => [day.dateKey, day.count])), [studyDays])
   const calendarDays = useMemo(() => buildCalendarMonth(month), [month])
   const monthLabel = new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(month)
+  const todayKey = toDateKey(new Date())
 
   return (
-    <section className="overflow-hidden rounded-md border-2 border-[#172018] bg-[#20213f] p-5 text-white shadow-[7px_7px_0_#172018] dark:border-white/80 dark:shadow-[7px_7px_0_rgba(255,255,255,0.24)] sm:p-6">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-stretch">
-        <div>
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className={cn("overflow-hidden p-3 sm:p-4", neo.section)}>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,640px)_minmax(360px,1fr)] lg:items-center">
+        <div className="w-full max-w-[640px]">
+          <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-white/70">Chuỗi ngày học</p>
-              <h3 className="mt-1 text-xl font-semibold capitalize">{monthLabel}</h3>
+              <p className="text-xs font-extrabold text-muted-foreground">Chuỗi ngày học</p>
+              <h3 className="text-xl font-extrabold capitalize tracking-tight">{monthLabel}</h3>
             </div>
             <div className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="border-white/20 bg-white/5 text-white hover:bg-white/10"
                 onClick={() => onMonthChange(addMonths(month, -1))}
                 aria-label="Tháng trước"
               >
@@ -477,7 +476,6 @@ function StreakCalendar({
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="border-white/20 bg-white/5 text-white hover:bg-white/10"
                 onClick={() => onMonthChange(addMonths(month, 1))}
                 aria-label="Tháng sau"
               >
@@ -486,43 +484,55 @@ function StreakCalendar({
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-white/85">
+          <div className="grid grid-cols-7 gap-x-1 text-center text-xs font-extrabold uppercase leading-none text-muted-foreground">
             {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((day) => (
               <span key={day}>{day}</span>
             ))}
           </div>
 
-          <div className="mt-3 grid grid-cols-7 gap-2">
+          <div className="mt-1 grid auto-rows-[1.7rem] grid-cols-7 items-center gap-x-1 gap-y-0.5">
             {calendarDays.map((day) => {
               const active = activeDays.has(day.dateKey)
+              const isToday = day.dateKey === todayKey
               return (
                 <div
                   key={day.dateKey}
                   className={cn(
-                    "relative flex min-h-9 items-center justify-center rounded-full text-sm font-semibold sm:min-h-10",
-                    day.inCurrentMonth ? "text-white" : "text-white/25",
-                    active && "bg-orange-400 text-[#111432] shadow-[0_0_0_4px_rgba(251,146,60,0.16)]"
+                    "relative mx-auto flex h-7 min-w-7 max-w-10 items-center justify-center rounded-full border-2 px-1 text-sm font-extrabold leading-none transition-colors",
+                    day.inCurrentMonth
+                      ? "border-transparent text-foreground"
+                      : "border-transparent text-muted-foreground/35",
+                    active &&
+                      "border-[#172018] bg-[#fef08a] text-[#172018] shadow-[2px_2px_0_#172018] dark:border-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:shadow-[2px_2px_0_rgba(253,224,71,0.24)]",
+                    !active &&
+                      isToday &&
+                      "border-[#172018] bg-[#fef08a] text-[#172018] shadow-[2px_2px_0_#172018] dark:border-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:shadow-[2px_2px_0_rgba(253,224,71,0.24)]"
                   )}
                   title={active ? `${activeDays.get(day.dateKey)} hoạt động` : undefined}
                 >
-                  {active ? <Flame className="absolute inset-0 m-auto size-9 fill-orange-400 text-orange-400" /> : null}
-                  <span className="relative z-10">{day.date.getDate()}</span>
+                  {active ? <Flame className="mr-0.5 size-3.5 fill-orange-500 text-orange-700 dark:text-orange-400" /> : null}
+                  <span>{day.date.getDate()}</span>
                 </div>
               )
             })}
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center rounded-md border-2 border-white/35 bg-white/10 p-4 text-center shadow-[4px_4px_0_rgba(255,255,255,0.18)]">
-          <p className="text-lg font-semibold">Chuỗi hiện tại</p>
-          <p className="mt-1 text-3xl font-semibold">{currentStreak}</p>
-          <p className="text-sm text-white/70">{currentStreak === 1 ? "ngày" : "ngày"}</p>
-          <div className="mt-5 flex flex-col items-center gap-2 text-orange-400">
-            <Flame className="size-12 fill-orange-400" />
-            <Flame className="size-9 fill-orange-400" />
+        <div className="flex min-h-[178px] flex-col justify-center gap-5 rounded-md border-2 border-[#172018] bg-[#fef08a] p-5 text-[#172018] shadow-[5px_5px_0_#172018] dark:border-white/80 dark:bg-amber-950/70 dark:text-amber-100 dark:shadow-[5px_5px_0_rgba(255,255,255,0.24)] sm:min-h-[190px] sm:p-6 lg:self-center xl:min-h-[200px]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+              <p className="text-lg font-extrabold text-[#4f4a20] dark:text-amber-100/75 sm:text-xl">Chuỗi hiện tại</p>
+              <div className="flex items-baseline gap-2 sm:gap-3">
+                <p className="text-6xl font-extrabold leading-none sm:text-7xl">{currentStreak}</p>
+                <p className="text-xl font-extrabold sm:text-2xl">ngày</p>
+              </div>
+            </div>
+            <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-[#172018] bg-white shadow-[3px_3px_0_#172018] dark:border-white/80 dark:bg-background dark:shadow-[3px_3px_0_rgba(255,255,255,0.2)] sm:size-16">
+              <Flame className="size-8 fill-orange-500 text-orange-700 dark:text-orange-400 sm:size-9" />
+            </span>
           </div>
-          <div className="mt-5 flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-sm text-white/75">
-            <ShieldCheck className="size-4" />
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border-2 border-[#172018] bg-white px-4 py-2 text-base font-extrabold text-[#172018] shadow-[3px_3px_0_#172018] dark:border-white/80 dark:bg-background dark:text-foreground dark:shadow-[3px_3px_0_rgba(255,255,255,0.2)] sm:text-lg">
+            <ShieldCheck className="size-4 sm:size-5" />
             Dài nhất {longestStreak} ngày
           </div>
         </div>
@@ -557,103 +567,8 @@ function InfoItem({ label, value }: { label: string; value: string }) {
   )
 }
 
-async function loadStudyDays() {
-  const counts = new Map<string, number>()
-
-  Object.values(readLocalProgress()).forEach((progress) => {
-    if (progress.lastAttemptAt) addDate(counts, progress.lastAttemptAt)
-  })
-
-  const sessions = await listPracticeSessions()
-  sessions.forEach((session) => {
-    addDate(counts, session.completedAt ?? session.createdAt)
-    session.attempts.forEach((attempt) => addDate(counts, attempt.createdAt))
-  })
-
-  return Array.from(counts.entries())
-    .map(([dateKey, count]) => ({ dateKey, count }))
-    .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
-}
-
-function addDate(counts: Map<string, number>, value?: string | null) {
-  if (!value) return
-  const dateKey = toDateKey(new Date(value))
-  counts.set(dateKey, (counts.get(dateKey) ?? 0) + 1)
-}
-
-function calculateStreakStats(days: StudyDay[]) {
-  const daySet = new Set(days.map((day) => day.dateKey))
-  const sorted = Array.from(daySet).sort()
-  let longest = 0
-  let run = 0
-  let previous: Date | null = null
-
-  for (const dateKey of sorted) {
-    const current = parseDateKey(dateKey)
-    if (previous && daysBetween(previous, current) === 1) run += 1
-    else run = 1
-    longest = Math.max(longest, run)
-    previous = current
-  }
-
-  const today = startOfDay(new Date())
-  const yesterday = addDays(today, -1)
-  let cursor = daySet.has(toDateKey(today)) ? today : daySet.has(toDateKey(yesterday)) ? yesterday : null
-  let current = 0
-  while (cursor && daySet.has(toDateKey(cursor))) {
-    current += 1
-    cursor = addDays(cursor, -1)
-  }
-
-  return { current, longest }
-}
-
-function buildCalendarMonth(month: Date) {
-  const first = startOfMonth(month)
-  const startOffset = (first.getDay() + 6) % 7
-  const start = addDays(first, -startOffset)
-  return Array.from({ length: 42 }, (_, index) => {
-    const date = addDays(start, index)
-    return {
-      date,
-      dateKey: toDateKey(date),
-      inCurrentMonth: date.getMonth() === month.getMonth(),
-    }
-  })
-}
-
-function startOfMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1)
-}
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
-
 function addMonths(date: Date, months: number) {
   return new Date(date.getFullYear(), date.getMonth() + months, 1)
-}
-
-function daysBetween(a: Date, b: Date) {
-  return Math.round((startOfDay(b).getTime() - startOfDay(a).getTime()) / 86_400_000)
-}
-
-function toDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day)
 }
 
 function providerText(user: User | null) {

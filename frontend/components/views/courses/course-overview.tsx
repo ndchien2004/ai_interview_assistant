@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, BookOpen, Brain, CheckCircle2, ClipboardCheck, Gamepad2, Library, PlayCircle } from "lucide-react"
+import { ArrowRight, BookOpen, Brain, CheckCircle2, ClipboardCheck, Flame, Gamepad2, Library, PlayCircle } from "lucide-react"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 
@@ -11,6 +11,11 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { COURSE_PROGRESS_CHANGE_EVENT, getCourse, getCourseProgress } from "@/services/course-service"
 import { listActivePracticeSessions } from "@/services/practice-service"
+import {
+  EMPTY_STREAK_SUMMARY,
+  loadStudyStreakSummary,
+  type StudyStreakSummary,
+} from "@/services/streak-service"
 import type { Course, CourseProgress, CourseSection, PracticeSession, PracticeSessionMode, TopicProgress } from "@/types"
 import { cn } from "@/lib/utils"
 
@@ -31,18 +36,20 @@ export function CourseOverview() {
   const [course, setCourse] = useState<Course | null>(null)
   const [progress, setProgress] = useState<CourseProgress | null>(null)
   const [activeSessions, setActiveSessions] = useState<PracticeSession[]>([])
+  const [streakSummary, setStreakSummary] = useState<StudyStreakSummary>(EMPTY_STREAK_SUMMARY)
   const [error, setError] = useState("")
 
   useEffect(() => {
     let active = true
 
     const loadOverview = () => {
-      Promise.all([getCourse(courseSlug), getCourseProgress(courseSlug), listActivePracticeSessions(courseSlug)])
-        .then(([courseData, progressData, sessions]) => {
+      Promise.all([getCourse(courseSlug), getCourseProgress(courseSlug), listActivePracticeSessions(courseSlug), loadStudyStreakSummary()])
+        .then(([courseData, progressData, sessions, streakData]) => {
           if (!active) return
           setCourse(courseData)
           setProgress(progressData)
           setActiveSessions(sessions)
+          setStreakSummary(streakData)
           setError("")
         })
         .catch(() => {
@@ -155,6 +162,8 @@ export function CourseOverview() {
           <Progress value={masteredPct} className="h-2" />
         </div>
       </section>
+
+      <StreakDashboardCard summary={streakSummary} href={baseDeckHref} />
 
       {/* ── Active sessions (if any) ── */}
       {activeSessions.length > 0 && (
@@ -283,6 +292,79 @@ function MetricPill({
 }
 
 // ─── ActiveSessionRow ────────────────────────────────────────────────────────
+function StreakDashboardCard({ summary, href }: { summary: StudyStreakSummary; href: string }) {
+  return (
+    <section
+      className={cn(
+        card,
+        "overflow-hidden px-5 py-5 sm:px-7",
+        summary.studiedToday
+          ? "bg-[#bbf7d0] dark:bg-emerald-950/70"
+          : "bg-[#fef08a] dark:bg-amber-950/70"
+      )}
+    >
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex size-10 items-center justify-center rounded-full border-2 border-[#172018] bg-white text-[#172018] shadow-[3px_3px_0_#172018] dark:border-white/80 dark:bg-background dark:text-foreground dark:shadow-[3px_3px_0_rgba(255,255,255,0.24)]">
+              <Flame className="size-5 fill-orange-500 text-orange-700 dark:text-orange-400" />
+            </span>
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
+                Chuỗi ngày học
+              </p>
+              <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+                {summary.current} ngày liên tục
+              </h2>
+            </div>
+          </div>
+          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-foreground/75">
+            {summary.studiedToday
+              ? "Hôm nay đã học rồi. Giữ nhịp này thêm một phiên ngắn nữa là đẹp."
+              : "Học một phiên ngắn hôm nay để bắt đầu hoặc giữ chuỗi học của bạn."}
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center lg:min-w-[520px]">
+          <div className="grid grid-cols-7 gap-1.5">
+            {summary.recentDays.map((day) => (
+              <div key={day.dateKey} className="text-center">
+                <p className="text-[10px] font-extrabold uppercase text-muted-foreground">{day.label}</p>
+                <div
+                  className={cn(
+                    "mt-1 flex aspect-square min-h-9 items-center justify-center rounded-full border-2 text-xs font-extrabold shadow-[2px_2px_0_#172018] dark:shadow-[2px_2px_0_rgba(255,255,255,0.18)]",
+                    day.active
+                      ? "border-[#166534] bg-white text-[#166534] dark:border-emerald-200 dark:bg-emerald-950 dark:text-emerald-100"
+                      : "border-[#172018]/40 bg-background/70 text-muted-foreground dark:border-white/35",
+                    day.isToday && "ring-2 ring-[#f59e0b] ring-offset-2 ring-offset-background"
+                  )}
+                  title={day.active ? `${day.count} hoạt động` : "Chưa học"}
+                >
+                  {day.active ? <Flame className="size-4 fill-orange-500 text-orange-700 dark:text-orange-400" /> : day.date.getDate()}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 sm:flex-col">
+            <div className="rounded-md border-2 border-[#172018] bg-card px-3 py-2 text-sm shadow-[3px_3px_0_#172018] dark:border-white/80 dark:shadow-[3px_3px_0_rgba(255,255,255,0.2)]">
+              <p className="text-xs font-bold text-muted-foreground">Dài nhất</p>
+              <p className="font-extrabold">{summary.longest} ngày</p>
+            </div>
+            <Link
+              href={href}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border-2 border-[#172018] bg-[#22c55e] px-4 text-sm font-extrabold text-[#09210f] shadow-[4px_4px_0_#172018] transition-all hover:-translate-y-0.5 hover:bg-[#4ade80] dark:border-white/80 dark:shadow-[4px_4px_0_rgba(255,255,255,0.24)]"
+            >
+              <Brain className="size-4" />
+              Học tiếp
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ActiveSessionRow({ session, deck }: { session: PracticeSession; deck?: CourseSection }) {
   const answered = session.answeredCount ?? session.attempts.length
   const total = session.questionCount ?? session.questions?.length ?? 0
