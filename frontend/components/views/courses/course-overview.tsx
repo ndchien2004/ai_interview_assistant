@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, BookOpen, Brain, ClipboardCheck, Gamepad2, Library, PlayCircle } from "lucide-react"
+import { ArrowRight, BookOpen, Brain, CheckCircle2, ClipboardCheck, Gamepad2, Library, PlayCircle } from "lucide-react"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 
@@ -334,6 +334,7 @@ function DeckRow({
   const total = progress?.total ?? section.questions.length
   const masteredPct = total ? Math.round((mastered / total) * 100) : 0
   const attemptedPct = total ? Math.round((attempted / total) * 100) : 0
+  const completed = total > 0 && mastered >= total
 
   return (
     <Link
@@ -341,44 +342,57 @@ function DeckRow({
       className={cn(
         rowItem,
         "grid items-center gap-4 px-5 py-4 active:scale-[0.99]",
-        "sm:grid-cols-[minmax(0,1fr)_260px_auto]"
+        "sm:grid-cols-[minmax(0,1fr)_260px_auto]",
+        completed &&
+          "border-[#166534] bg-[#bbf7d0] text-[#12351d] shadow-[6px_6px_0_#166534] hover:bg-[#86efac] dark:border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-50 dark:shadow-[6px_6px_0_rgba(134,239,172,0.28)]"
       )}
     >
       {/* Name + counters */}
       <div className="min-w-0">
-        <p className="truncate text-base font-semibold text-foreground">{section.title}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <p className={cn("truncate text-base font-semibold text-foreground", completed && "text-[#12351d] dark:text-emerald-50")}>{section.title}</p>
+          {completed ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border-2 border-[#166534] bg-white px-2 py-0.5 text-[11px] font-extrabold text-[#166534] shadow-[2px_2px_0_#166534] dark:border-emerald-200 dark:bg-emerald-900 dark:text-emerald-100 dark:shadow-[2px_2px_0_rgba(134,239,172,0.35)]">
+              <CheckCircle2 className="size-3" />
+              {"Ho\u00e0n th\u00e0nh"}</span>
+          ) : null}
+        </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
           <span>{section.questions.length} câu</span>
           {due > 0 && (
             <span className="font-medium text-foreground">{due} cần ôn</span>
           )}
           {mastered > 0 && (
-            <span className="text-foreground">{mastered} thuộc</span>
+            <span className={cn("text-foreground", completed && "font-extrabold text-[#166534] dark:text-emerald-200")}>{mastered} {"thu\u1ed9c"}</span>
           )}
         </div>
       </div>
 
       {/* Progress bars — stacked: attempted (bg) + mastered (fg) */}
       <div className="hidden sm:block">
-        <div className="mb-1.5 flex justify-between text-sm text-muted-foreground">
+        <div className={cn("mb-1.5 flex justify-between text-sm text-muted-foreground", completed && "font-bold text-[#166534] dark:text-emerald-200")}>
           <span>{attempted}/{total} đã học</span>
           <span>{masteredPct}%</span>
         </div>
-        <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+        <div className={cn("relative h-2 overflow-hidden rounded-full bg-muted", completed && "border border-[#166534]/30 bg-white/70 dark:bg-emerald-950")}>
           {/* attempted */}
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-foreground/20"
+            className={cn("absolute inset-y-0 left-0 rounded-full bg-foreground/20", completed && "bg-emerald-200 dark:bg-emerald-900")}
             style={{ width: `${attemptedPct}%` }}
           />
           {/* mastered on top */}
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-primary"
+            className={cn("absolute inset-y-0 left-0 rounded-full bg-primary", completed && "bg-[#16a34a] dark:bg-emerald-300")}
             style={{ width: `${masteredPct}%` }}
           />
         </div>
       </div>
 
-      <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
+      {completed ? (
+        <CheckCircle2 className="size-6 shrink-0 text-[#166534] dark:text-emerald-200" />
+      ) : (
+        <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
+      )}
     </Link>
   )
 }
