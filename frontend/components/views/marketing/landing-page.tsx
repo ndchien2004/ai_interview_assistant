@@ -7,45 +7,23 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import {
   BookOpenCheck,
   Brain,
-  CalendarClock,
   CheckCircle2,
   Flame,
   Layers3,
   Mail,
-  MessageCircleQuestion,
   Star,
   Trophy,
-  WandSparkles,
   Zap,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { CreatorSection } from "@/components/views/marketing/creator-section"
+import { DemoFlashcardSection } from "@/components/views/marketing/demo-flashcard-section"
 
 const stats = [
   { value: "20'", label: "mỗi phiên học", tone: "bg-emerald-300 text-emerald-950" },
   { value: "3", label: "chế độ luyện", tone: "bg-sky-300 text-sky-950" },
   { value: "10+", label: "bộ thẻ mẫu", tone: "bg-amber-300 text-amber-950" },
-]
-
-const highlights = [
-  {
-    title: "Học như chơi",
-    description: "Mỗi câu hỏi thành một thẻ nhỏ, lật nhanh, nhớ nhanh, bớt áp lực.",
-    icon: WandSparkles,
-    iconClassName: "text-amber-600",
-  },
-  {
-    title: "Luyện nói câu trả lời",
-    description: "Chuyển từ nhớ ý chính sang nói thành câu, đúng kiểu chuẩn bị phỏng vấn.",
-    icon: MessageCircleQuestion,
-    iconClassName: "text-sky-600",
-  },
-  {
-    title: "Quay lại đúng lúc",
-    description: "Câu nào yếu thì hiện lại, câu nào chắc thì đi tiếp. Nhịp học gọn hơn.",
-    icon: CalendarClock,
-    iconClassName: "text-emerald-600",
-  },
 ]
 
 const studyPath = [
@@ -55,7 +33,7 @@ const studyPath = [
   { title: "Sẵn sàng phỏng vấn", icon: Trophy, color: "bg-rose-400" },
 ]
 
-const chips = ["Java Core", "OOP", "HashMap", "SQL", "System Design", "Behavioral"]
+const chips = ["Java Core", "OOP", "HashMap", "SQL", "Thiết kế hệ thống", "Phỏng vấn hành vi"]
 const marqueeChips = Array.from({ length: 4 }, () => chips).flat()
 
 export function LandingPage() {
@@ -89,15 +67,6 @@ export function LandingPage() {
           transformOrigin: "center bottom",
         })
         gsap.set(".path-line", { scaleX: 0, transformOrigin: "left center" })
-        gsap.set(".feature-card", {
-          opacity: 0,
-          y: 70,
-          z: -140,
-          rotateX: -28,
-          rotateY: 18,
-          transformPerspective: 1000,
-          transformOrigin: "center bottom",
-        })
         gsap.set(cardRefs.current.filter(Boolean), {
           y: 54,
           opacity: 0,
@@ -168,39 +137,6 @@ export function LandingPage() {
                 .to(item, { y: 0, rotateZ: 0, duration: 2.8, ease: "sine.inOut" })
             })
           })
-
-        gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: ".feature-section",
-              start: "top 72%",
-              once: true,
-            },
-          })
-          .to(".feature-card", {
-            opacity: 1,
-            y: 0,
-            z: 0,
-            rotateX: 0,
-            rotateY: 0,
-            duration: 0.78,
-            ease: "back.out(1.45)",
-            stagger: 0.16,
-          })
-          .to(
-            ".feature-icon",
-            {
-              y: -6,
-              rotateZ: 8,
-              duration: 0.42,
-              ease: "back.out(2)",
-              stagger: 0.12,
-              yoyo: true,
-              repeat: 1,
-            },
-            "-=0.35"
-          )
-
       }
 
       const onMove = (event: PointerEvent) => {
@@ -257,7 +193,7 @@ export function LandingPage() {
         <div aria-hidden="true" className="absolute bottom-[8%] left-0 h-24 w-full rotate-2 bg-[#34d399]/20" />
         <div aria-hidden="true" className="absolute right-[-8%] top-0 h-full w-[42%] skew-x-[-12deg] bg-[#2563eb]/10" />
 
-        <header className="nav-pop relative z-20 mx-auto flex h-[76px] w-full max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
+        <header className="nav-pop relative z-20 mx-auto flex min-h-[76px] w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <Link href="/" className="inline-flex shrink-0 items-center gap-2 rounded-full border-2 border-[#172018] bg-white px-3 py-2 text-sm font-extrabold shadow-[5px_5px_0_#172018]">
               <BookOpenCheck className="size-5 text-emerald-600" />
@@ -267,53 +203,53 @@ export function LandingPage() {
               Hôm nay học ít thôi, nhưng nhớ thật lâu
             </div>
           </div>
-          <nav className="flex items-center gap-2">
-            <Button asChild className="border-2 border-[#172018] bg-[#fef08a] text-[#172018] shadow-[4px_4px_0_#172018] hover:bg-[#fde047]">
+          <nav className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
+            <Button asChild className="h-9 px-2.5 text-xs border-2 border-[#172018] bg-[#fef08a] text-[#172018] shadow-[3px_3px_0_#172018] hover:bg-[#fde047] sm:h-10 sm:px-3.5 sm:text-sm sm:shadow-[4px_4px_0_#172018]">
               <Link href="/login">Đăng nhập</Link>
             </Button>
-            <Button asChild className="bg-[#172018] text-white shadow-[3px_3px_0_#f59e0b] hover:bg-[#2d3b2f]">
+            <Button asChild className="h-9 px-2.5 text-xs bg-[#172018] text-white shadow-[3px_3px_0_#f59e0b] hover:bg-[#2d3b2f] sm:h-10 sm:px-3.5 sm:text-sm">
               <Link href="/register">Tạo tài khoản</Link>
             </Button>
           </nav>
         </header>
 
-        <div className="relative z-10 mx-auto grid h-[calc(100svh-76px)] w-full max-w-7xl items-center gap-6 px-5 pb-4 pt-1 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl items-start gap-8 px-4 pb-10 pt-4 sm:px-6 sm:pt-8 lg:h-[calc(100svh-76px)] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:px-8 lg:pb-4 lg:pt-1">
           <div className="max-w-2xl">
-            <h1 className="hero-pop max-w-3xl text-5xl font-extrabold leading-[1.04] tracking-normal text-[#172018] sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
+            <h1 className="hero-pop max-w-3xl text-4xl font-extrabold leading-[1.06] tracking-normal text-[#172018] min-[380px]:text-5xl sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
               Ôn phỏng vấn vui hơn một chút.
             </h1>
             <p className="hero-pop mt-5 max-w-xl text-base font-medium leading-7 text-[#405044] sm:text-lg">
               FreeCard biến kiến thức khô thành những vòng luyện tập ngắn, có nhịp, có thành tựu nhỏ để bạn muốn quay lại học mỗi ngày.
             </p>
 
-            <div className="hero-pop mt-7 grid max-w-xl grid-cols-3 gap-3">
+            <div className="hero-pop mt-6 grid max-w-xl grid-cols-3 gap-2 sm:mt-7 sm:gap-3">
               {stats.map((item) => (
-                <div key={item.label} className={`rounded-md border-2 border-[#172018] px-4 py-3 shadow-[4px_4px_0_#172018] ${item.tone}`}>
-                  <p className="text-2xl font-extrabold">{item.value}</p>
-                  <p className="mt-1 text-xs font-bold leading-5">{item.label}</p>
+                <div key={item.label} className={`rounded-md border-2 border-[#172018] px-3 py-3 shadow-[3px_3px_0_#172018] sm:px-4 sm:shadow-[4px_4px_0_#172018] ${item.tone}`}>
+                  <p className="text-xl font-extrabold sm:text-2xl">{item.value}</p>
+                  <p className="mt-1 text-[11px] font-bold leading-4 sm:text-xs sm:leading-5">{item.label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="hero-pop relative flex min-h-[430px] items-center justify-center sm:min-h-[460px] lg:min-h-[510px]" style={{ perspective: "1200px" }}>
-            <div className="relative h-[430px] w-full max-w-[690px] translate-x-2 scale-[1.03] sm:h-[460px] lg:h-[510px] lg:translate-x-[10px] lg:scale-[1.06] xl:translate-x-[-10px] translate-y-[55px]">
-              <div ref={boardRef} className="relative h-full min-h-[430px] transform-gpu sm:min-h-[460px] lg:min-h-[510px]" style={{ transformStyle: "preserve-3d" }}>
+          <div className="hero-pop relative flex min-h-[470px] items-center justify-center py-4 sm:min-h-[460px] lg:min-h-[510px] lg:py-0" style={{ perspective: "1200px" }}>
+            <div className="relative h-[450px] w-full max-w-[380px] sm:h-[460px] sm:max-w-[690px] lg:h-[510px] lg:translate-x-[10px] lg:translate-y-[55px] lg:scale-[1.06] xl:translate-x-[-10px]">
+              <div ref={boardRef} className="relative h-full min-h-[450px] transform-gpu sm:min-h-[460px] lg:min-h-[510px]" style={{ transformStyle: "preserve-3d" }}>
               <div
                 ref={(node) => {
                   cardRefs.current[0] = node
                 }}
-                className="absolute left-[9%] top-[8%] z-10 w-[72%] rotate-[-5deg] rounded-md border-2 border-[#172018] bg-white p-5 shadow-[12px_12px_0_#172018]"
+                className="absolute left-[5%] top-[25%] z-10 w-[84%] rotate-[-4deg] rounded-md border-2 border-[#172018] bg-white p-4 shadow-[7px_7px_0_#172018] sm:left-[9%] sm:top-[8%] sm:w-[72%] sm:p-5 sm:shadow-[12px_12px_0_#172018]"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="flex items-center justify-between">
                   <span className="rounded-full bg-[#d9f99d] px-3 py-1 text-xs font-extrabold text-lime-900">Câu hôm nay</span>
                   <Star className="size-6 fill-amber-300 text-amber-500" />
                 </div>
-                <p className="mt-8 text-2xl font-extrabold leading-tight">HashMap xử lý va chạm như thế nào?</p>
-                <div className="mt-8 flex items-center justify-between">
-                  <span className="text-sm font-bold text-[#68756b]">12 / 40 câu</span>
-                  <span className="rounded-full border-2 border-[#172018] bg-[#38bdf8] px-3 py-1 text-sm font-extrabold text-sky-950">
+                <p className="mt-6 text-xl font-extrabold leading-tight sm:mt-8 sm:text-2xl">HashMap xử lý va chạm như thế nào?</p>
+                <div className="mt-6 flex items-center justify-between gap-3 sm:mt-8">
+                  <span className="text-xs font-bold text-[#68756b] sm:text-sm">12 / 40 câu</span>
+                  <span className="rounded-full border-2 border-[#172018] bg-[#38bdf8] px-3 py-1 text-xs font-extrabold text-sky-950 sm:text-sm">
                     Lật thẻ
                   </span>
                 </div>
@@ -324,13 +260,13 @@ export function LandingPage() {
                   cardRefs.current[1] = node
                   floatRefs.current[0] = node
                 }}
-                className="absolute right-[-15%] top-[23%] z-30 w-56 rotate-[8deg] rounded-md border-2 border-[#172018] bg-[#fef08a] p-4 shadow-[9px_9px_0_#172018]"
+                className="absolute right-[3%] top-[7%] z-30 w-36 rotate-[6deg] rounded-md border-2 border-[#172018] bg-[#fef08a] p-3 shadow-[6px_6px_0_#172018] min-[380px]:w-40 sm:right-[-8%] sm:top-[23%] sm:w-56 sm:p-4 sm:shadow-[9px_9px_0_#172018] lg:right-[-15%]"
               >
                 <div className="flex items-center gap-2">
-                  <Flame className="size-6 fill-orange-400 text-orange-600" />
+                  <Flame className="size-5 fill-orange-400 text-orange-600 sm:size-6" />
                   <div>
                     <p className="text-xs font-extrabold uppercase">Chuỗi học</p>
-                    <p className="text-2xl font-extrabold">7 ngày</p>
+                    <p className="text-xl font-extrabold sm:text-2xl">7 ngày</p>
                   </div>
                 </div>
               </div>
@@ -340,10 +276,10 @@ export function LandingPage() {
                   cardRefs.current[2] = node
                   floatRefs.current[1] = node
                 }}
-                className="absolute left-[-7%] top-[-12%] z-40 w-[43%] rotate-[3deg] rounded-md border-2 border-[#172018] bg-[#bae6fd] p-4 shadow-[9px_9px_0_#172018]"
+                className="absolute left-[2%] top-0 z-40 w-[49%] rotate-[3deg] rounded-md border-2 border-[#172018] bg-[#bae6fd] p-3 shadow-[6px_6px_0_#172018] sm:left-[-4%] sm:top-[-8%] sm:w-[43%] sm:p-4 sm:shadow-[9px_9px_0_#172018] lg:left-[-7%] lg:top-[-12%]"
               >
                 <p className="text-sm font-extrabold">Tiến độ tuần</p>
-                <div className="mt-4 h-4 overflow-hidden rounded-full border-2 border-[#172018] bg-white">
+                <div className="mt-3 h-3 overflow-hidden rounded-full border-2 border-[#172018] bg-white sm:mt-4 sm:h-4">
                   <div className="h-full w-[68%] rounded-full bg-[#22c55e]" />
                 </div>
                 <p className="mt-3 text-xs font-bold text-sky-950">68% mục tiêu đã hoàn thành</p>
@@ -354,13 +290,13 @@ export function LandingPage() {
                   cardRefs.current[3] = node
                   floatRefs.current[2] = node
                 }}
-                className="absolute left-[27%] top-[51%] z-20 w-[43%] -rotate-[3deg] rounded-md border-2 border-[#172018] bg-[#fecdd3] p-4 shadow-[9px_9px_0_#172018]"
+                className="absolute bottom-[1%] left-[9%] z-20 w-[82%] -rotate-[3deg] rounded-md border-2 border-[#172018] bg-[#fecdd3] p-4 shadow-[6px_6px_0_#172018] sm:bottom-auto sm:left-[27%] sm:top-[51%] sm:w-[43%] sm:shadow-[9px_9px_0_#172018]"
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-extrabold">Sắp phỏng vấn?</p>
                   <CheckCircle2 className="size-6 text-emerald-700" />
                 </div>
-                <p className="mt-3 text-3xl font-extrabold">Luyện 15 câu</p>
+                <p className="mt-3 text-2xl font-extrabold sm:text-3xl">Luyện 15 câu</p>
                 <p className="mt-1 text-xs font-bold text-rose-950">Tập nói đáp án trước khi xem gợi ý.</p>
               </div>
 
@@ -373,6 +309,10 @@ export function LandingPage() {
         </div>
       </section>
 
+      <CreatorSection />
+
+      <DemoFlashcardSection />
+
       <section className="relative overflow-hidden border-y-2 border-[#172018] bg-[#172018] py-4 text-white">
         <div className="ticker-track flex w-max animate-[freecard-marquee_28s_linear_infinite] gap-3 whitespace-nowrap will-change-transform">
           {marqueeChips.map((chip, index) => (
@@ -383,52 +323,32 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="feature-section bg-[#fff8e8] px-5 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-3">
-          {highlights.map((item) => {
-            const Icon = item.icon
-
-            return (
-              <article
-                key={item.title}
-                className="feature-card relative overflow-hidden rounded-md border-2 border-[#172018] bg-white p-6 shadow-[7px_7px_0_#172018] will-change-transform"
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                <Icon className={`feature-icon relative size-10 ${item.iconClassName}`} />
-                <h2 className="relative mt-5 text-xl font-extrabold">{item.title}</h2>
-                <p className="relative mt-2 text-sm font-medium leading-6 text-[#526057]">{item.description}</p>
-              </article>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="path-section relative flex min-h-[92svh] items-center bg-[#cdf7ed] px-5 py-10 sm:px-6 lg:px-8">
+      <section className="path-section relative flex bg-[#cdf7ed] px-4 py-12 sm:px-6 sm:py-16 md:min-h-[92svh] md:items-center lg:px-8">
         <div className="mx-auto w-full max-w-7xl">
           <div className="max-w-2xl">
             <p className="inline-flex rounded-full border-2 border-[#172018] bg-white px-4 py-2 text-sm font-extrabold shadow-[4px_4px_0_#172018]">
               Lộ trình học có cảm giác tiến lên
             </p>
-            <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
+            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
               Mỗi bước nhỏ đều có phần thưởng tinh thần.
             </h2>
           </div>
 
-          <div className="relative mt-10 min-h-[380px]">
+          <div className="relative mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:block md:min-h-[380px]">
             <div aria-hidden="true" className="path-line absolute left-4 right-4 top-[55%] hidden h-1 -translate-y-1/2 -rotate-3 rounded-full bg-[#172018] md:block" />
             {studyPath.map((item, index) => {
               const Icon = item.icon
               const positionClassName = [
-                "left-[1%] top-0 rotate-[-4deg]",
-                "left-[27%] top-24 rotate-[3deg]",
-                "right-[27%] top-8 rotate-[-2deg]",
-                "right-[1%] top-32 rotate-[4deg]",
+                "md:left-[1%] md:top-0 md:rotate-[-4deg]",
+                "md:left-[27%] md:top-24 md:rotate-[3deg]",
+                "md:right-[27%] md:top-8 md:rotate-[-2deg]",
+                "md:right-[1%] md:top-32 md:rotate-[4deg]",
               ][index]
 
               return (
                 <article
                   key={item.title}
-                  className={`path-step relative mb-4 rounded-md border-2 border-[#172018] bg-white p-5 shadow-[8px_8px_0_#172018] md:absolute md:w-[24%] ${positionClassName}`}
+                  className={`path-step relative rounded-md border-2 border-[#172018] bg-white p-5 shadow-[6px_6px_0_#172018] md:absolute md:w-[24%] md:shadow-[8px_8px_0_#172018] ${positionClassName}`}
                 >
                   <div className={`flex size-14 items-center justify-center rounded-full border-2 border-[#172018] ${item.color}`}>
                     <Icon className="size-6 text-[#172018]" />
